@@ -11,6 +11,12 @@ export async function queryActiveTab(): Promise<Tab | null> {
   return tab ?? null
 }
 
+/** Active tab of the last focused window — the service worker has no "current" window. */
+export async function queryLastFocusedActiveTab(): Promise<Tab | null> {
+  const [tab] = await requireChrome('tabs').tabs.query({ active: true, lastFocusedWindow: true })
+  return tab ?? null
+}
+
 export async function getTab(tabId: number): Promise<Tab | null> {
   try {
     return await requireChrome('tabs').tabs.get(tabId)

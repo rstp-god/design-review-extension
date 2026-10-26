@@ -1,6 +1,7 @@
 import { onCommand } from '@/services/chrome/commands'
 import { onRuntimeMessage } from '@/services/chrome/runtime'
 import { handleCommand } from './commands'
+import { installE2EHooks } from './e2e'
 import { messageListener } from './messageHandler'
 
 /**
@@ -13,8 +14,8 @@ onCommand((command, tab) => {
   void handleCommand(command, tab)
 })
 
-// Dead code in the production build: Vite inlines the constant and Rollup drops the branch, so
-// `e2e.ts` and its `__drE2E` hook never reach `dist/` (checked by a contract test).
+// Dead code in the production build: Vite inlines the constant, the call is dropped and with it
+// the whole e2e module, so `__drE2E` never reaches `dist/` (checked by a contract test).
 if (import.meta.env.VITE_E2E === '1') {
-  void import('./e2e')
+  installE2EHooks()
 }
