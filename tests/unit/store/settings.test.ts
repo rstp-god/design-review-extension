@@ -99,6 +99,42 @@ describe('settings store', () => {
     expect(store.getState().tooltipFields).not.toContain('typography')
   })
 
+  it('ignores changes until hydrated, then persists a pre-hydration change only if nothing was stored', async () => {
+    await mock.storage.sync.set({ [SETTINGS_KEY]: makeSettingsEnvelope({ theme: 'dark' }, 3) })
+    mock.storage.sync.set.mockClear()
+    // A slow read keeps the store un-hydrated long enough to act on it.
+    const realGet = mock.storage.sync.get.getMockImplementation()
+    mock.storage.sync.get.mockImplementationOnce(
+      (keys) =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve(realGet?.(keys) ?? {}), 50)
+        }),
+    )
+    vi.resetModules()
+    const { useSettingsStore } = await import('@/store/settings')
+    expect(useSettingsStore.getState().hydrated).toBe(false)
+
+    // A click that lands before the read finished: it must not overwrite the stored envelope.
+    useSettingsStore.getState().update({ theme: 'light' })
+    await vi.advanceTimersByTimeAsync(200)
+    expect(mock.storage.sync.set).not.toHaveBeenCalled()
+
+    await vi.waitFor(() => expect(useSettingsStore.getState().hydrated).toBe(true))
+    await vi.advanceTimersByTimeAsync(200)
+    expect(useSettingsStore.getState().theme).toBe('dark')
+    expect(mock.storage.sync.set).not.toHaveBeenCalled()
+  })
+
+  it('persists a pre-hydration change when the storage was empty', async () => {
+    vi.resetModules()
+    const { useSettingsStore } = await import('@/store/settings')
+    useSettingsStore.getState().update({ units: 'rem' })
+    await vi.waitFor(() => expect(useSettingsStore.getState().hydrated).toBe(true))
+    await vi.advanceTimersByTimeAsync(200)
+    const stored = mock.storage.sync.data.get(SETTINGS_KEY) as { state: { units: string } }
+    expect(stored.state.units).toBe('rem')
+  })
+
   it('retries after a rejected sync write', async () => {
     const store = await loadStore()
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})

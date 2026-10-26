@@ -1,3 +1,4 @@
+import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
 import type { Issue, ReviewSession, Settings } from '@/shared/model'
 import { defaultSettings } from '@/shared/model'
 
@@ -47,6 +48,47 @@ export function makeIssue(overrides: Partial<Issue> = {}): Issue {
 
 export function makeSettings(overrides: Partial<Settings> = {}): Settings {
   return { ...defaultSettings('en'), ...overrides }
+}
+
+/** Domain session of the Playwright fixture site, with three issues on two pages. */
+export const FIXTURE_SESSION_ID = 'session-fixture'
+
+export function makeFixtureSession(overrides: Partial<ReviewSession> = {}): ReviewSession {
+  return makeSession({
+    id: FIXTURE_SESSION_ID,
+    key: FIXTURE_SITE_URL,
+    origin: FIXTURE_SITE_URL,
+    title: new URL(FIXTURE_SITE_URL).host,
+    updatedAt: '2026-01-14T12:00:00.000Z',
+    nextNumber: 4,
+    ...overrides,
+  })
+}
+
+export function makeFixtureIssues(): Issue[] {
+  return [
+    makeIssue({
+      number: 1,
+      id: 'fx-1',
+      sessionId: FIXTURE_SESSION_ID,
+      severity: 'blocker',
+      pagePath: '/catalog',
+    }),
+    makeIssue({
+      number: 2,
+      id: 'fx-2',
+      sessionId: FIXTURE_SESSION_ID,
+      severity: 'major',
+      pagePath: '/catalog',
+    }),
+    makeIssue({
+      number: 3,
+      id: 'fx-3',
+      sessionId: FIXTURE_SESSION_ID,
+      severity: 'minor',
+      pagePath: '/cart',
+    }),
+  ]
 }
 
 /** A settings envelope as `chrome.storage.sync` holds it. */

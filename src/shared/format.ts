@@ -17,7 +17,8 @@ export function formatBytes(bytes: number, locale: string): string {
   return new Intl.NumberFormat(locale, {
     style: 'unit',
     unit,
-    unitDisplay: 'short',
+    // "512 bytes" rather than the short form's "512 byte".
+    unitDisplay: unit === 'byte' ? 'long' : 'short',
     maximumFractionDigits: unit === 'byte' ? 0 : 1,
   }).format(value)
 }

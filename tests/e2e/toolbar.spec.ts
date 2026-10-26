@@ -1,8 +1,10 @@
 import { type BrowserContext, expect, type Page, test } from '@playwright/test'
 import { TestId } from '@tests/constants/testIds'
+import { makeFixtureIssues, makeFixtureSession } from '@tests/fixtures/data'
 import {
   clearExtensionStorage,
   launchExtensionContext,
+  seedSessions,
   startReview,
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
@@ -97,6 +99,15 @@ test.describe('toolbar', () => {
     const icon = await exit.locator('svg').boundingBox()
     expect(icon?.width).toBe(20)
     expect(icon?.height).toBe(20)
+  })
+
+  test('a page with a session shows its issue count on the toolbar and the collapsed button', async () => {
+    await seedSessions(context, { sessions: [makeFixtureSession()], issues: makeFixtureIssues() })
+    await startReview(context, page)
+
+    await expect(page.getByTestId(TestId.ToolbarIssuesBadge)).toHaveText('3')
+    await page.getByTestId(TestId.ToolbarCollapse).click()
+    await expect(page.getByTestId(TestId.ToolbarCollapsedBadge)).toHaveText('3')
   })
 
   test('a second start does not create a second overlay', async () => {

@@ -1,6 +1,6 @@
 import { type BrowserContext, expect, type Page, test } from '@playwright/test'
 import { TestId, testIds } from '@tests/constants/testIds'
-import { makeIssue, makeSession } from '@tests/fixtures/data'
+import { makeFixtureIssues, makeFixtureSession, makeIssue, makeSession } from '@tests/fixtures/data'
 import {
   clearExtensionStorage,
   getActiveTabId,
@@ -12,39 +12,8 @@ import {
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
 import { SETTINGS_KEY } from '@/shared/constants'
 
-/** Fixture-site sessions: the catalog tab belongs to the domain session of the fixture origin. */
-const fixtureDomain = makeSession({
-  id: 'session-fixture',
-  key: FIXTURE_SITE_URL,
-  origin: FIXTURE_SITE_URL,
-  title: 'localhost:4173',
-  updatedAt: '2026-01-14T12:00:00.000Z',
-  nextNumber: 4,
-})
-
-const fixtureIssues = [
-  makeIssue({
-    number: 1,
-    sessionId: fixtureDomain.id,
-    id: 'fx-1',
-    severity: 'blocker',
-    pagePath: '/catalog',
-  }),
-  makeIssue({
-    number: 2,
-    sessionId: fixtureDomain.id,
-    id: 'fx-2',
-    severity: 'major',
-    pagePath: '/catalog',
-  }),
-  makeIssue({
-    number: 3,
-    sessionId: fixtureDomain.id,
-    id: 'fx-3',
-    severity: 'minor',
-    pagePath: '/cart',
-  }),
-]
+const fixtureDomain = makeFixtureSession()
+const fixtureIssues = makeFixtureIssues()
 
 const otherSite = makeSession({
   id: 'session-landing',

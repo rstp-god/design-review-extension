@@ -9,8 +9,8 @@ import {
 
 describe('formatBytes', () => {
   it('picks the unit by magnitude', () => {
-    expect(formatBytes(0, 'en')).toBe('0 byte')
-    expect(formatBytes(512, 'en')).toBe('512 byte')
+    expect(formatBytes(0, 'en')).toBe('0 bytes')
+    expect(formatBytes(512, 'en')).toBe('512 bytes')
     expect(formatBytes(2048, 'en')).toBe('2 kB')
     expect(formatBytes(13_002_342, 'en')).toBe('12.4 MB')
     expect(formatBytes(3 * 1024 ** 3, 'en')).toBe('3 GB')
@@ -21,8 +21,8 @@ describe('formatBytes', () => {
   })
 
   it('treats garbage as zero', () => {
-    expect(formatBytes(Number.NaN, 'en')).toBe('0 byte')
-    expect(formatBytes(-5, 'en')).toBe('0 byte')
+    expect(formatBytes(Number.NaN, 'en')).toBe('0 bytes')
+    expect(formatBytes(-5, 'en')).toBe('0 bytes')
   })
 })
 

@@ -17,7 +17,8 @@ const PATCHED_FLAG = '__drHistoryPatched'
 export function patchHistoryInPage(): void {
   const scope = window as Window & { __drHistoryPatched?: boolean }
   if (scope.__drHistoryPatched) return
-  scope.__drHistoryPatched = true
+  // Non-enumerable: a site that enumerates `window` does not see the extension this way.
+  Object.defineProperty(scope, '__drHistoryPatched', { value: true, enumerable: false })
 
   const notify = () => {
     window.dispatchEvent(new Event('dr:locationchange'))

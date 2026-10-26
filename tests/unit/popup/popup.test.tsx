@@ -157,6 +157,22 @@ describe('popup', () => {
     expect(window.close).not.toHaveBeenCalled()
   })
 
+  it('a failed session list is not mistaken for a first run', async () => {
+    mock.runtime.onMessage.addListener(
+      createMessageListener({
+        'session/list': async () => {
+          throw new Error('worker restarting')
+        },
+        'storage/usage': async () => ({ bytes: 0, sessions: 0 }),
+      }),
+    )
+    await renderPopup()
+
+    expect(screen.queryByTestId(TestId.PopupOnboarding)).toBeNull()
+    expect(screen.queryByTestId(TestId.PopupRecent)).toBeNull()
+    expect(screen.getByTestId(TestId.PopupStart)).toBeEnabled()
+  })
+
   it('restricted page: notice, disabled start, recent sessions still listed', async () => {
     mock.tabs.query.mockResolvedValue([mockTab({ id: 4, url: 'chrome://extensions/' })])
     background(mock, [summary(shop, 7, 1)])
@@ -180,8 +196,29 @@ describe('popup', () => {
 
     const shortcut = screen.getByTestId(TestId.PopupShortcut)
     expect(shortcut).toHaveTextContent('No hotkey assigned')
-    await userEvent.click(within(shortcut).getByRole('button', { name: 'Set one up' }))
+    await userEvent.click(screen.getByTestId(TestId.PopupShortcutSetup))
     expect(mock.tabs.create).toHaveBeenCalledWith({ url: 'chrome://extensions/shortcuts' })
+  })
+
+  it('settings: a failed delete-all is reported', async () => {
+    const user = userEvent.setup()
+    background(mock, [summary(shop, 1, 1)], {
+      'session/deleteAll': async () => {
+        throw new Error('blocked')
+      },
+    })
+    await renderPopup()
+    await user.click(screen.getByTestId(TestId.PopupSettingsButton))
+    await waitFor(() =>
+      expect(screen.getByTestId(TestId.SettingsRoot)).toHaveAttribute('data-hydrated', 'true'),
+    )
+
+    await user.click(screen.getByTestId(TestId.SettingsDeleteAll))
+    await user.click(await screen.findByTestId(TestId.SettingsDeleteAllConfirm))
+    expect(await screen.findByTestId(TestId.SettingsDeleteAllError)).toHaveTextContent(
+      'Could not delete',
+    )
+    expect(screen.getByTestId(TestId.SettingsStorageUsage)).toHaveTextContent('1 session')
   })
 
   it('settings: every control writes to the store, delete-all asks first', async () => {

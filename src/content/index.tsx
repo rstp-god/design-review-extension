@@ -13,8 +13,10 @@ import { useOverlayStore } from './store/overlay'
  * the background. Everything we add to the page lives in one shadow root; `dispose()` removes
  * it all — DOM, React, listeners — so leaving the review leaves nothing behind.
  *
- * Idempotent: a second injection into a document that already has our host does nothing. The
- * instance that created the host keeps answering `review/*` messages for it.
+ * The background injects only when no script answered `review/status`, so a host that is
+ * already in the document belongs to a dead instance (the extension was reloaded or updated
+ * while a review was open). It is replaced, never kept: keeping it would leave a toolbar nobody
+ * controls and block every later start until the page reloads.
  */
 function mount(): void {
   const host = createOverlayHost(overlayCss)
@@ -52,6 +54,5 @@ function mount(): void {
   )
 }
 
-if (!findOverlayHost()) {
-  mount()
-}
+findOverlayHost()?.remove()
+mount()

@@ -14,6 +14,7 @@ export const TestId = {
   PopupSessionSummary: 'popup-session-summary',
   PopupStart: 'popup-start',
   PopupShortcut: 'popup-shortcut',
+  PopupShortcutSetup: 'popup-shortcut-setup',
   PopupExportHtml: 'popup-export-html',
   PopupExportPdf: 'popup-export-pdf',
   PopupRecent: 'popup-recent',
@@ -40,6 +41,7 @@ export const TestId = {
   SettingsDeleteAll: 'settings-delete-all',
   SettingsDeleteAllConfirm: 'settings-delete-all-confirm',
   SettingsDeleteAllCancel: 'settings-delete-all-cancel',
+  SettingsDeleteAllError: 'settings-delete-all-error',
 
   // Overlay
   Toolbar: 'toolbar',

@@ -21,8 +21,6 @@
   overflow: visible;
   z-index: 2147483647;
   color-scheme: dark;
-  /* Default toolbar corner before any drag (screens.md §03). */
-  --dr-toolbar-inset: 16px;
 }
 
 :host([data-theme="light"]) {

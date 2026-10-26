@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { clampToViewport, defaultToolbarPosition, type Point } from '@/content/position'
 import { useOverlayStore } from '@/content/store/overlay'
 import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
+import { TOOLBAR_DEFAULT_INSET } from '@/shared/constants'
 import { Badge, Button, cn, Logo, Tooltip } from '@/ui'
 import { useDrag } from './useDrag'
 
@@ -50,6 +51,8 @@ export function Toolbar({ onExit }: ToolbarProps) {
   const issueCount = useOverlayStore((state) => state.session?.issueCount ?? 0)
   const box = useRef<HTMLDivElement>(null)
   const restored = useRef(false)
+  /** Set by the user toggling collapse; consumed once the new box is laid out. */
+  const persistAfterToggle = useRef(false)
 
   const measure = useCallback(() => {
     const rect = box.current?.getBoundingClientRect()
@@ -123,13 +126,24 @@ export function Toolbar({ onExit }: ToolbarProps) {
   }
 
   const toggleCollapsed = (next: boolean) => {
+    persistAfterToggle.current = true
     setCollapsed(next)
-    persist(position, next)
   }
+
+  // The collapsed circle and the expanded bar have different sizes: once the new box is laid
+  // out, keep an explicit position inside the viewport and persist the state for that size.
+  useLayoutEffect(() => {
+    if (!persistAfterToggle.current) return
+    persistAfterToggle.current = false
+    const current = useOverlayStore.getState().position
+    const next = current ? clampToViewport(current, measure(), viewportSize()) : null
+    if (next) setPosition(next)
+    persist(next, collapsed)
+  }, [collapsed, measure, persist, setPosition])
 
   const style = position
     ? { left: position.x, top: position.y }
-    : { right: 'var(--dr-toolbar-inset)', top: 'var(--dr-toolbar-inset)' }
+    : { right: TOOLBAR_DEFAULT_INSET, top: TOOLBAR_DEFAULT_INSET }
 
   const soon = (label: string, keys: readonly string[]) => ({
     label: `${label} · ${tCommon('soon')}`,

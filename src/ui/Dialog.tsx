@@ -58,8 +58,8 @@ export function Dialog({
 
   return (
     <FloatingPortal root={root}>
+      {/* No `lockScroll`: in the overlay that would write styles onto the host page's body. */}
       <FloatingOverlay
-        lockScroll
         data-testid={TestId.DialogScrim}
         className={cn(
           'z-40 flex bg-scrim',

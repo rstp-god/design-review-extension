@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getCommands } from '@/services/chrome/commands'
 import type { Tab } from '@/services/chrome/tabs'
 import { TOGGLE_REVIEW_COMMAND } from '@/shared/constants'
@@ -22,12 +22,12 @@ export interface PopupData {
   usage: StorageUsage | null
   /** Current binding of the global command; empty when unassigned. */
   shortcut: string
-  refresh: () => void
 }
 
 /**
  * Everything the home screen shows, loaded once the settings store is hydrated (the current
- * session depends on the collection scope). `refresh` reloads after a deletion.
+ * session depends on the collection scope). Home is remounted when the user comes back from the
+ * settings screen, so there is no separate reload path.
  */
 export function usePopupData(): PopupData {
   const hydrated = useSettingsStore((state) => state.hydrated)
@@ -35,6 +35,8 @@ export function usePopupData(): PopupData {
   const [tab, setTab] = useState<Tab | null>(null)
   const [tabResolved, setTabResolved] = useState(false)
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null)
+  /** The list could not be loaded: show no onboarding, it would claim the user has no sessions. */
+  const [listFailed, setListFailed] = useState(false)
   const [usage, setUsage] = useState<StorageUsage | null>(null)
   const [shortcut, setShortcut] = useState('')
 
@@ -64,26 +66,21 @@ export function usePopupData(): PopupData {
     }
   }, [])
 
-  const load = useCallback(() => {
+  useEffect(() => {
     let cancelled = false
     void Promise.all([
-      sendToBackground('session/list', {}).catch(() => [] as SessionSummary[]),
+      sendToBackground('session/list', {}).catch(() => null),
       sendToBackground('storage/usage', {}).catch(() => null),
     ]).then(([list, usageResult]) => {
       if (cancelled) return
-      setSessions(list)
+      setListFailed(list === null)
+      setSessions(list ?? [])
       setUsage(usageResult)
     })
     return () => {
       cancelled = true
     }
   }, [])
-
-  useEffect(() => load(), [load])
-
-  const refresh = useCallback(() => {
-    load()
-  }, [load])
 
   const restricted = isRestrictedUrl(tab?.url)
   const currentKey = tab?.url && !restricted ? sessionKey(tab.url, sessionScope) : null
@@ -99,9 +96,8 @@ export function usePopupData(): PopupData {
     restricted,
     current,
     recent,
-    firstRun: (sessions?.length ?? 0) === 0,
+    firstRun: !listFailed && (sessions?.length ?? 0) === 0,
     usage,
     shortcut,
-    refresh,
   }
 }

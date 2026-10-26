@@ -5,13 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { getExtensionVersion } from '@/services/chrome/runtime'
 import { createTab } from '@/services/chrome/tabs'
 import { SHORTCUTS_PAGE_URL } from '@/shared/constants'
-import {
-  displayHost,
-  formatBytes,
-  formatRelativeDay,
-  sessionLabel,
-  splitShortcut,
-} from '@/shared/format'
+import { formatBytes, formatRelativeDay, sessionLabel, splitShortcut } from '@/shared/format'
 import { sendToBackground } from '@/shared/messaging'
 import { SEVERITIES, type SessionSummary } from '@/shared/model'
 import { normalizePath } from '@/shared/sessionKey'
@@ -149,6 +143,7 @@ export function Home({ onOpenSettings }: HomeProps) {
                 <span>{t('shortcut.unset')}</span>
                 <button
                   type="button"
+                  data-testid={TestId.PopupShortcutSetup}
                   className="cursor-pointer text-accent-text underline-offset-2 hover:underline"
                   onClick={() => void createTab(SHORTCUTS_PAGE_URL)}
                 >
@@ -306,5 +301,3 @@ function Onboarding() {
     </section>
   )
 }
-
-export { displayHost }

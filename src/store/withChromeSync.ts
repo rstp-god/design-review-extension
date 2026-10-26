@@ -60,6 +60,8 @@ export function withChromeSync<State extends object, Persisted>({
       let rev = 0
       let lastWrittenJson: string | null = null
       let applyingRemote = false
+      let hydrated = false
+      let changedBeforeHydration = false
       let timer: ReturnType<typeof setTimeout> | null = null
 
       const typedSet = set as unknown as (partial: Partial<Synced<State>>) => void
@@ -85,6 +87,11 @@ export function withChromeSync<State extends object, Persisted>({
 
       const scheduleWrite = () => {
         if (applyingRemote) return
+        // Writing before the initial read would overwrite the stored envelope with defaults.
+        if (!hydrated) {
+          changedBeforeHydration = true
+          return
+        }
         if (debounceMs <= 0) {
           void writeNow()
           return
@@ -110,12 +117,16 @@ export function withChromeSync<State extends object, Persisted>({
       void (async () => {
         const parsed = schema.safeParse(await getArea<unknown>(area, key))
         if (parsed.success) applyEnvelope(parsed.data)
+        hydrated = true
         applyingRemote = true
         try {
           typedSet({ hydrated: true } as Partial<Synced<State>>)
         } finally {
           applyingRemote = false
         }
+        // A change made while loading survives only when nothing was stored (`merge` replaced
+        // the state otherwise); persist it now instead of waiting for the next change.
+        if (changedBeforeHydration && !parsed.success) scheduleWrite()
       })()
 
       onStorageChanged((changes, changedArea) => {

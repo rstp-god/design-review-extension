@@ -66,6 +66,7 @@
     "used": "Used",
     "deleteAll": "Delete all sessions",
     "confirmTitle": "Delete all sessions?",
-    "confirmText": "Every issue and screenshot will be removed from this device. This cannot be undone."
+    "confirmText": "Every issue and screenshot will be removed from this device. This cannot be undone.",
+    "deleteFailed": "Could not delete the sessions. Try again."
   }
 }

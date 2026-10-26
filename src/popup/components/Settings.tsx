@@ -38,6 +38,7 @@ export function Settings({ onBack }: SettingsProps) {
   const [usage, setUsage] = useState<StorageUsage | null>(null)
   const [commands, setCommands] = useState<Command[]>([])
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteFailed, setDeleteFailed] = useState(false)
 
   const loadUsage = () => {
     void sendToBackground('storage/usage', {})
@@ -52,8 +53,11 @@ export function Settings({ onBack }: SettingsProps) {
   }, [])
 
   const deleteAll = async () => {
+    setDeleteFailed(false)
     try {
       await sendToBackground('session/deleteAll', {})
+    } catch {
+      setDeleteFailed(true)
     } finally {
       setConfirmDelete(false)
       loadUsage()
@@ -75,6 +79,8 @@ export function Settings({ onBack }: SettingsProps) {
     <div
       data-testid={TestId.SettingsRoot}
       data-hydrated={settings.hydrated}
+      // Controls stay inert until the stored settings arrived; a click before that would be lost.
+      inert={!settings.hydrated}
       className="flex flex-col"
     >
       <Header
@@ -332,6 +338,15 @@ export function Settings({ onBack }: SettingsProps) {
         >
           {t('data.deleteAll')}
         </Button>
+        {deleteFailed && (
+          <p
+            role="alert"
+            data-testid={TestId.SettingsDeleteAllError}
+            className="m-0 text-sm text-danger"
+          >
+            {t('data.deleteFailed')}
+          </p>
+        )}
       </Section>
 
       <Dialog
