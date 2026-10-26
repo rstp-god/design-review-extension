@@ -18,10 +18,15 @@ import { CONTENT_SCRIPT_FILE } from './src/shared/constants.ts'
  */
 const isE2E = process.env.VITE_E2E === '1'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Library builds do not replace `process.env.NODE_ENV`; without this React ships its dev build.
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(mode),
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
+      '@tests': path.resolve(import.meta.dirname, 'tests'),
     },
   },
   plugins: [tailwindcss()],
@@ -42,4 +47,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
