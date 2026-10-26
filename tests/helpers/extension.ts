@@ -43,10 +43,25 @@ export async function launchExtensionContext(): Promise<BrowserContext> {
   })
 }
 
-/** Resolves once the extension's MV3 service worker is registered. */
+/**
+ * Resolves once the extension's MV3 service worker is running.
+ *
+ * Fails fast instead of hanging until the test timeout when no worker is running and none
+ * registers soon: Chrome stops idle MV3 workers after ~30 s, so a scenario that waited on a page
+ * must wake the worker (open an extension page, send a runtime message) before calling this.
+ */
 export async function getServiceWorker(context: BrowserContext): Promise<Worker> {
   const existing = context.serviceWorkers()[0]
-  return existing ?? (await context.waitForEvent('serviceworker'))
+  if (existing) return existing
+
+  try {
+    return await context.waitForEvent('serviceworker', { timeout: 10_000 })
+  } catch (error) {
+    throw new Error(
+      'Extension service worker is not running and did not start within 10 s. It may have gone idle; wake it before calling getServiceWorker().',
+      { cause: error },
+    )
+  }
 }
 
 export async function getExtensionId(context: BrowserContext): Promise<string> {

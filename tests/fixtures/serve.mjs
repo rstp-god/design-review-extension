@@ -29,39 +29,69 @@ const mimeTypes = {
   '.txt': 'text/plain; charset=utf-8',
 }
 
-/** Maps a request path to a file under `root`, or `null` when there is none (or it escapes root). */
-async function resolveFile(requestUrl) {
-  const { pathname } = new URL(requestUrl, 'http://localhost')
-  let filePath = path.join(root, path.normalize(decodeURIComponent(pathname)))
-
-  const relative = path.relative(root, filePath)
-  if (relative.startsWith('..') || path.isAbsolute(relative)) return null
-
+/**
+ * Maps a request to `{ filePath }` for a file under `root`, `{ redirect }` for a directory
+ * requested without a trailing slash, or `null` when nothing matches (including bad escapes
+ * and paths that would escape `root`).
+ */
+async function resolveTarget(requestUrl) {
   try {
+    const { pathname } = new URL(requestUrl, 'http://localhost')
+    let filePath = path.join(root, path.normalize(decodeURIComponent(pathname)))
+
+    const relative = path.relative(root, filePath)
+    if (relative.startsWith('..') || path.isAbsolute(relative)) return null
+
     if ((await stat(filePath)).isDirectory()) {
+      // Relative URLs inside index.html resolve against the directory only with a trailing slash.
+      if (!pathname.endsWith('/')) return { redirect: `${pathname}/` }
       filePath = path.join(filePath, 'index.html')
       await stat(filePath)
     }
-    return filePath
+
+    return { filePath }
   } catch {
     return null
   }
 }
 
-const server = createServer(async (req, res) => {
-  const filePath = await resolveFile(req.url ?? '/')
+function sendText(res, status, text) {
+  res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8' })
+  res.end(text)
+}
 
-  if (!filePath) {
-    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' })
-    res.end('Not found')
+const server = createServer(async (req, res) => {
+  const target = await resolveTarget(req.url ?? '/')
+
+  if (!target) {
+    sendText(res, 404, 'Not found')
     return
   }
 
-  res.writeHead(200, {
-    'content-type': mimeTypes[path.extname(filePath)] ?? 'application/octet-stream',
-    'cache-control': 'no-store',
+  if (target.redirect) {
+    res.writeHead(301, { location: target.redirect })
+    res.end()
+    return
+  }
+
+  const stream = createReadStream(target.filePath)
+
+  stream.once('open', () => {
+    res.writeHead(200, {
+      'content-type': mimeTypes[path.extname(target.filePath)] ?? 'application/octet-stream',
+      'cache-control': 'no-store',
+    })
+    stream.pipe(res)
   })
-  createReadStream(filePath).pipe(res)
+
+  stream.on('error', () => {
+    // The file vanished or became unreadable between `stat` and `open`.
+    if (res.headersSent) {
+      res.destroy()
+      return
+    }
+    sendText(res, 500, 'Read error')
+  })
 })
 
 server.listen(port, 'localhost', () => {
