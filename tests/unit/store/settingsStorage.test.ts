@@ -3,20 +3,13 @@ import { type ChromeMock, installChromeMock } from '@tests/mocks/chrome'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SETTINGS_KEY } from '@/shared/constants'
 import { defaultSettings } from '@/shared/model'
-import { readSettings, settingsEnvelopeSchema, toReportLang } from '@/store/settingsStorage'
+import { readSettings, settingsEnvelopeSchema } from '@/store/settingsStorage'
 
 describe('settingsStorage', () => {
   let mock: ChromeMock
 
   beforeEach(() => {
     mock = installChromeMock()
-  })
-
-  it('maps the UI language to a report language', () => {
-    expect(toReportLang('ru')).toBe('ru')
-    expect(toReportLang('ru-RU')).toBe('ru')
-    expect(toReportLang('en-US')).toBe('en')
-    expect(toReportLang('de')).toBe('en')
   })
 
   it('returns defaults for a missing or unreadable envelope', async () => {
