@@ -17,16 +17,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Node and Yarn
+        uses: ./.github/actions/setup
 
       - name: Lint and format check
         run: yarn check

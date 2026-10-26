@@ -14,16 +14,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Node and Yarn
+        uses: ./.github/actions/setup
 
       - name: Run Vitest suite
         run: yarn test
@@ -41,16 +33,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install dependencies
-        run: yarn install --immutable
+      - name: Setup Node and Yarn
+        uses: ./.github/actions/setup
 
       - name: Build extension (E2E build)
         run: yarn build:e2e
