@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { defineConfig } from 'vitest/config'
+import { coverageConfigDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   resolve: {
@@ -17,8 +17,13 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],
-      // Entry points only wire things together; Playwright exercises them, Vitest does not.
-      exclude: ['src/**/main.tsx', 'src/background/index.ts', 'src/**/*.d.ts'],
+      exclude: [
+        // Keep Vitest's defaults (test files, configs, declarations) and add our entry points:
+        // they only wire things together and are exercised by Playwright, not Vitest.
+        ...coverageConfigDefaults.exclude,
+        'src/**/main.tsx',
+        'src/background/index.ts',
+      ],
       thresholds: {
         lines: 70,
         functions: 70,
