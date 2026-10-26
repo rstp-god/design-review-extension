@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:"
+    />
+    <title>SPA — fixture</title>
+    <link rel="stylesheet" href="/site.css" />
+  </head>
+  <body>
+    <header class="header">
+      <a href="/">Fixture</a>
+      <a href="/spa/" data-spa>Home</a>
+      <a href="/spa/products" data-spa data-fixture="spa-link-products">Products</a>
+      <a href="/spa/about" data-spa data-fixture="spa-link-about">About</a>
+    </header>
+    <main>
+      <h1 data-fixture="title">Single-page app</h1>
+      <p data-fixture="spa-view">View: /spa/</p>
+      <p><button type="button" data-fixture="spa-replace">replaceState</button></p>
+    </main>
+    <script src="/site.js"></script>
+  </body>
+</html>

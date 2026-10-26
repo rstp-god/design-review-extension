@@ -3,14 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; frame-src 'self'"
+    />
     <title>Design Review fixture site</title>
+    <link rel="stylesheet" href="/site.css" />
   </head>
   <body>
-    <h1>Fixture site</h1>
-    <p>
-      Static pages for Playwright tests. The real fixtures (catalog and cart pages, CSS hover
-      menu, open and closed shadow DOM, iframe, fixed header, SPA navigation, strict CSP) arrive
-      with the extension shell.
-    </p>
+    <header class="header">
+      <a href="/">Fixture</a>
+      <a href="/catalog/">Catalog</a>
+      <a href="/cart/">Cart</a>
+      <a href="/spa/">SPA</a>
+      <div class="menu">
+        <a href="/catalog/" data-fixture="menu-trigger">Hover menu</a>
+        <div class="menu__dropdown" data-fixture="menu-dropdown">
+          <a href="/catalog/">Catalog</a>
+          <a href="/cart/">Cart</a>
+          <a href="/spa/">SPA</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <h1 data-fixture="title">Fixture site</h1>
+      <p>
+        Static pages for Playwright: <code>html { font-size: 62.5% }</code>, hostile tag styles, a
+        strict CSP delivered by a meta tag, a fixed header, a CSS hover menu, open and closed
+        shadow roots, an iframe and a tiny SPA.
+      </p>
+
+      <section class="grid">
+        <article class="product-card">
+          <h2>Product one</h2>
+          <p class="product-card__price">12 990 ₽</p>
+          <button type="button" class="card__cta">Add to cart</button>
+        </article>
+        <fx-open-card></fx-open-card>
+        <fx-closed-card></fx-closed-card>
+      </section>
+
+      <p>
+        <button type="button" data-fixture="counter">Clicked 0</button>
+      </p>
+
+      <div class="field">
+        <label for="search">Search</label>
+        <input id="search" type="text" data-fixture="input" />
+      </div>
+      <div class="field">
+        <span id="notes-label">Notes</span>
+        <div class="editable" contenteditable="true" data-fixture="editable"></div>
+      </div>
+
+      <iframe class="frame" src="/frame.html" title="Embedded frame" data-fixture="iframe"></iframe>
+
+      <div class="spacer"></div>
+      <p>Bottom of the page.</p>
+    </main>
+
+    <script src="/site.js"></script>
   </body>
 </html>

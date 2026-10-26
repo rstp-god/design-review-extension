@@ -15,7 +15,7 @@ const desktopChrome = {
 export default defineConfig({
   testDir: 'tests/e2e',
   testMatch: '**/*.spec.ts',
-  snapshotPathTemplate: '{testFileDir}/{projectName}/{arg}{ext}',
+  snapshotPathTemplate: '{testDir}/{testFileDir}/{projectName}/{arg}{ext}',
   timeout: 60_000,
   workers: 1,
   forbidOnly: !!process.env.CI,
