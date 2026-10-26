@@ -10,5 +10,9 @@
   "extActionTitle": {
     "message": "Design Review — начать ревью",
     "description": "Подсказка на кнопке в тулбаре, открывающей попап."
+  },
+  "cmdToggleReview": {
+    "message": "Начать или закончить ревью на этой вкладке",
+    "description": "Название сочетания клавиш в chrome://extensions/shortcuts."
   }
 }
