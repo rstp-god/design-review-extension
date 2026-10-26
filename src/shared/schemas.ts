@@ -137,6 +137,8 @@ export const sessionSummarySchema = z.object({
 
 export const storageUsageSchema = z.object({
   bytes: z.number().nonnegative(),
+  /** Origin quota as reported by the browser; absent when the API is unavailable. */
+  quota: z.number().nonnegative().optional(),
   sessions: z.number().int().nonnegative(),
 })
 

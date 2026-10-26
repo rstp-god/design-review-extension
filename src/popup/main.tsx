@@ -1,20 +1,32 @@
+import '@fontsource-variable/inter'
+import '@fontsource-variable/jetbrains-mono'
+import '@/styles/popup.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { APP_NAME } from '@/shared/constants'
+import { I18nextProvider } from 'react-i18next'
+import { createI18n } from '@/i18n'
+import { FloatingRootProvider } from '@/ui'
+import { App } from './App'
 
 /**
- * Placeholder popup. The real one (home, settings, restricted-page state) lands with
- * `feature/extension-shell`; this only proves the React + crxjs toolchain end to end.
+ * Popup entry. Fonts are bundled from `@fontsource-variable` (no network); floating UI renders
+ * into `#floating`, a sibling of the React root in our own document.
  */
 const container = document.getElementById('root')
-if (!container) {
-  throw new Error('Popup root element not found')
+const floating = document.getElementById('floating')
+if (!container || !floating) {
+  throw new Error('Popup root elements not found')
 }
+
+const i18n = createI18n()
+document.documentElement.lang = i18n.language
 
 createRoot(container).render(
   <StrictMode>
-    <main>
-      <h1>{APP_NAME}</h1>
-    </main>
+    <I18nextProvider i18n={i18n}>
+      <FloatingRootProvider container={floating}>
+        <App />
+      </FloatingRootProvider>
+    </I18nextProvider>
   </StrictMode>,
 )

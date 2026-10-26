@@ -7,5 +7,9 @@ import { countSessions } from './db'
  */
 export async function getStorageUsage(): Promise<StorageUsage> {
   const estimate = await globalThis.navigator?.storage?.estimate?.().catch(() => undefined)
-  return { bytes: estimate?.usage ?? 0, sessions: await countSessions() }
+  return {
+    bytes: estimate?.usage ?? 0,
+    ...(estimate?.quota !== undefined ? { quota: estimate.quota } : {}),
+    sessions: await countSessions(),
+  }
 }
