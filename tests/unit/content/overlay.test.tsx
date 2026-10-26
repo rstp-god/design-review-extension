@@ -10,6 +10,7 @@ import { App } from '@/content/overlay/App'
 import { useOverlayStore } from '@/content/store/overlay'
 import { createI18n } from '@/i18n'
 import { TOOLBAR_STATE_KEY } from '@/shared/constants'
+import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 
 const css = ':host{all:initial}'
 
@@ -115,6 +116,24 @@ describe('overlay app', () => {
 
     await user.click(q.byTestId('toolbar-exit') as HTMLElement)
     expect(onExit).toHaveBeenCalledTimes(2)
+  })
+
+  it('ignores synthetic clicks and drags from the page', async () => {
+    const user = userEvent.setup()
+    const { host, onExit } = renderOverlay()
+    const q = within(host)
+    trustSyntheticEventsForTests(false)
+
+    await user.click(q.byTestId('toolbar-exit') as HTMLElement)
+    expect(onExit).not.toHaveBeenCalled()
+    await user.click(q.byTestId('toolbar-collapse') as HTMLElement)
+    expect(q.byTestId('toolbar')).not.toBeNull()
+
+    const grip = q.byTestId('toolbar-grip') as HTMLElement
+    fireEvent.pointerDown(grip, { button: 0, clientX: 10, clientY: 10, pointerId: 1 })
+    fireEvent.pointerMove(grip, { clientX: 300, clientY: 300, pointerId: 1 })
+    expect(useOverlayStore.getState().position).toBeNull()
+    expect(mock.storage.local.data.has(TOOLBAR_STATE_KEY)).toBe(false)
   })
 
   it('drags by the grip, clamps to the viewport and persists the position', async () => {

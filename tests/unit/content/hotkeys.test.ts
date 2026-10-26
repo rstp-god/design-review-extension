@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { installHotkeys, isEditableTarget } from '@/content/hotkeys'
+import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 
 function press(target: EventTarget, init: KeyboardEventInit): KeyboardEvent {
   const event = new KeyboardEvent('keydown', {
@@ -94,6 +95,15 @@ describe('hotkeys', () => {
 
     press(input, { key: 'p', code: 'KeyP' })
     expect(onPicker).not.toHaveBeenCalled()
+  })
+
+  it('ignores synthetic events the page dispatches', () => {
+    const handler = vi.fn()
+    uninstall = installHotkeys([{ key: 'Escape', handler }])
+    trustSyntheticEventsForTests(false)
+    const event = press(document.body, { key: 'Escape' })
+    expect(handler).not.toHaveBeenCalled()
+    expect(event.defaultPrevented).toBe(false)
   })
 
   it('uninstalls cleanly', () => {

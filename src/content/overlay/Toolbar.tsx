@@ -22,6 +22,7 @@ import { clampToViewport, defaultToolbarPosition, type Point } from '@/content/p
 import { useOverlayStore } from '@/content/store/overlay'
 import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
 import { TOOLBAR_DEFAULT_INSET } from '@/shared/constants'
+import { isTrustedEvent } from '@/shared/trustedEvents'
 import { Badge, Button, cn, Logo, Tooltip } from '@/ui'
 import { useDrag } from './useDrag'
 
@@ -105,7 +106,15 @@ export function Toolbar({ onExit }: ToolbarProps) {
     },
   })
 
+  /** Only the user may change review state: the page can call `.click()` on our buttons. */
+  const trusted =
+    <E extends { isTrusted: boolean }>(handler: (event: E) => void) =>
+    (event: E) => {
+      if (isTrustedEvent(event)) handler(event)
+    }
+
   const nudge = (event: KeyboardEvent<HTMLElement>) => {
+    if (!isTrustedEvent(event)) return
     const delta: Record<string, Point> = {
       ArrowLeft: { x: -KEYBOARD_STEP_PX, y: 0 },
       ArrowRight: { x: KEYBOARD_STEP_PX, y: 0 },
@@ -162,9 +171,9 @@ export function Toolbar({ onExit }: ToolbarProps) {
           aria-label={t('toolbar.expand')}
           data-testid={TestId.ToolbarCollapsed}
           {...handlers}
-          onClick={() => {
+          onClick={trusted(() => {
             if (!wasDragged()) toggleCollapsed(false)
-          }}
+          })}
           onKeyDown={nudge}
           className={cn(
             'relative flex size-24 cursor-pointer items-center justify-center rounded-pill',
@@ -274,7 +283,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
           iconOnly
           aria-label={t('toolbar.collapse')}
           data-testid={TestId.ToolbarCollapse}
-          onClick={() => toggleCollapsed(true)}
+          onClick={trusted(() => toggleCollapsed(true))}
         >
           <Minus size={ICON_SIZE} aria-hidden="true" />
         </Button>
@@ -286,7 +295,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
           iconOnly
           aria-label={t('toolbar.exit')}
           data-testid={TestId.ToolbarExit}
-          onClick={onExit}
+          onClick={trusted(onExit)}
         >
           <X size={ICON_SIZE} aria-hidden="true" />
         </Button>

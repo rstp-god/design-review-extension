@@ -1,5 +1,6 @@
 import { type PointerEvent as ReactPointerEvent, useCallback, useRef, useState } from 'react'
 import { clampToViewport, type Point, type Size } from '@/content/position'
+import { isTrustedEvent } from '@/shared/trustedEvents'
 
 const CLICK_THRESHOLD_PX = 3
 
@@ -49,7 +50,7 @@ export function useDrag({ position, getOrigin, getSize, getViewport, onMove, onE
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
-      if (event.button !== 0) return
+      if (event.button !== 0 || !isTrustedEvent(event)) return
       // The box may sit in its default corner (position null): start from where it actually is.
       const origin = position ?? getOrigin()
       start.current = { pointer: { x: event.clientX, y: event.clientY }, origin, size: getSize() }

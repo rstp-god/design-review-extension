@@ -1,3 +1,5 @@
+import { isTrustedEvent } from '@/shared/trustedEvents'
+
 export interface HotkeyBinding {
   /** `event.key`, case-insensitive for single characters: `'p'`, `'Escape'`. */
   key: string
@@ -31,11 +33,13 @@ function matches(binding: HotkeyBinding, event: KeyboardEvent): boolean {
 /**
  * Review-mode hotkeys (spec 3.11). Listens on `window` in the capture phase so a page that
  * swallows keyboard events cannot hide ours, and stops propagation only for keys we handle.
- * Single-character keys are ignored while the focus is in an editable element; `Escape` and
- * Chrome's global command always work. Returns the uninstall function.
+ * Synthetic events dispatched by the page are ignored: a site must not be able to end the
+ * review. Single-character keys are ignored while the focus is in an editable element;
+ * `Escape` and Chrome's global command always work. Returns the uninstall function.
  */
 export function installHotkeys(bindings: readonly HotkeyBinding[], target: Window = window) {
   const onKeyDown = (event: KeyboardEvent) => {
+    if (!isTrustedEvent(event)) return
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
 
     const binding = bindings.find((candidate) => matches(candidate, event))
