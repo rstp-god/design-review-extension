@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Design Review",
+    "description": "Extension name shown in the Chrome Web Store and chrome://extensions. Max 75 characters."
+  },
+  "extDescription": {
+    "message": "Pick elements on a live page like DevTools Inspect, write what is wrong, export an HTML or PDF report. Local-first, no servers.",
+    "description": "Short description from the manifest. Max 132 characters."
+  },
+  "extActionTitle": {
+    "message": "Design Review — start a review",
+    "description": "Tooltip on the toolbar button that opens the popup."
+  }
+}

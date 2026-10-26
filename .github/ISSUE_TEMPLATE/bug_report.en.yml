@@ -1,0 +1,67 @@
+name: "🐞 Bug report"
+description: "Report a reproducible bug in the extension"
+title: "[BUG]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill in all required fields.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug summary
+      description: What is broken?
+      placeholder: e.g. "The toolbar does not appear after Alt+Shift+R on a site with a strict CSP".
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide a step-by-step reproduction scenario. A link to the page helps.
+      placeholder: |
+        1. Open the page ...
+        2. Start a review, pick an element ...
+        3. Press ...
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Provide platform and version details.
+      placeholder: |
+        - OS: macOS 15
+        - Browser: Chrome 142
+        - Extension version: 0.1.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots (optional)
+      description: Paste console logs (page and service worker) or attach screenshots.
+    validations:
+      required: false

@@ -1,0 +1,59 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  unit-and-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node and Yarn
+        uses: ./.github/actions/setup
+
+      - name: Run Vitest suite
+        run: yarn test
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-and-contract
+    # Must match the `@playwright/test` version in package.json exactly: the image ships the
+    # browsers that version expects.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node and Yarn
+        uses: ./.github/actions/setup
+
+      - name: Build extension (E2E build)
+        run: yarn build:e2e
+
+      - name: Run Playwright tests
+        run: yarn test:e2e:ci
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results
+          if-no-files-found: ignore

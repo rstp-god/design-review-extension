@@ -1,0 +1,58 @@
+{
+  "name": "design-review-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Chrome extension for design review of live web pages: pick elements like DevTools Inspect, write what is wrong, export an HTML or PDF report.",
+  "homepage": "https://github.com/rstp-god/design-review-extension#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rstp-god/design-review-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rstp-god/design-review-extension/issues"
+  },
+  "packageManager": "yarn@4.18.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:e2e": "tsc -b && VITE_E2E=1 vite build",
+    "lint": "biome lint .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e:local": "playwright test --project=chromium-mac",
+    "test:e2e:update-snapshots": "playwright test --project=chromium-mac --update-snapshots",
+    "test:e2e:ci": "xvfb-run -a playwright test --project=chromium-ci",
+    "test:e2e:update-snapshots:ci": "xvfb-run -a playwright test --project=chromium-ci --update-snapshots",
+    "postinstall": "husky"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.3",
+    "@crxjs/vite-plugin": "^2.4.11",
+    "@playwright/test": "1.64.1",
+    "@types/chrome": "^0.3.6",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "4.1.3",
+    "husky": "^9.1.7",
+    "jsdom": "^30.1.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0",
+    "vite-plugin-zip-pack": "^1.2.4",
+    "vitest": "4.1.3"
+  }
+}

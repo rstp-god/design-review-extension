@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Design Review",
+    "description": "Имя расширения в Chrome Web Store и chrome://extensions. Не длиннее 75 символов."
+  },
+  "extDescription": {
+    "message": "Выбирайте элементы на странице как в DevTools, пишите, что не так, выгружайте отчёт в HTML или PDF. Local-first, без серверов.",
+    "description": "Короткое описание из манифеста. Не длиннее 132 символов."
+  },
+  "extActionTitle": {
+    "message": "Design Review — начать ревью",
+    "description": "Подсказка на кнопке в тулбаре, открывающей попап."
+  }
+}
