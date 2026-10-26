@@ -3,9 +3,11 @@ import { TestId, testIds } from '@tests/constants/testIds'
 import { makeFixtureIssues, makeFixtureSession, makeIssue, makeSession } from '@tests/fixtures/data'
 import {
   clearExtensionStorage,
+  closePagesExcept,
   getActiveTabId,
   getTabId,
   launchExtensionContext,
+  openKeeperPage,
   openPopup,
   seedSessions,
 } from '@tests/helpers/extension'
@@ -27,10 +29,12 @@ const otherSite = makeSession({
 
 test.describe('popup', () => {
   let context: BrowserContext
+  let keeper: Page
   let page: Page
 
   test.beforeAll(async () => {
     context = await launchExtensionContext()
+    keeper = await openKeeperPage(context)
   })
 
   test.afterAll(async () => {
@@ -44,7 +48,7 @@ test.describe('popup', () => {
   })
 
   test.afterEach(async () => {
-    for (const open of context.pages()) await open.close()
+    await closePagesExcept(context, keeper)
   })
 
   test('first run: onboarding, then start shows the toolbar on the tab', async () => {
@@ -53,7 +57,9 @@ test.describe('popup', () => {
     await expect(popup.getByTestId(TestId.PopupOnboarding)).toBeVisible()
     await expect(popup.getByTestId(TestId.PopupSessionHost)).toHaveText('localhost:4173')
     await expect(popup.getByTestId(TestId.PopupStart)).toBeEnabled()
-    await expect(popup.getByTestId(TestId.PopupShortcut)).toContainText(/Alt|⌥/)
+    // Chrome reports the binding per platform (`Alt+Shift+R`, `⌥⇧R`); on the Linux CI runner the
+    // command stays unbound and the popup offers to set one up. Both are the hotkey line.
+    await expect(popup.getByTestId(TestId.PopupShortcut)).toContainText(/Alt|⌥|No hotkey assigned/)
     await expect(popup.getByTestId(TestId.PopupRecent)).toHaveCount(0)
     await expect(popup.getByTestId(TestId.PopupRoot)).toHaveScreenshot('popup-first-run.png')
 

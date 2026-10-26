@@ -53,6 +53,22 @@ export async function launchExtensionContext(): Promise<BrowserContext> {
 }
 
 /**
+ * A persistent Chromium context shuts down when its last page closes (seen on Linux). Specs keep
+ * one blank page open for the whole file and close everything else between scenarios.
+ */
+export async function openKeeperPage(context: BrowserContext): Promise<Page> {
+  const keeper = await context.newPage()
+  await keeper.goto('about:blank')
+  return keeper
+}
+
+export async function closePagesExcept(context: BrowserContext, keeper: Page): Promise<void> {
+  for (const page of context.pages()) {
+    if (page !== keeper && !page.isClosed()) await page.close()
+  }
+}
+
+/**
  * Resolves once the extension's MV3 service worker is running.
  *
  * Fails fast instead of hanging until the test timeout when no worker is running and none

@@ -3,7 +3,9 @@ import { TestId } from '@tests/constants/testIds'
 import { makeFixtureIssues, makeFixtureSession } from '@tests/fixtures/data'
 import {
   clearExtensionStorage,
+  closePagesExcept,
   launchExtensionContext,
+  openKeeperPage,
   seedSessions,
   startReview,
 } from '@tests/helpers/extension'
@@ -31,10 +33,12 @@ async function pageFingerprint(page: Page) {
 
 test.describe('toolbar', () => {
   let context: BrowserContext
+  let keeper: Page
   let page: Page
 
   test.beforeAll(async () => {
     context = await launchExtensionContext()
+    keeper = await openKeeperPage(context)
   })
 
   test.afterAll(async () => {
@@ -48,7 +52,7 @@ test.describe('toolbar', () => {
   })
 
   test.afterEach(async () => {
-    for (const open of context.pages()) await open.close()
+    await closePagesExcept(context, keeper)
   })
 
   test('start mounts one shadow host with the toolbar; tools are soft-disabled with tooltips', async () => {
