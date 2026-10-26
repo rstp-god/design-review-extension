@@ -1,0 +1,65 @@
+name: Update Visual Snapshots
+
+# Regenerates the Linux (`chromium-ci`) visual baselines and uploads them as an artifact.
+# Download it, unpack over `tests/e2e/`, review the diff and commit. Never refresh
+# `chromium-ci` baselines from a Mac — the rendering differs.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-visual-snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build extension (E2E build)
+        run: yarn build:e2e
+
+      - name: Regenerate CI visual snapshots
+        run: yarn test:e2e:update-snapshots:ci
+
+      - name: Collect CI visual snapshots
+        run: |
+          mkdir -p snapshot-artifacts
+          find tests/e2e -type d -name chromium-ci -exec cp -R --parents {} snapshot-artifacts/ \;
+
+      - name: Upload CI visual snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-snapshots-ci
+          path: snapshot-artifacts
+          if-no-files-found: ignore
+
+      - name: Upload Playwright HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-update-snapshots
+          path: playwright-report
+          if-no-files-found: ignore
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-update-snapshots
+          path: test-results
+          if-no-files-found: ignore

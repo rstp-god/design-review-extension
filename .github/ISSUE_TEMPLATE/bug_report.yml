@@ -1,0 +1,67 @@
+name: "🐞 Баг-репорт"
+description: "Сообщить об ошибке в расширении"
+title: "[BUG]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за репорт! Пожалуйста, заполните поля как можно подробнее.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Краткое описание бага
+      description: Что не работает?
+      placeholder: Например, "Тулбар не появляется после Alt+Shift+R на сайте с строгим CSP".
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      description: Пошагово опишите, как повторить проблему. Если можно — ссылка на страницу.
+      placeholder: |
+        1. Открыть страницу ...
+        2. Запустить ревью, выбрать элемент ...
+        3. Нажать ...
+        4. Увидеть ошибку ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+      placeholder: Что должно было произойти?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Фактическое поведение
+      placeholder: Что произошло на самом деле?
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Окружение
+      description: Укажите платформу и версии.
+      placeholder: |
+        - OS: macOS 15
+        - Browser: Chrome 142
+        - Extension version: 0.1.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи / скриншоты (опционально)
+      description: Вставьте логи из консоли (страница и service worker) или приложите скриншоты.
+    validations:
+      required: false
