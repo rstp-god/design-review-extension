@@ -23,6 +23,8 @@ export default defineConfig({
         ...coverageConfigDefaults.exclude,
         'src/**/main.tsx',
         'src/background/index.ts',
+        'src/background/e2e.ts',
+        'src/content/index.tsx',
       ],
       thresholds: {
         lines: 70,

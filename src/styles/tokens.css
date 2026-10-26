@@ -1,0 +1,153 @@
+/*
+ * Design tokens. Declared on both `:root` (popup, report page) and `:host` (overlay inside a
+ * shadow root on a third-party page). Everything is in px: host pages change the root font size.
+ *
+ * Tailwind utilities reference these through `@theme inline` in theme.css, so switching the
+ * overlay theme is just redefining `--dr-*` on the host.
+ */
+:root,
+:host {
+  /* Surfaces and borders */
+  --dr-bg: #1e1f22;
+  --dr-surface: #2b2d31;
+  --dr-surface-raised: #26282c;
+  --dr-surface-hover: #34363c;
+  --dr-surface-selected: #464952;
+  --dr-border: #34363c;
+  --dr-border-strong: #3e4047;
+  --dr-divider: #2e3035;
+  --dr-scrim: rgba(10, 11, 13, 0.62);
+  --dr-page-dim: rgba(17, 24, 39, 0.38);
+
+  /* Text */
+  --dr-text: #e6e7ea;
+  --dr-text-secondary: #c9cbd0;
+  --dr-text-muted: #a1a4ab;
+  --dr-text-inactive: #b4b7be;
+  --dr-text-disabled: #8a8d94;
+  --dr-text-subtle: #5a5e66;
+
+  /* Accent */
+  --dr-accent: #4c8dff;
+  --dr-accent-fg: #0b1220;
+  --dr-accent-text: #8ab4ff;
+  --dr-accent-soft: rgba(76, 141, 255, 0.15);
+  --dr-accent-tint: rgba(76, 141, 255, 0.08);
+
+  /* States */
+  --dr-danger-text: #ff8a8a;
+  --dr-danger-border: #5a2b2e;
+  --dr-warning-text: #f5b54a;
+  --dr-warning-bg: rgba(245, 165, 36, 0.1);
+  --dr-warning-border: rgba(245, 165, 36, 0.35);
+
+  /* Severity: dot / badge fill, text on dark, text on the badge. Never color alone. */
+  --dr-blocker: #ff6b6b;
+  --dr-blocker-text: #ff8a8a;
+  --dr-blocker-on: #2a0a0a;
+  --dr-major: #f5a524;
+  --dr-major-text: #f5b54a;
+  --dr-major-on: #1a1206;
+  --dr-minor: #8b95a5;
+  --dr-minor-text: #b4bac4;
+  --dr-minor-on: #ffffff;
+
+  /* Picker box model (DevTools-like) */
+  --dr-box-margin: rgba(246, 178, 107, 0.55);
+  --dr-box-border: rgba(255, 229, 153, 0.66);
+  --dr-box-padding: rgba(147, 196, 125, 0.65);
+  --dr-box-content: rgba(111, 168, 220, 0.75);
+  --dr-tooltip-tag: #e59bf2;
+  --dr-tooltip-class: #8ab4ff;
+
+  /* Radii */
+  --dr-radius-xs: 4px;
+  --dr-radius-sm: 5px;
+  --dr-radius-md: 6px;
+  --dr-radius-ctl: 7px;
+  --dr-radius-lg: 8px;
+  --dr-radius-xl: 10px;
+  --dr-radius-2xl: 12px;
+  --dr-radius-pill: 999px;
+
+  /* Shadows */
+  --dr-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --dr-shadow-popover: 0 10px 28px rgba(0, 0, 0, 0.28);
+  --dr-shadow-dialog: 0 16px 40px rgba(0, 0, 0, 0.35);
+
+  /* Motion: 120–160 ms, ease-out, opacity and transform only */
+  --dr-duration: 140ms;
+  --dr-ease: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Report page: light, print-oriented */
+:root {
+  --dr-r-bg: #ffffff;
+  --dr-r-surface: #f9fafb;
+  --dr-r-chip: #f3f4f6;
+  --dr-r-border: #e5e7eb;
+  --dr-r-text: #111827;
+  --dr-r-text-secondary: #374151;
+  --dr-r-text-muted: #4b5563;
+  --dr-r-text-meta: #6b7280;
+  --dr-r-link: #1d4ed8;
+  --dr-r-blocker: #b91c1c;
+  --dr-r-blocker-chip-bg: #fef2f2;
+  --dr-r-blocker-chip-text: #991b1b;
+  --dr-r-major: #b45309;
+  --dr-r-major-chip-bg: #fffbeb;
+  --dr-r-major-chip-text: #92400e;
+  --dr-r-minor: #4b5563;
+  --dr-r-minor-chip-bg: #f3f4f6;
+  --dr-r-minor-chip-text: #374151;
+}
+
+/*
+ * Light toolbar theme. There is no mockup for it yet: it is the dark palette inverted by role
+ * (tokens.md §3) with severity colors taken from the report. Temporary until a dedicated design.
+ * `data-theme` always holds the resolved value: `system` is mapped to light/dark in JS.
+ */
+:host([data-theme="light"]) {
+  --dr-bg: #ffffff;
+  --dr-surface: #f3f4f6;
+  --dr-surface-raised: #f9fafb;
+  --dr-surface-hover: #e5e7eb;
+  --dr-surface-selected: #d1d5db;
+  --dr-border: #e5e7eb;
+  --dr-border-strong: #d1d5db;
+  --dr-divider: #e5e7eb;
+  --dr-scrim: rgba(17, 24, 39, 0.45);
+
+  --dr-text: #111827;
+  --dr-text-secondary: #374151;
+  --dr-text-muted: #6b7280;
+  --dr-text-inactive: #4b5563;
+  --dr-text-disabled: #9ca3af;
+  --dr-text-subtle: #9ca3af;
+
+  --dr-accent: #4c8dff;
+  --dr-accent-fg: #ffffff;
+  --dr-accent-text: #1d4ed8;
+  --dr-accent-soft: rgba(76, 141, 255, 0.15);
+  --dr-accent-tint: rgba(76, 141, 255, 0.1);
+
+  --dr-danger-text: #b91c1c;
+  --dr-danger-border: #fca5a5;
+  --dr-warning-text: #b45309;
+  --dr-warning-bg: #fffbeb;
+  --dr-warning-border: #fcd34d;
+
+  --dr-blocker: #b91c1c;
+  --dr-blocker-text: #991b1b;
+  --dr-blocker-on: #ffffff;
+  --dr-major: #b45309;
+  --dr-major-text: #92400e;
+  --dr-major-on: #ffffff;
+  --dr-minor: #4b5563;
+  --dr-minor-text: #374151;
+  --dr-minor-on: #ffffff;
+
+  --dr-shadow-float: 0 8px 24px rgba(17, 24, 39, 0.14);
+  --dr-shadow-popover: 0 10px 28px rgba(17, 24, 39, 0.18);
+  --dr-shadow-dialog: 0 16px 40px rgba(17, 24, 39, 0.22);
+}
