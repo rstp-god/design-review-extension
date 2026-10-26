@@ -1,0 +1,24 @@
+{
+  "actions": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "back": "Back"
+  },
+  "severity": {
+    "blocker": "Blocker",
+    "major": "Major",
+    "minor": "Minor"
+  },
+  "scope": {
+    "domain": "By domain",
+    "page": "By page"
+  },
+  "soon": "Coming soon",
+  "issues_one": "{{count}} issue",
+  "issues_other": "{{count}} issues",
+  "pages_one": "{{count}} page",
+  "pages_other": "{{count}} pages",
+  "sessions_one": "{{count}} session",
+  "sessions_other": "{{count}} sessions"
+}

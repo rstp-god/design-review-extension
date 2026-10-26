@@ -1,0 +1,17 @@
+{
+  "toolbar": {
+    "label": "Design Review toolbar",
+    "drag": "Move the toolbar",
+    "picker": "Picker",
+    "area": "Area",
+    "freeze": "Snapshot",
+    "issues": "Issues",
+    "export": "Export",
+    "collapse": "Collapse",
+    "expand": "Expand the toolbar",
+    "exit": "Exit review"
+  },
+  "hint": {
+    "exit": "exit"
+  }
+}
