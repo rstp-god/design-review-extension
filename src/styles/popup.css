@@ -1,0 +1,26 @@
+/* Popup stylesheet. Fonts are bundled locally (see popup/main.tsx); no network requests. */
+@import "tailwindcss" source(none);
+@import "./tokens.css";
+@import "./theme.css";
+@source "../popup";
+@source "../ui";
+
+@theme {
+  --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  width: 380px;
+  max-height: 600px;
+  margin: 0;
+  overflow-y: auto;
+  background: var(--dr-bg);
+  color: var(--dr-text);
+  font: 400 13px / 19px var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

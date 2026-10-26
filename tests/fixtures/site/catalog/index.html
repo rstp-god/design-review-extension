@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:"
+    />
+    <title>Catalog — fixture</title>
+    <link rel="stylesheet" href="/site.css" />
+  </head>
+  <body>
+    <header class="header">
+      <a href="/">Fixture</a>
+      <a href="/catalog/">Catalog</a>
+      <a href="/cart/">Cart</a>
+    </header>
+    <main>
+      <h1 data-fixture="title">Catalog</h1>
+      <section class="grid">
+        <article class="product-card">
+          <h2>Product one</h2>
+          <p class="product-card__price">12 990 ₽</p>
+          <button type="button" class="card__cta">Add to cart</button>
+        </article>
+        <article class="product-card">
+          <h2>Product two</h2>
+          <p class="product-card__price">7 490 ₽</p>
+          <button type="button" class="card__cta">Add to cart</button>
+        </article>
+        <article class="product-card">
+          <h2>Product three</h2>
+          <p class="product-card__price">3 200 ₽</p>
+          <button type="button" class="card__cta">Add to cart</button>
+        </article>
+      </section>
+    </main>
+    <script src="/site.js"></script>
+  </body>
+</html>

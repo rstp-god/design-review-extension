@@ -10,5 +10,9 @@
   "extActionTitle": {
     "message": "Design Review — start a review",
     "description": "Tooltip on the toolbar button that opens the popup."
+  },
+  "cmdToggleReview": {
+    "message": "Start or stop the review on this tab",
+    "description": "Name of the keyboard shortcut in chrome://extensions/shortcuts."
   }
 }

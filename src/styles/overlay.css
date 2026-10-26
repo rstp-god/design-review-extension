@@ -1,0 +1,37 @@
+/*
+ * Overlay stylesheet, compiled to a string (`?inline`) and attached to our shadow root through
+ * `adoptedStyleSheets` (content/host.ts). It never touches the host document.
+ *
+ * Fonts: Chrome ignores `@font-face` inside a shadow root, so the overlay uses system stacks
+ * (tokens.md §4) — nothing is loaded into the page.
+ */
+@import "tailwindcss" source(none);
+@import "./tokens.css";
+@import "./theme.css";
+@source "../content";
+@source "../ui";
+
+:host {
+  all: initial;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 2147483647;
+  color-scheme: dark;
+}
+
+:host([data-theme="light"]) {
+  color-scheme: light;
+}
+
+/* Typography lives on the root container: `all: initial` on the host resets inherited props. */
+.dr-root {
+  font: 400 13px / 19px var(--font-sans);
+  color: var(--dr-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  direction: ltr;
+}

@@ -1,0 +1,30 @@
+{
+  "actions": {
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "delete": "Удалить",
+    "back": "Назад"
+  },
+  "severity": {
+    "blocker": "Blocker",
+    "major": "Major",
+    "minor": "Minor"
+  },
+  "scope": {
+    "domain": "По домену",
+    "page": "По странице"
+  },
+  "soon": "Скоро",
+  "issues_one": "{{count}} замечание",
+  "issues_few": "{{count}} замечания",
+  "issues_many": "{{count}} замечаний",
+  "issues_other": "{{count}} замечания",
+  "pages_one": "{{count}} страница",
+  "pages_few": "{{count}} страницы",
+  "pages_many": "{{count}} страниц",
+  "pages_other": "{{count}} страницы",
+  "sessions_one": "{{count}} сессия",
+  "sessions_few": "{{count}} сессии",
+  "sessions_many": "{{count}} сессий",
+  "sessions_other": "{{count}} сессии"
+}

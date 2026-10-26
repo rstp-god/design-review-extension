@@ -1,0 +1,117 @@
+/*
+ * Tailwind v4 theme shared by the popup and the overlay.
+ *
+ * `--*: initial` drops Tailwind's default theme entirely: it is rem-based, and a host page with
+ * `html { font-size: 62.5% }` would shrink every rem value in our shadow root. Everything below is
+ * px. Semantic colors and shadows are declared with `@theme inline` so utilities resolve straight
+ * to the `--dr-*` tokens (tokens.css) and follow a theme switch on `:host`.
+ *
+ * Spacing: `--spacing: 2px`, i.e. `p-8` = 16px, `gap-4` = 8px, `size-22` = 44px.
+ */
+@theme {
+  --*: initial;
+
+  --spacing: 2px;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-mono);
+
+  /* Type scale: size / line-height (tokens.md §4) */
+  --text-badge: 10px;
+  --text-badge--line-height: 16px;
+  --text-label: 11px;
+  --text-label--line-height: 16px;
+  --text-sm: 12px;
+  --text-sm--line-height: 18px;
+  --text-base: 13px;
+  --text-base--line-height: 19px;
+  --text-md: 14px;
+  --text-md--line-height: 20px;
+  --text-lg: 15px;
+  --text-lg--line-height: 22px;
+  --text-report-group: 18px;
+  --text-report-group--line-height: 24px;
+  --text-report-h1: 28px;
+  --text-report-h1--line-height: 34px;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --tracking-label: 0.06em;
+  --tracking-severity: 0.05em;
+  --tracking-tight: -0.01em;
+
+  --radius-xs: 4px;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-ctl: 7px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-pill: 999px;
+
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --default-transition-duration: 140ms;
+  --default-transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+@theme inline {
+  --color-bg: var(--dr-bg);
+  --color-surface: var(--dr-surface);
+  --color-surface-raised: var(--dr-surface-raised);
+  --color-surface-hover: var(--dr-surface-hover);
+  --color-surface-selected: var(--dr-surface-selected);
+  --color-border: var(--dr-border);
+  --color-border-strong: var(--dr-border-strong);
+  --color-divider: var(--dr-divider);
+  --color-scrim: var(--dr-scrim);
+  --color-page-dim: var(--dr-page-dim);
+
+  --color-fg: var(--dr-text);
+  --color-fg-secondary: var(--dr-text-secondary);
+  --color-fg-muted: var(--dr-text-muted);
+  --color-fg-inactive: var(--dr-text-inactive);
+  --color-fg-disabled: var(--dr-text-disabled);
+  --color-fg-subtle: var(--dr-text-subtle);
+
+  --color-accent: var(--dr-accent);
+  --color-accent-fg: var(--dr-accent-fg);
+  --color-accent-text: var(--dr-accent-text);
+  --color-accent-soft: var(--dr-accent-soft);
+  --color-accent-tint: var(--dr-accent-tint);
+
+  --color-danger: var(--dr-danger-text);
+  --color-danger-border: var(--dr-danger-border);
+  --color-warning: var(--dr-warning-text);
+  --color-warning-bg: var(--dr-warning-bg);
+  --color-warning-border: var(--dr-warning-border);
+
+  --color-blocker: var(--dr-blocker);
+  --color-blocker-text: var(--dr-blocker-text);
+  --color-blocker-on: var(--dr-blocker-on);
+  --color-major: var(--dr-major);
+  --color-major-text: var(--dr-major-text);
+  --color-major-on: var(--dr-major-on);
+  --color-minor: var(--dr-minor);
+  --color-minor-text: var(--dr-minor-text);
+  --color-minor-on: var(--dr-minor-on);
+
+  --color-white: #ffffff;
+
+  --shadow-float: var(--dr-shadow-float);
+  --shadow-popover: var(--dr-shadow-popover);
+  --shadow-dialog: var(--dr-shadow-dialog);
+}
+
+/* Utilities read `--default-transition-duration`, our own transitions read `--dr-duration`. */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  :host {
+    --default-transition-duration: 0s;
+    --dr-duration: 0s;
+  }
+}

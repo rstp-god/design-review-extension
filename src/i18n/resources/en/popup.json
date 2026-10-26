@@ -1,0 +1,43 @@
+{
+  "header": {
+    "settings": "Settings"
+  },
+  "session": {
+    "label": "Session",
+    "currentPage": "Current page",
+    "nowAt": "Now at"
+  },
+  "start": "Start review",
+  "continue": "Continue review",
+  "or": "or",
+  "shortcut": {
+    "unset": "No hotkey assigned",
+    "edit": "Set one up"
+  },
+  "export": {
+    "html": "HTML",
+    "pdf": "PDF",
+    "soon": "Export arrives in a later version"
+  },
+  "recent": {
+    "title": "Recent sessions",
+    "actions": "Session actions"
+  },
+  "onboarding": {
+    "title": "How it works",
+    "step1": "Hover an element like in DevTools and click to select it",
+    "step2": "Describe what is wrong and pick the severity",
+    "step3": "Export the report as HTML or PDF",
+    "freezeHint": "For menus and hover states, freeze the page with a timer:"
+  },
+  "restricted": {
+    "title": "Reviews are not available here",
+    "text": "Chrome does not let extensions run on its own pages, in the Web Store or in the built-in PDF viewer. Open a regular website."
+  },
+  "errors": {
+    "startFailed": "Could not start the review on this tab. Reload the page and try again."
+  },
+  "footer": {
+    "storage": "Storage: {{size}}"
+  }
+}

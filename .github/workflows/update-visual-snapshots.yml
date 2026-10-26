@@ -28,6 +28,8 @@ jobs:
         run: yarn test:e2e:update-snapshots:ci
 
       - name: Collect CI visual snapshots
+        # Also after failures: the baselines of the passing specs are still worth downloading.
+        if: always()
         run: |
           mkdir -p snapshot-artifacts
           find tests/e2e -type d -name chromium-ci -exec cp -R --parents {} snapshot-artifacts/ \;

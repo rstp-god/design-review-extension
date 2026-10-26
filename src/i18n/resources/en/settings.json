@@ -1,0 +1,72 @@
+{
+  "title": "Settings",
+  "sessions": {
+    "title": "Sessions",
+    "collect": "Collect issues",
+    "hint": {
+      "domain": "The whole site is one session and one report broken down by page. Applies to new sessions.",
+      "page": "Each page is its own session and its own report. Applies to new sessions."
+    }
+  },
+  "report": {
+    "title": "Report",
+    "reviewer": "Reviewer name",
+    "reviewerPlaceholder": "Name shown in the report",
+    "lang": "Report language",
+    "quality": "Screenshot quality",
+    "qualityOption": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
+  },
+  "picker": {
+    "title": "Picker",
+    "tooltipFields": "Show in the tooltip",
+    "field": {
+      "typography": "Typography",
+      "colors": "Colors and background",
+      "spacing": "Spacing (padding, margin)",
+      "size": "Size",
+      "radius": "Radius and shadows"
+    },
+    "colorFormat": "Color format",
+    "units": "Units",
+    "cropPadding": "Crop padding",
+    "freezeDelay": "Freeze delay",
+    "freezeDelayHint": "for Shift+F and by default",
+    "seconds": "{{count}} s"
+  },
+  "issues": {
+    "title": "Issues",
+    "defaultSeverity": "Default severity"
+  },
+  "interface": {
+    "title": "Interface",
+    "theme": "Toolbar theme",
+    "themeOption": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "hotkeys": {
+    "title": "Hotkeys",
+    "toggle": "Start / stop review",
+    "picker": "Picker",
+    "area": "Area",
+    "freeze": "Snapshot now / live page",
+    "freezeDelayed": "Delayed snapshot",
+    "unset": "not set",
+    "hintBefore": "The global hotkey is changed at",
+    "hintAfter": "Single keys work only in review mode."
+  },
+  "data": {
+    "title": "Data",
+    "used": "Used",
+    "deleteAll": "Delete all sessions",
+    "confirmTitle": "Delete all sessions?",
+    "confirmText": "Every issue and screenshot will be removed from this device. This cannot be undone.",
+    "deleteFailed": "Could not delete the sessions. Try again."
+  }
+}
