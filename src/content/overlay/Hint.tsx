@@ -9,10 +9,10 @@ import { Kbd } from '@/ui'
 export function Hint() {
   const { t } = useTranslation('overlay')
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-10 flex justify-center">
+    <div className="pointer-events-none fixed inset-x-0 bottom-12 z-10 flex justify-center">
       <div
         data-testid={TestId.OverlayHint}
-        className="inline-flex h-20 items-center gap-8 rounded-xl border border-border bg-bg px-12 text-sm text-fg-secondary shadow-float"
+        className="inline-flex h-18 items-center gap-4 rounded-xl border border-border bg-bg px-6 text-sm text-fg-secondary shadow-float"
       >
         <Kbd>Esc</Kbd>
         <span>{t('hint.exit')}</span>

@@ -11,7 +11,7 @@ export interface HeaderProps {
 
 export function Header({ leading, title = APP_NAME, trailing }: HeaderProps) {
   return (
-    <header className="flex h-28 items-center gap-10 border-b border-border px-16">
+    <header className="flex h-28 items-center gap-5 border-b border-border px-8">
       {leading ?? <Logo />}
       <h1 className="m-0 min-w-0 flex-1 truncate text-md font-semibold text-fg">{title}</h1>
       {trailing}

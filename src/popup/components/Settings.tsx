@@ -127,7 +127,7 @@ export function Settings({ onBack }: SettingsProps) {
               data-testid={TestId.SettingReviewer}
               value={settings.reviewer}
               onChange={(event) => update({ reviewer: event.target.value })}
-              className="h-18 w-full rounded-md border border-border-strong bg-surface px-10 text-base text-fg placeholder:text-fg-subtle focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+              className="h-18 w-full rounded-md border border-border-strong bg-surface px-5 text-base text-fg placeholder:text-fg-subtle focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
             />
           )}
         </Field>
@@ -161,7 +161,7 @@ export function Settings({ onBack }: SettingsProps) {
       <Section title={t('picker.title')}>
         <Field label={t('picker.tooltipFields')}>
           {() => (
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-4">
               {TOOLTIP_FIELDS.map((field) => (
                 <Checkbox
                   key={field}
@@ -273,11 +273,11 @@ export function Settings({ onBack }: SettingsProps) {
       </Section>
 
       <Section title={t('hotkeys.title')}>
-        <ul className="m-0 flex list-none flex-col gap-10 p-0">
+        <ul className="m-0 flex list-none flex-col gap-5 p-0">
           {hotkeyRows.map((row) => (
             <li
               key={row.label}
-              className="flex items-center justify-between gap-12 text-base text-fg"
+              className="flex items-center justify-between gap-6 text-base text-fg"
             >
               <span>{row.label}</span>
               {row.keys.length > 0 ? (
@@ -303,7 +303,7 @@ export function Settings({ onBack }: SettingsProps) {
       </Section>
 
       <Section title={t('data.title')} last>
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-base text-fg">
             <span>{t('data.used')}</span>
             <span
@@ -376,8 +376,8 @@ function Section({
     <section
       className={
         last
-          ? 'flex flex-col gap-12 px-16 pt-14 pb-16'
-          : 'flex flex-col gap-12 border-b border-divider px-16 pt-14 pb-16'
+          ? 'flex flex-col gap-6 px-8 pt-7 pb-8'
+          : 'flex flex-col gap-6 border-b border-divider px-8 pt-7 pb-8'
       }
     >
       <SectionLabel>{title}</SectionLabel>
@@ -398,7 +398,7 @@ function Field({
 }) {
   const id = useId()
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
       {htmlFor ? (
         <label htmlFor={htmlFor} className="text-base text-fg">
           {label}
@@ -425,7 +425,7 @@ function Row({
 }) {
   const id = useId()
   return (
-    <div className="flex items-center justify-between gap-12">
+    <div className="flex items-center justify-between gap-6">
       <div className="flex min-w-0 flex-col">
         <span id={id} className="text-base text-fg">
           {label}

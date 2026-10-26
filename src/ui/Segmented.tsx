@@ -59,10 +59,10 @@ export function Segmented<Value extends string | number>({
             key={String(option.value)}
             data-testid={testId ? testIds.segmentOption(testId, option.value) : undefined}
             className={cn(
-              'relative inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-6',
-              'whitespace-nowrap rounded-sm px-10 transition-colors duration-(--dr-duration) ease-out',
+              'relative inline-flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-3',
+              'whitespace-nowrap rounded-sm px-5 transition-colors duration-(--dr-duration) ease-out',
               'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-accent',
-              size === 'sm' ? 'h-12 text-sm' : 'h-13 text-base',
+              size === 'sm' ? 'h-14 text-sm' : 'h-15 text-base',
               mono && 'font-mono',
               checked
                 ? 'bg-surface-selected font-medium text-fg'

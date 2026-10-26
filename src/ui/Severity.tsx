@@ -16,7 +16,7 @@ export function SeverityDot({ severity, className }: { severity: Severity; class
     <span
       aria-hidden="true"
       data-severity={severity}
-      className={cn('inline-block size-8 shrink-0', dotShape[severity], className)}
+      className={cn('inline-block size-4 shrink-0', dotShape[severity], className)}
     />
   )
 }

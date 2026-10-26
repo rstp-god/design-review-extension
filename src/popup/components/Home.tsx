@@ -72,15 +72,15 @@ export function Home({ onOpenSettings }: HomeProps) {
         }
       />
 
-      <section data-testid={TestId.PopupSession} className="flex flex-col gap-6 px-16 pt-14 pb-16">
-        <div className="flex items-center justify-between gap-8">
+      <section data-testid={TestId.PopupSession} className="flex flex-col gap-3 px-8 pt-7 pb-8">
+        <div className="flex items-center justify-between gap-4">
           <SectionLabel>
             {data.current ? t('session.label') : t('session.currentPage')}
           </SectionLabel>
           {!data.restricted && data.status === 'ready' && (
             <span
               data-testid={TestId.PopupSessionScope}
-              className="inline-flex h-12 items-center gap-4 rounded-pill border border-border-strong px-8 text-sm text-fg-secondary"
+              className="inline-flex h-12 items-center gap-2 rounded-pill border border-border-strong px-4 text-sm text-fg-secondary"
             >
               <Globe size={12} aria-hidden="true" />
               {tCommon(`scope.${scope}`)}
@@ -104,7 +104,7 @@ export function Home({ onOpenSettings }: HomeProps) {
           <div
             data-testid={TestId.PopupRestricted}
             role="status"
-            className="mt-4 flex gap-10 rounded-xl border border-border bg-surface-raised p-12"
+            className="mt-2 flex gap-5 rounded-xl border border-border bg-surface-raised p-6"
           >
             <CircleAlert size={18} aria-hidden="true" className="mt-1 shrink-0 text-warning" />
             <div className="flex flex-col gap-2">
@@ -137,7 +137,7 @@ export function Home({ onOpenSettings }: HomeProps) {
         {!data.restricted && (
           <div
             data-testid={TestId.PopupShortcut}
-            className="flex items-center justify-center gap-6 text-sm text-fg-muted"
+            className="flex items-center justify-center gap-3 text-sm text-fg-muted"
           >
             {keys.length > 0 ? (
               <>
@@ -160,7 +160,7 @@ export function Home({ onOpenSettings }: HomeProps) {
         )}
 
         {data.current && (
-          <div className="mt-4 grid grid-cols-2 gap-10">
+          <div className="mt-2 grid grid-cols-2 gap-5">
             <Tooltip content={t('export.soon')}>
               <Button softDisabled size="md" data-testid={TestId.PopupExportHtml}>
                 <Download size={16} aria-hidden="true" />
@@ -182,7 +182,7 @@ export function Home({ onOpenSettings }: HomeProps) {
       {data.recent.length > 0 && (
         <section
           data-testid={TestId.PopupRecent}
-          className="flex flex-col gap-8 border-t border-border px-16 pt-14 pb-12"
+          className="flex flex-col gap-4 border-t border-border px-8 pt-7 pb-6"
         >
           <SectionLabel>{t('recent.title')}</SectionLabel>
           <ul className="m-0 flex list-none flex-col p-0">
@@ -193,7 +193,7 @@ export function Home({ onOpenSettings }: HomeProps) {
         </section>
       )}
 
-      <footer className="flex items-center justify-between border-t border-border px-16 py-10 text-sm text-fg-muted">
+      <footer className="flex items-center justify-between border-t border-border px-8 py-5 text-sm text-fg-muted">
         <span data-testid={TestId.PopupStorage}>
           {t('footer.storage', {
             size: data.usage ? formatBytes(data.usage.bytes, i18n.language) : '—',
@@ -218,7 +218,7 @@ function Summary({ summary }: { summary: SessionSummary }) {
   return (
     <div
       data-testid={TestId.PopupSessionSummary}
-      className="mt-4 flex h-22 items-center gap-6 rounded-xl bg-surface px-12"
+      className="mt-2 flex h-22 items-center gap-3 rounded-xl bg-surface px-6"
     >
       <span className="text-base font-semibold text-fg">
         {tCommon('issues', { count: summary.issueCount })}
@@ -228,9 +228,9 @@ function Summary({ summary }: { summary: SessionSummary }) {
           · {tCommon('pages', { count: summary.pageCount })}
         </span>
       )}
-      <span className="ml-auto flex items-center gap-8 text-sm text-fg-secondary">
+      <span className="ml-auto flex items-center gap-4 text-sm text-fg-secondary">
         {SEVERITIES.map((severity) => (
-          <span key={severity} className="inline-flex items-center gap-4">
+          <span key={severity} className="inline-flex items-center gap-2">
             <SeverityDot severity={severity} />
             <span className="sr-only">{tCommon(`severity.${severity}`)}</span>
             {summary.bySeverity[severity]}
@@ -255,9 +255,9 @@ function RecentRow({ summary }: { summary: SessionSummary }) {
   return (
     <li
       data-testid={testIds.recentItem(session.id)}
-      className={cn('-mx-8 flex items-center gap-8 rounded-lg px-8 py-6')}
+      className={cn('-mx-4 flex items-center gap-4 rounded-lg px-4 py-3')}
     >
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="truncate font-mono text-sm text-fg">{sessionLabel(session)}</div>
         <div className="truncate text-sm text-fg-muted">{meta.join(' · ')}</div>
       </div>
@@ -283,12 +283,12 @@ function Onboarding() {
   return (
     <section
       data-testid={TestId.PopupOnboarding}
-      className="flex flex-col gap-12 border-t border-border px-16 pt-16 pb-16"
+      className="flex flex-col gap-6 border-t border-border px-8 pt-8 pb-8"
     >
       <h2 className="m-0 text-base font-semibold text-fg">{t('onboarding.title')}</h2>
-      <ol className="m-0 flex list-none flex-col gap-10 p-0">
+      <ol className="m-0 flex list-none flex-col gap-5 p-0">
         {steps.map((step, index) => (
-          <li key={step} className="flex items-start gap-10 text-base text-fg-secondary">
+          <li key={step} className="flex items-start gap-5 text-base text-fg-secondary">
             <span
               aria-hidden="true"
               className="mt-1 inline-flex size-12 shrink-0 items-center justify-center rounded-pill border border-border-strong text-label text-fg-muted"
@@ -299,7 +299,7 @@ function Onboarding() {
           </li>
         ))}
       </ol>
-      <p className="m-0 mt-4 flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-fg-muted">
+      <p className="m-0 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-fg-muted">
         <span>{t('onboarding.freezeHint')}</span>
         <KeyCombo keys={['Shift', 'F']} />
       </p>

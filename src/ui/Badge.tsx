@@ -14,7 +14,7 @@ export function Badge({ children, tone = 'accent', className, ...rest }: BadgePr
     <span
       {...rest}
       className={cn(
-        'inline-flex h-16 min-w-16 items-center justify-center rounded-pill px-4',
+        'inline-flex h-8 min-w-8 items-center justify-center rounded-pill px-2',
         'font-sans text-badge font-bold tabular-nums',
         tone === 'accent' ? 'bg-accent text-accent-fg' : 'bg-surface-selected text-fg',
         className,

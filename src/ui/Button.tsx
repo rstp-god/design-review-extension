@@ -23,7 +23,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 }
 
 const base =
-  'inline-flex items-center justify-center gap-6 select-none whitespace-nowrap font-sans ' +
+  'inline-flex items-center justify-center gap-3 select-none whitespace-nowrap font-sans ' +
   'cursor-pointer transition-colors duration-(--dr-duration) ease-out ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' +
   'disabled:cursor-default aria-disabled:cursor-default'
@@ -53,10 +53,10 @@ const variants: Record<ButtonVariant, string> = {
 }
 
 const sizes: Record<ButtonSize, { box: string; square: string; text: string }> = {
-  lg: { box: 'h-22 px-16', square: 'size-22', text: 'text-md' },
-  md: { box: 'h-20 px-14', square: 'size-20', text: 'text-base' },
-  sm: { box: 'h-18 px-12', square: 'size-18', text: 'text-base' },
-  xs: { box: 'h-16 px-10', square: 'size-16', text: 'text-sm' },
+  lg: { box: 'h-22 px-8', square: 'size-22', text: 'text-md' },
+  md: { box: 'h-20 px-7', square: 'size-20', text: 'text-base' },
+  sm: { box: 'h-18 px-6', square: 'size-18', text: 'text-base' },
+  xs: { box: 'h-16 px-5', square: 'size-16', text: 'text-sm' },
 }
 
 export function Button({

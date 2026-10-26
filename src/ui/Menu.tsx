@@ -100,7 +100,7 @@ export function Menu({ items, children, placement = 'bottom-end', ...aria }: Men
               {...floatingProps}
               data-testid={TestId.Menu}
               className={cn(
-                'z-30 flex min-w-[180px] flex-col gap-1 rounded-xl border border-border bg-bg p-4',
+                'z-30 flex min-w-[180px] flex-col gap-1 rounded-xl border border-border bg-bg p-2',
                 'font-sans text-base text-fg shadow-popover',
               )}
             >
@@ -125,7 +125,7 @@ export function Menu({ items, children, placement = 'bottom-end', ...aria }: Men
                     },
                   })}
                   className={cn(
-                    'flex h-16 cursor-pointer items-center gap-8 rounded-md px-8 text-left',
+                    'flex h-16 cursor-pointer items-center gap-4 rounded-md px-4 text-left',
                     'transition-colors duration-(--dr-duration) ease-out',
                     'hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none',
                     'disabled:cursor-default disabled:text-fg-disabled disabled:hover:bg-transparent',
@@ -135,7 +135,7 @@ export function Menu({ items, children, placement = 'bottom-end', ...aria }: Men
                   {item.icon && (
                     <span
                       aria-hidden="true"
-                      className="inline-flex size-16 items-center justify-center"
+                      className="inline-flex size-8 items-center justify-center"
                     >
                       {item.icon}
                     </span>

@@ -63,7 +63,7 @@ export function Dialog({
         data-testid={TestId.DialogScrim}
         className={cn(
           'z-40 flex bg-scrim',
-          position === 'sheet' ? 'items-end justify-center' : 'items-center justify-center p-16',
+          position === 'sheet' ? 'items-end justify-center' : 'items-center justify-center p-8',
         )}
       >
         <FloatingFocusManager context={context} modal>
@@ -77,7 +77,7 @@ export function Dialog({
             aria-modal="true"
             data-testid={TestId.Dialog}
             className={cn(
-              'flex w-full flex-col gap-12 bg-surface-raised p-16 font-sans text-fg shadow-dialog',
+              'flex w-full flex-col gap-6 bg-surface-raised p-8 font-sans text-fg shadow-dialog',
               position === 'sheet'
                 ? 'rounded-t-2xl border-t border-border'
                 : 'max-w-[360px] rounded-2xl border border-border',
@@ -92,7 +92,7 @@ export function Dialog({
               </p>
             )}
             {children}
-            <div className="flex justify-end gap-8">{actions}</div>
+            <div className="flex justify-end gap-4">{actions}</div>
           </div>
         </FloatingFocusManager>
       </FloatingOverlay>

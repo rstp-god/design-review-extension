@@ -84,8 +84,8 @@ export function Tooltip({
             {...getFloatingProps()}
             data-testid={TestId.Tooltip}
             className={cn(
-              'pointer-events-none z-20 inline-flex max-w-[260px] items-center gap-8 rounded-lg',
-              'border border-border bg-bg px-10 py-6 font-sans text-sm text-fg shadow-popover',
+              'pointer-events-none z-20 inline-flex max-w-[260px] items-center gap-4 rounded-lg',
+              'border border-border bg-bg px-5 py-3 font-sans text-sm text-fg shadow-popover',
               className,
             )}
           >
