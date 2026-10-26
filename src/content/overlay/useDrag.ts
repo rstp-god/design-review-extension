@@ -6,6 +6,8 @@ const CLICK_THRESHOLD_PX = 3
 export interface DragOptions {
   /** Current top-left corner; `null` while the toolbar sits in its default corner. */
   position: Point | null
+  /** Where the dragged box actually is when `position` is `null` (its default corner). */
+  getOrigin: () => Point
   /** Size of the dragged box, read when the drag starts. */
   getSize: () => Size
   getViewport: () => Size
@@ -24,7 +26,7 @@ export interface DragHandlers {
  * Pointer-based dragging with pointer capture, clamped to the viewport. `wasDragged()` tells a
  * click handler on the same element whether the pointer moved (a drag) or not (a click).
  */
-export function useDrag({ position, getSize, getViewport, onMove, onEnd }: DragOptions) {
+export function useDrag({ position, getOrigin, getSize, getViewport, onMove, onEnd }: DragOptions) {
   const [dragging, setDragging] = useState(false)
   const start = useRef<{ pointer: Point; origin: Point; size: Size } | null>(null)
   const moved = useRef(false)
@@ -48,15 +50,14 @@ export function useDrag({ position, getSize, getViewport, onMove, onEnd }: DragO
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       if (event.button !== 0) return
-      const rect = event.currentTarget.getBoundingClientRect()
-      // The box may sit in its default corner (position null): use where it actually is.
-      const origin = position ?? { x: rect.left, y: rect.top }
+      // The box may sit in its default corner (position null): start from where it actually is.
+      const origin = position ?? getOrigin()
       start.current = { pointer: { x: event.clientX, y: event.clientY }, origin, size: getSize() }
       moved.current = false
       event.currentTarget.setPointerCapture?.(event.pointerId)
       setDragging(true)
     },
-    [getSize, position],
+    [getOrigin, getSize, position],
   )
 
   const onPointerMove = useCallback(

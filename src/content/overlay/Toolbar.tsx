@@ -56,6 +56,11 @@ export function Toolbar({ onExit }: ToolbarProps) {
     return { w: rect?.width ?? 0, h: rect?.height ?? 0 }
   }, [])
 
+  const origin = useCallback(() => {
+    const rect = box.current?.getBoundingClientRect()
+    return { x: rect?.left ?? 0, y: rect?.top ?? 0 }
+  }, [])
+
   const persist = useCallback(
     (next: Point | null, nextCollapsed: boolean) => {
       const point = next ?? defaultToolbarPosition(measure(), viewportSize())
@@ -87,6 +92,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
 
   const { handlers, dragging, wasDragged } = useDrag({
     position,
+    getOrigin: origin,
     getSize: measure,
     getViewport: viewportSize,
     onMove: setPosition,
@@ -177,7 +183,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
       style={style}
       className={cn(
         'pointer-events-auto fixed z-10 flex items-center gap-1 rounded-2xl border border-border',
-        'bg-bg p-6 shadow-float',
+        'bg-bg p-3 shadow-float',
         dragging && 'select-none',
       )}
     >
@@ -188,7 +194,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
         {...handlers}
         onKeyDown={nudge}
         className={cn(
-          'flex h-22 w-12 cursor-grab items-center justify-center rounded-md text-fg-muted touch-none',
+          'flex h-22 w-6 cursor-grab items-center justify-center rounded-md text-fg-muted touch-none',
           'hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent',
           dragging && 'cursor-grabbing',
         )}
