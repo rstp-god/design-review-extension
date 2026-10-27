@@ -43,15 +43,20 @@ describe('blockPageEvents', () => {
     expect(onClick.mock.calls[0]?.[0]).toMatchObject({ clientX: 5, clientY: 6 })
   })
 
-  it('reports swallowed pointerdowns for the area tool', () => {
+  it('reports swallowed pointerdowns and pointerups for the area tool', () => {
     document.body.append(button, host)
     const onPointerDown = vi.fn()
-    uninstall = blockPageEvents({ host, onPointerDown })
+    const onPointerUp = vi.fn()
+    uninstall = blockPageEvents({ host, onPointerDown, onPointerUp })
 
     fire(button, 'pointerdown', { clientX: 7, clientY: 8 })
     fire(button, 'mousedown', { clientX: 7, clientY: 8 })
+    fire(button, 'pointerup', { clientX: 9, clientY: 10 })
+    fire(button, 'mouseup', { clientX: 9, clientY: 10 })
     expect(onPointerDown).toHaveBeenCalledTimes(1)
     expect(onPointerDown.mock.calls[0]?.[0]).toMatchObject({ clientX: 7, clientY: 8 })
+    expect(onPointerUp).toHaveBeenCalledTimes(1)
+    expect(onPointerUp.mock.calls[0]?.[0]).toMatchObject({ clientX: 9, clientY: 10 })
   })
 
   it('swallows keyboard-activated clicks without reporting a position', () => {

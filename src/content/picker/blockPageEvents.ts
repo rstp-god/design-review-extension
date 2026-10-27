@@ -23,6 +23,8 @@ export interface PageEventBlockerOptions {
   onClick?: (event: MouseEvent) => void
   /** A user `pointerdown` on the page that was swallowed — the area tool starts drawing from it. */
   onPointerDown?: (event: PointerEvent) => void
+  /** A user `pointerup` on the page that was swallowed — the area tool ends its drag on it. */
+  onPointerUp?: (event: PointerEvent) => void
   target?: Window
 }
 
@@ -39,6 +41,7 @@ export function blockPageEvents({
   host,
   onClick,
   onPointerDown,
+  onPointerUp,
   target = window,
 }: PageEventBlockerOptions): () => void {
   const handler = (event: Event) => {
@@ -50,6 +53,7 @@ export function blockPageEvents({
     // position — there is nothing under (0, 0) worth locking.
     if (event.type === 'click' && (event as MouseEvent).detail > 0) onClick?.(event as MouseEvent)
     if (event.type === 'pointerdown') onPointerDown?.(event as PointerEvent)
+    if (event.type === 'pointerup') onPointerUp?.(event as PointerEvent)
   }
 
   for (const type of BLOCKED_PAGE_EVENTS) target.addEventListener(type, handler, true)

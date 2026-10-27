@@ -14,6 +14,7 @@ import { Chip, chipTop } from '@/content/overlay/Chip'
 import { blockPageEvents } from '@/content/picker/blockPageEvents'
 import { Shields, useShieldRects } from '@/content/picker/Shields'
 import type { PickSource } from '@/content/picker/source'
+import { viewportSize } from '@/content/position'
 import { useOverlayStore } from '@/content/store/overlay'
 import type { Rect } from '@/shared/model'
 import { isTrustedEvent } from '@/shared/trustedEvents'
@@ -33,7 +34,6 @@ import {
   type Point,
   rectFromDrag,
   resizeFromCorner,
-  type Size,
 } from './geometry'
 
 const HANDLE_SIZE = 10
@@ -45,10 +45,6 @@ const HANDLE_CURSOR: Record<Corner, string> = {
   se: 'cursor-nwse-resize',
   ne: 'cursor-nesw-resize',
   sw: 'cursor-nesw-resize',
-}
-
-function viewportSize(): Size {
-  return { w: window.innerWidth, h: window.innerHeight }
 }
 
 function modifiersOf(event: { shiftKey: boolean; altKey: boolean }): DragModifiers {
@@ -162,26 +158,38 @@ export function AreaSelect({ host, source }: AreaSelectProps) {
     update(null)
   }, [mode, cancelFrame, update])
 
-  // Pointer input. `pointerup` is handled here for every target — the page, a shield, a handle,
-  // the toolbar — so a drag never gets stuck. This effect runs before the blocker below, so its
-  // capture listener sees the page's `pointerup` before the blocker stops the event.
+  /** The primary button went up: the drag ends where the pointer is. */
+  const onUp = useCallback(
+    (event: PointerEvent) => {
+      if (!drag.current || event.button !== 0 || !isTrustedEvent(event)) return
+      pointer.current = { x: event.clientX, y: event.clientY }
+      modifiers.current = modifiersOf(event)
+      finish()
+    },
+    [finish],
+  )
+
+  // Pointer input. A `pointerup` over our own UI (a shield, a handle, the toolbar) arrives here;
+  // one over the page is swallowed by the blocker below and reported through its callback, so
+  // the two listeners never depend on each other's order. A move with no button held means the
+  // release happened where no `pointerup` reached us (outside the window): the drag ends then.
   useEffect(() => {
     const onMove = (event: PointerEvent) => {
       if (!drag.current || !isTrustedEvent(event) || debug?.frozen()) return
       pointer.current = { x: event.clientX, y: event.clientY }
       modifiers.current = modifiersOf(event)
+      if (event.buttons === 0) {
+        finish()
+        return
+      }
       schedule()
     }
-    const onUp = (event: PointerEvent) => {
-      if (!drag.current || !isTrustedEvent(event)) return
-      pointer.current = { x: event.clientX, y: event.clientY }
-      modifiers.current = modifiersOf(event)
-      finish()
-    }
-    // Shift / Alt pressed or released without moving the mouse redraw the rectangle.
+    // Shift / Alt pressed or released without moving the mouse redraw the rectangle. A bare Alt
+    // would hand the focus to Chrome's menu bar on Windows (and blur the page mid-drag).
     const onModifier = (event: KeyboardEvent) => {
       if (!drag.current || !isTrustedEvent(event)) return
       if (event.key !== 'Shift' && event.key !== 'Alt') return
+      if (event.key === 'Alt') event.preventDefault()
       modifiers.current = modifiersOf(event)
       schedule()
     }
@@ -202,7 +210,7 @@ export function AreaSelect({ host, source }: AreaSelectProps) {
       window.removeEventListener('keyup', onModifier, true)
       window.removeEventListener('blur', onLost)
     }
-  }, [debug, schedule, finish])
+  }, [debug, schedule, finish, onUp])
 
   useEffect(
     () =>
@@ -213,8 +221,9 @@ export function AreaSelect({ host, source }: AreaSelectProps) {
             startDraw({ x: event.clientX, y: event.clientY }, modifiersOf(event))
           }
         },
+        onPointerUp: onUp,
       }),
-    [host, startDraw],
+    [host, startDraw, onUp],
   )
 
   // The window shrank: keep the area inside it.

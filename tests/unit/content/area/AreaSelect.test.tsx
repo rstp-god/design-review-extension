@@ -28,8 +28,9 @@ describe('area select', () => {
     fireEvent.keyDown(document.body, { key, code: code ?? key })
   const down = (x: number, y: number, init: object = {}) =>
     fireEvent.pointerDown(document.body, { clientX: x, clientY: y, button: 0, ...init })
+  /** A move with the primary button held, as during a real drag. */
   const move = (x: number, y: number, init: object = {}) =>
-    fireEvent.pointerMove(document.body, { clientX: x, clientY: y, ...init })
+    fireEvent.pointerMove(document.body, { clientX: x, clientY: y, buttons: 1, ...init })
   const up = (x: number, y: number, init: object = {}) =>
     fireEvent.pointerUp(document.body, { clientX: x, clientY: y, button: 0, ...init })
   const activate = () => {
@@ -115,6 +116,7 @@ describe('area select', () => {
     expect(q('area-dim')).toBeNull()
     expect(q('area-handle-se')).toBeNull()
     expect(q('area-actions')).toBeNull()
+    expect(q('overlay-hint')).toHaveTextContent(/Esc\s*cancel$/)
 
     up(400, 350)
     expect(state().areaMode).toBe('adjusting')
@@ -215,6 +217,44 @@ describe('area select', () => {
     expect(onExit).not.toHaveBeenCalled()
     press('Escape')
     expect(onExit).toHaveBeenCalledTimes(1)
+  })
+
+  it('only the primary button ends a drag; a release outside the window is caught on the next move', async () => {
+    activate()
+    down(100, 200)
+    move(400, 350)
+    await nextFrame()
+    // A right-button release mid-drag changes nothing.
+    up(400, 350, { button: 2 })
+    expect(state().areaMode).toBe('dragging')
+    move(420, 360)
+    await nextFrame()
+    expect(box('area-selection')).toEqual(['100px', '200px', '320px', '160px'])
+
+    // The button went up where no pointerup reached us: the next move with no button ends it.
+    move(430, 365, { buttons: 0 })
+    expect(state().areaMode).toBe('adjusting')
+    expect(q('area-chip')).toHaveTextContent('330 × 165 · x 100 y 200')
+  })
+
+  it('keeps a bare Alt from reaching the browser while dragging', async () => {
+    activate()
+    down(100, 200)
+    move(300, 300)
+    await nextFrame()
+    const altDown = new KeyboardEvent('keydown', {
+      key: 'Alt',
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      document.body.dispatchEvent(altDown)
+    })
+    expect(altDown.defaultPrevented).toBe(true)
+    await nextFrame()
+    // From the center, kept symmetric at the left edge: 100 px of room on each side.
+    expect(box('area-selection')).toEqual(['0px', '100px', '200px', '200px'])
   })
 
   it('Esc during a drag cancels only the drag', async () => {

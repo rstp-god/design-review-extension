@@ -27,7 +27,7 @@ export function Hint() {
         <HintDot />
         <HintKeys
           keys={['Esc']}
-          label={t(areaMode === 'adjusting' ? 'hint.cancel' : 'hint.areaOff')}
+          label={t(areaMode === 'drawing' ? 'hint.areaOff' : 'hint.cancel')}
         />
       </HintPill>
     )

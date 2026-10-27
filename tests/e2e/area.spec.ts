@@ -9,14 +9,8 @@ import {
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
 import { installEventCounter, withFrozenPointer } from '@tests/helpers/pageEvents'
+import { CORNERS, type Corner, type Point } from '@/content/area/geometry'
 import { OVERLAY_HOST_TAG } from '@/shared/constants'
-
-interface Point {
-  x: number
-  y: number
-}
-
-const CORNERS = ['nw', 'ne', 'sw', 'se'] as const
 
 function near(actual: number | undefined, expected: number, tolerance = 1) {
   expect(Math.abs((actual ?? Number.NaN) - expected)).toBeLessThanOrEqual(tolerance)
@@ -30,7 +24,7 @@ test.describe('area', () => {
   const selection = () => page.getByTestId(TestId.AreaSelection)
   const chip = () => page.getByTestId(TestId.AreaChip)
   const dim = () => page.getByTestId(TestId.AreaDim)
-  const handle = (corner: (typeof CORNERS)[number]) => page.getByTestId(testIds.areaHandle(corner))
+  const handle = (corner: Corner) => page.getByTestId(testIds.areaHandle(corner))
 
   async function activateArea() {
     await page.keyboard.press('a')
@@ -48,7 +42,7 @@ test.describe('area', () => {
   }
 
   /** Drags a handle by its center. */
-  async function dragHandle(corner: (typeof CORNERS)[number], to: Point) {
+  async function dragHandle(corner: Corner, to: Point) {
     const box = await handle(corner).boundingBox()
     if (!box) throw new Error(`${corner} handle not laid out`)
     await drag({ x: box.x + box.width / 2, y: box.y + box.height / 2 }, to)

@@ -18,11 +18,16 @@ import {
   useRef,
 } from 'react'
 import { useT } from '@/content/i18n'
-import { clampToViewport, defaultToolbarPosition, type Point } from '@/content/position'
+import {
+  clampToViewport,
+  defaultToolbarPosition,
+  type Point,
+  viewportSize,
+} from '@/content/position'
 import { useOverlayStore } from '@/content/store/overlay'
 import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
 import { TOOLBAR_DEFAULT_INSET } from '@/shared/constants'
-import { isTrustedEvent } from '@/shared/trustedEvents'
+import { isTrustedEvent, onlyTrusted } from '@/shared/trustedEvents'
 import { Badge, Button, cn, Logo, Tooltip } from '@/ui'
 import { surfaceProps } from './surfaces'
 import { useDrag } from './useDrag'
@@ -32,10 +37,6 @@ const KEYBOARD_STEP_PX = 8
 
 export interface ToolbarProps {
   onExit: () => void
-}
-
-function viewportSize() {
-  return { w: window.innerWidth, h: window.innerHeight }
 }
 
 /**
@@ -112,11 +113,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
   })
 
   /** Only the user may change review state: the page can call `.click()` on our buttons. */
-  const trusted =
-    <E extends { isTrusted: boolean }>(handler: (event: E) => void) =>
-    (event: E) => {
-      if (isTrustedEvent(event)) handler(event)
-    }
+  const trusted = onlyTrusted
 
   const nudge = (event: KeyboardEvent<HTMLElement>) => {
     if (!isTrustedEvent(event)) return

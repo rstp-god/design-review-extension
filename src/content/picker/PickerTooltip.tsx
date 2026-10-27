@@ -10,6 +10,7 @@ import {
 import { TestId, testIds } from '@tests/constants/testIds'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useT } from '@/content/i18n'
+import { rectReference } from '@/content/overlay/rectReference'
 import { surfaceProps } from '@/content/overlay/surfaces'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
@@ -44,18 +45,7 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
   const arrowRef = useRef<SVGSVGElement>(null)
 
   const reference = useMemo(
-    () => ({
-      getBoundingClientRect: () => ({
-        x: rect.x,
-        y: rect.y,
-        width: rect.w,
-        height: rect.h,
-        top: rect.y,
-        left: rect.x,
-        right: rect.x + rect.w,
-        bottom: rect.y + rect.h,
-      }),
-    }),
+    () => rectReference({ x: rect.x, y: rect.y, w: rect.w, h: rect.h }),
     [rect.x, rect.y, rect.w, rect.h],
   )
 

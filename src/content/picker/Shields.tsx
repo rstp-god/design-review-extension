@@ -7,7 +7,7 @@ import {
 } from 'react'
 import { useT } from '@/content/i18n'
 import type { Rect } from '@/shared/model'
-import { isTrustedEvent } from '@/shared/trustedEvents'
+import { onlyTrusted } from '@/shared/trustedEvents'
 import { onLayoutChange } from './layoutChange'
 import type { PickSource } from './source'
 
@@ -72,12 +72,6 @@ export function Shields({ rects, label, onClick, onPointerDown }: ShieldsProps) 
   const t = useT('overlay')
   if (rects.length === 0) return null
 
-  const trusted =
-    <E extends { isTrusted: boolean }>(handler?: (event: E) => void) =>
-    (event: E) => {
-      if (handler && isTrustedEvent(event)) handler(event)
-    }
-
   return (
     <div className="pointer-events-none fixed inset-0 z-0">
       {rects.map((rect, index) => (
@@ -89,8 +83,8 @@ export function Shields({ rects, label, onClick, onPointerDown }: ShieldsProps) 
           data-testid={testIds.pickerShield(index)}
           className="pointer-events-auto absolute m-0 cursor-default border-0 bg-transparent p-0"
           style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
-          onClick={trusted(onClick)}
-          onPointerDown={trusted(onPointerDown)}
+          onClick={onlyTrusted(onClick)}
+          onPointerDown={onlyTrusted(onPointerDown)}
           onContextMenu={(event) => event.preventDefault()}
         />
       ))}

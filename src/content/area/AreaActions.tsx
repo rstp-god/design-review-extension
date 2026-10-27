@@ -2,8 +2,9 @@ import { FloatingPortal, flip, offset, shift, useFloating } from '@floating-ui/r
 import { TestId } from '@tests/constants/testIds'
 import { useLayoutEffect, useMemo } from 'react'
 import { useT } from '@/content/i18n'
+import { rectReference } from '@/content/overlay/rectReference'
 import type { Rect } from '@/shared/model'
-import { isTrustedEvent } from '@/shared/trustedEvents'
+import { onlyTrusted } from '@/shared/trustedEvents'
 import { Button, Kbd, Tooltip, useFloatingRoot } from '@/ui'
 
 /** Gap between the area and its action bar (screens.md §08). */
@@ -25,18 +26,7 @@ export function AreaActions({ rect, onReselect }: AreaActionsProps) {
   const root = useFloatingRoot()
 
   const reference = useMemo(
-    () => ({
-      getBoundingClientRect: () => ({
-        x: rect.x,
-        y: rect.y,
-        width: rect.w,
-        height: rect.h,
-        top: rect.y,
-        left: rect.x,
-        right: rect.x + rect.w,
-        bottom: rect.y + rect.h,
-      }),
-    }),
+    () => rectReference({ x: rect.x, y: rect.y, w: rect.w, h: rect.h }),
     [rect.x, rect.y, rect.w, rect.h],
   )
 
@@ -68,9 +58,7 @@ export function AreaActions({ rect, onReselect }: AreaActionsProps) {
           variant="secondary"
           size="sm"
           data-testid={TestId.AreaReselect}
-          onClick={(event) => {
-            if (isTrustedEvent(event)) onReselect()
-          }}
+          onClick={onlyTrusted(onReselect)}
         >
           {t('area.reselect')}
         </Button>
