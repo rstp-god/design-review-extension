@@ -41,7 +41,12 @@ function firstFontFamily(value: string): string {
  * fields enabled in the settings. Pure: the source captured raw values once, the user's color
  * format and units are applied here on every render, so a settings change needs no re-capture.
  */
-export function tooltipRows(styles: NodeStyles, format: TooltipFormat): TooltipRow[] {
+export function tooltipRows(
+  styles: NodeStyles,
+  format: TooltipFormat,
+  /** Border box of the node: computed `width` / `height` are `auto` for inline elements. */
+  box?: { w: number; h: number },
+): TooltipRow[] {
   const { values, rootFontSize } = styles
   const { colorFormat, units } = format
   const enabled = new Set(format.fields)
@@ -117,10 +122,14 @@ export function tooltipRows(styles: NodeStyles, format: TooltipFormat): TooltipR
   }
 
   if (enabled.has('size')) {
+    const side = (property: 'width' | 'height', fallback: number | undefined) => {
+      const value = Number.parseFloat(get(property))
+      return formatLength(Number.isFinite(value) ? value : (fallback ?? 0), units, rootFontSize)
+    }
     rows.push({
       key: 'size',
       field: 'size',
-      value: `${formatLength(px('width'), units, rootFontSize)} × ${formatLength(px('height'), units, rootFontSize)}`,
+      value: `${side('width', box?.w)} × ${side('height', box?.h)}`,
     })
     rows.push({ key: 'display', field: 'size', value: get('display') })
   }

@@ -82,6 +82,14 @@ describe('tooltipRows', () => {
     ])
   })
 
+  it('falls back to the box for inline elements whose computed size is auto', () => {
+    const rows = rowMap(
+      tooltipRows(buttonStyles({ width: 'auto', height: 'auto' }), all, { w: 134.6, h: 21.5 }),
+    )
+    expect(rows.size).toBe('134.6px × 21.5px')
+    expect(rowMap(tooltipRows(buttonStyles({ width: 'auto' }), all)).size).toBe('0 × 40px')
+  })
+
   it('follows the enabled fields', () => {
     const rows = tooltipRows(buttonStyles(), { ...all, fields: ['colors', 'spacing'] })
     expect(rows.map((row) => row.key)).toEqual(['color', 'background', 'padding', 'margin'])

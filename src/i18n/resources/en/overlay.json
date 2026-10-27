@@ -21,7 +21,6 @@
     "back": "back"
   },
   "picker": {
-    "tooltip": "Element styles",
     "row": {
       "font": "Font",
       "text": "Text",

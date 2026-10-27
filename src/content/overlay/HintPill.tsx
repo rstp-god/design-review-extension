@@ -5,10 +5,13 @@ import { cn, KeyCombo } from '@/ui'
 export function HintPill({
   children,
   testId,
+  interactive = false,
   className,
 }: {
   children: ReactNode
   testId: string
+  /** Only a pill with controls takes pointer events; a plain hint lets clicks reach the page. */
+  interactive?: boolean
   className?: string
 }) {
   return (
@@ -16,8 +19,9 @@ export function HintPill({
       <div
         data-testid={testId}
         className={cn(
-          'pointer-events-auto inline-flex h-18 max-w-full items-center gap-4 rounded-xl border',
+          'inline-flex h-18 max-w-full items-center gap-4 rounded-xl border',
           'border-border bg-bg px-6 text-fg-secondary text-sm shadow-float',
+          interactive && 'pointer-events-auto',
           className,
         )}
       >

@@ -10,8 +10,9 @@ import {
   startReview,
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
+import { formatCssColor } from '@/shared/colorFormat'
 import { OVERLAY_HOST_TAG } from '@/shared/constants'
-import { formatBoxSize } from '@/shared/cssUnits'
+import { convertLengths, formatBoxSize, shorthand } from '@/shared/cssUnits'
 
 /** Spec 4.2: the hover handler fits in one frame. Asserted locally; CI containers only report it. */
 const HOVER_P95_BUDGET_MS = 16
@@ -28,18 +29,15 @@ interface PerfStats {
 
 /** `rgb(29, 78, 216)` → `#1D4ED8`, the tooltip's default color format. */
 function hexOf(rgb: string): string {
-  const [r, g, b] = rgb.match(/\d+/g)?.map(Number) ?? [0, 0, 0]
-  return `#${[r, g, b].map((channel) => (channel ?? 0).toString(16).padStart(2, '0')).join('')}`.toUpperCase()
+  return formatCssColor(rgb, 'hex')
 }
 
-/** CSS shorthand of four computed sides, the way the tooltip prints padding and margin. */
-function shorthand([top, right, bottom, left]: string[]): string {
-  const sides = [top, right, bottom, left].map((side) => (side === '0px' ? '0' : side))
-  const [t, r, b, l] = sides
-  if (t === r && r === b && b === l) return t ?? '0'
-  if (t === b && r === l) return `${t} ${r}`
-  if (r === l) return `${t} ${r} ${b}`
-  return sides.join(' ')
+/** CSS shorthand of four computed sides in px, the way the tooltip prints padding and margin. */
+function sides([top, right, bottom, left]: string[]): string {
+  const [t, r, b, l] = [top, right, bottom, left].map((side) =>
+    convertLengths(side ?? '', 'px', 16),
+  )
+  return shorthand(t ?? '0', r ?? '0', b ?? '0', l ?? '0')
 }
 
 /** What the page itself says about an element — the tooltip must agree (spec 3.3 AC). */
@@ -170,10 +168,10 @@ test.describe('picker', () => {
       hexOf(expected.backgroundColor),
     )
     await expect(page.getByTestId(testIds.pickerRow('padding'))).toContainText(
-      shorthand(expected.padding),
+      sides(expected.padding),
     )
     await expect(page.getByTestId(testIds.pickerRow('margin'))).toContainText(
-      shorthand(expected.margin),
+      sides(expected.margin),
     )
     await expect(page.getByTestId(testIds.pickerRow('display'))).toContainText(expected.display)
     await expect(page.getByTestId(testIds.pickerRow('radius'))).toHaveCount(0)

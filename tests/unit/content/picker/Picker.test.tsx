@@ -151,7 +151,7 @@ describe('picker', () => {
     expect(blocked).toBe(false)
     expect(onLink).not.toHaveBeenCalled()
     fireEvent.pointerDown(button)
-    fireEvent.click(button)
+    fireEvent.click(button, { detail: 1 })
     expect(onButton).toHaveBeenCalledTimes(1)
 
     press('p', 'KeyP')
@@ -164,7 +164,7 @@ describe('picker', () => {
 
     it('a click locks the node: frame, chip, breadcrumbs; Escape returns to picking', async () => {
       press('p', 'KeyP')
-      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      fireEvent.click(button, { clientX: 120, clientY: 210, detail: 1 })
       expect(useOverlayStore.getState().pickerMode).toBe('locked')
 
       const frame = q('picker-locked-frame') as HTMLElement
@@ -191,7 +191,7 @@ describe('picker', () => {
 
     it('arrow keys walk the tree and are swallowed; nothing happens at the edges', () => {
       press('p', 'KeyP')
-      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      fireEvent.click(button, { clientX: 120, clientY: 210, detail: 1 })
 
       const up = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })
       act(() => {
@@ -225,25 +225,25 @@ describe('picker', () => {
 
     it('a breadcrumb or another page click re-locks', () => {
       press('p', 'KeyP')
-      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      fireEvent.click(button, { clientX: 120, clientY: 210, detail: 1 })
       fireEvent.click(q('picker-breadcrumb-2') as HTMLElement)
       expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
       expect(q('picker-breadcrumb-2')).toHaveTextContent('article.product-card')
 
       // A page click on a node of the trail keeps it; a click elsewhere rebuilds the path.
       document.elementsFromPoint = vi.fn(() => [article(), document.body])
-      fireEvent.click(article(), { clientX: 10, clientY: 10 })
+      fireEvent.click(article(), { clientX: 10, clientY: 10, detail: 1 })
       expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
       expect(q('picker-breadcrumb-3')).toHaveTextContent('button.card__cta')
       document.elementsFromPoint = vi.fn(() => [link, document.body])
-      fireEvent.click(link, { clientX: 10, clientY: 10 })
+      fireEvent.click(link, { clientX: 10, clientY: 10, detail: 1 })
       expect(q('picker-breadcrumb-3')).toHaveAttribute('aria-current', 'true')
       expect(q('picker-breadcrumb-3')).toHaveTextContent('a.link')
     })
 
     it('P turns the picker off from Locked and removes everything', () => {
       press('p', 'KeyP')
-      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      fireEvent.click(button, { clientX: 120, clientY: 210, detail: 1 })
       press('p', 'KeyP')
       expect(useOverlayStore.getState().tool).toBe('none')
       expect(q('picker-locked-frame')).toBeNull()
@@ -274,7 +274,14 @@ describe('picker', () => {
     fireEvent.click(shield, { clientX: 50, clientY: 350 })
     expect(useOverlayStore.getState().pickerMode).toBe('locked')
     expect(q('picker-locked-chip')).toHaveTextContent('.frame')
-    expect(q('picker-shield-0')).toBeNull()
+    // Still covered in Locked: a click into the frame must not reach the frame's page.
+    expect(q('picker-shield-0')).not.toBeNull()
+  })
+
+  it('ignores keyboard-activated page clicks for locking', () => {
+    press('p', 'KeyP')
+    fireEvent.click(button, { clientX: 0, clientY: 0, detail: 0 })
+    expect(useOverlayStore.getState().pickerMode).toBe('picking')
   })
 
   it('leaves arrow keys to the page while picking', () => {

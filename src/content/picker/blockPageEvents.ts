@@ -19,7 +19,7 @@ export const BLOCKED_PAGE_EVENTS = [
 export interface PageEventBlockerOptions {
   /** Our overlay host: events on our own UI pass through untouched. */
   host: Element
-  /** A user click on the page that was swallowed — the picker locks the node under it. */
+  /** A user pointer click on the page that was swallowed — the picker locks the node under it. */
   onClick?: (event: MouseEvent) => void
   target?: Window
 }
@@ -43,7 +43,9 @@ export function blockPageEvents({
     if (event.composedPath().includes(host)) return
     event.preventDefault()
     event.stopImmediatePropagation()
-    if (event.type === 'click') onClick?.(event as MouseEvent)
+    // `detail` is the click count: 0 means Enter / Space on a focused control, which carries no
+    // position — there is nothing under (0, 0) worth locking.
+    if (event.type === 'click' && (event as MouseEvent).detail > 0) onClick?.(event as MouseEvent)
   }
 
   for (const type of BLOCKED_PAGE_EVENTS) target.addEventListener(type, handler, true)

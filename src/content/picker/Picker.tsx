@@ -11,6 +11,7 @@ import { blockPageEvents } from './blockPageEvents'
 import { Highlight } from './Highlight'
 import { LockedBar } from './LockedBar'
 import { LockedFrame } from './LockedFrame'
+import { onLayoutChange } from './layoutChange'
 import { ARROW_KEYS, navigateFrom } from './navigation'
 import { PickerTooltip } from './PickerTooltip'
 import { createSampler } from './perf'
@@ -22,6 +23,22 @@ const PERF_REPORT_EVERY = 10
 export interface PickerProps {
   host: OverlayHost
   source: PickSource
+}
+
+function sameRects(a: Rect[], b: Rect[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((rect, i) => {
+      const other = b[i]
+      return (
+        other !== undefined &&
+        rect.x === other.x &&
+        rect.y === other.y &&
+        rect.w === other.w &&
+        rect.h === other.h
+      )
+    })
+  )
 }
 
 interface LockedState {
@@ -120,29 +137,26 @@ export function Picker({ host, source }: PickerProps) {
     if (mode === 'picking') setLocked(null)
   }, [mode])
 
-  // Shields over frames follow the layout through scroll and resize, one measurement per frame.
+  // Shields over frames, in both modes (a frame click must not reach the frame while a node is
+  // locked either): re-measured on scroll / resize, one measurement per frame, state kept when
+  // nothing moved so a scroll on a page without frames re-renders nothing.
   useEffect(() => {
-    if (mode !== 'picking') {
-      setShields([])
-      return
-    }
     let frame = 0
     const measure = () => {
       frame = 0
-      setShields(source.shieldRects())
+      const next = source.shieldRects()
+      setShields((previous) => (sameRects(previous, next) ? previous : next))
     }
     const schedule = () => {
       if (frame === 0) frame = requestAnimationFrame(measure)
     }
     measure()
-    window.addEventListener('scroll', schedule, { capture: true, passive: true })
-    window.addEventListener('resize', schedule)
+    const unsubscribe = onLayoutChange(schedule)
     return () => {
       if (frame !== 0) cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', schedule, { capture: true })
-      window.removeEventListener('resize', schedule)
+      unsubscribe()
     }
-  }, [mode, source])
+  }, [source])
 
   useEffect(
     () =>
@@ -181,18 +195,17 @@ export function Picker({ host, source }: PickerProps) {
     const schedule = () => {
       if (frame === 0) frame = requestAnimationFrame(remeasure)
     }
-    window.addEventListener('scroll', schedule, { capture: true, passive: true })
-    window.addEventListener('resize', schedule)
+    const unsubscribe = onLayoutChange(schedule)
     return () => {
       if (frame !== 0) cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', schedule, { capture: true })
-      window.removeEventListener('resize', schedule)
+      unsubscribe()
     }
   }, [mode, lockedNode, source])
 
   if (mode === 'locked' && locked) {
     return (
       <>
+        <Shields rects={shields} onPick={pickAt} />
         <LockedFrame rect={locked.rect} styles={locked.styles} selector={locked.selector} />
         <LockedBar path={locked.path} active={locked.node} onPick={lock} />
       </>

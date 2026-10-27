@@ -4,7 +4,13 @@ import { BLOCKED_PAGE_EVENTS, blockPageEvents } from '@/content/picker/blockPage
 import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 
 function fire(target: EventTarget, type: string, init: MouseEventInit = {}) {
-  const event = new MouseEvent(type, { bubbles: true, cancelable: true, composed: true, ...init })
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    composed: true,
+    detail: 1,
+    ...init,
+  })
   target.dispatchEvent(event)
   return event
 }
@@ -35,6 +41,19 @@ describe('blockPageEvents', () => {
     expect(pageListener).not.toHaveBeenCalled()
     expect(onClick).toHaveBeenCalledTimes(1)
     expect(onClick.mock.calls[0]?.[0]).toMatchObject({ clientX: 5, clientY: 6 })
+  })
+
+  it('swallows keyboard-activated clicks without reporting a position', () => {
+    document.body.append(button, host)
+    const onClick = vi.fn()
+    const pageListener = vi.fn()
+    button.addEventListener('click', pageListener)
+    uninstall = blockPageEvents({ host, onClick })
+
+    const event = fire(button, 'click', { detail: 0, clientX: 0, clientY: 0 })
+    expect(event.defaultPrevented).toBe(true)
+    expect(pageListener).not.toHaveBeenCalled()
+    expect(onClick).not.toHaveBeenCalled()
   })
 
   it('leaves our own UI alone, even inside the shadow root', () => {

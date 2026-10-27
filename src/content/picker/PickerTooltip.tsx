@@ -31,7 +31,8 @@ export interface PickerTooltipProps {
 /**
  * Hover tooltip of the picker (screens.md §04): `tag.class` and `W × H`, then one row per enabled
  * field. Anchored to the node's rect through a virtual element, flips above the node and shifts
- * to stay in the viewport. `pointer-events: none` keeps it out of hit testing.
+ * to stay in the viewport. `pointer-events: none` keeps it out of hit testing; it is hidden from
+ * assistive tech — it changes on every frame, and the Locked chip is the state worth announcing.
  */
 export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
   const { t } = useTranslation('overlay')
@@ -75,8 +76,8 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
   }, [refs, reference])
 
   const rows = useMemo(
-    () => tooltipRows(styles, { fields, colorFormat, units }),
-    [styles, fields, colorFormat, units],
+    () => tooltipRows(styles, { fields, colorFormat, units }, { w: rect.w, h: rect.h }),
+    [styles, fields, colorFormat, units, rect.w, rect.h],
   )
 
   return (
@@ -84,8 +85,7 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
       <div
         ref={refs.setFloating}
         style={{ ...floatingStyles, width: TOOLTIP_WIDTH }}
-        role="status"
-        aria-label={t('picker.tooltip')}
+        aria-hidden="true"
         data-testid={TestId.PickerTooltip}
         className="pointer-events-none z-20 flex flex-col gap-3 rounded-lg bg-bg px-6 py-5 text-fg shadow-popover"
       >

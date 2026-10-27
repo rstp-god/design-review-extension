@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { Rect } from '@/shared/model'
+import { onLayoutChange } from './layoutChange'
 import type { BoxModel, NodeStyles, PathEntry, PickNode, PickSource } from './source'
 
 /** Everything the hover UI needs about the node under the pointer. */
@@ -87,17 +88,15 @@ export function usePointerTracking({
     }
 
     target.addEventListener('pointermove', onMove, { capture: true, passive: true })
-    target.addEventListener('scroll', schedule, { capture: true, passive: true })
-    target.addEventListener('resize', schedule)
     doc.documentElement.addEventListener('pointerleave', onLeave)
+    const unsubscribe = onLayoutChange(schedule, target)
     schedule()
 
     return () => {
       if (frame !== 0) target.cancelAnimationFrame(frame)
       target.removeEventListener('pointermove', onMove, { capture: true })
-      target.removeEventListener('scroll', schedule, { capture: true })
-      target.removeEventListener('resize', schedule)
       doc.documentElement.removeEventListener('pointerleave', onLeave)
+      unsubscribe()
     }
   }, [active, source, onHover, onSample, target])
 }

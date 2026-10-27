@@ -15,11 +15,13 @@ export interface LockedFrameProps {
   selector: string
 }
 
-function cornerRadius(styles: NodeStyles, corner: string): number {
-  const value = Number.parseFloat(
-    styles.values[`border-${corner}-radius` as keyof NodeStyles['values']],
-  )
-  return (Number.isFinite(value) ? value : 0) + FRAME_INSET - 1
+/** The node's corner radius in px (`50%` is resolved against the box), grown to the frame. */
+function cornerRadius(styles: NodeStyles, corner: string, rect: Rect): number {
+  const raw = styles.values[`border-${corner}-radius` as keyof NodeStyles['values']] ?? ''
+  const value = Number.parseFloat(raw)
+  if (!Number.isFinite(value) || value <= 0) return FRAME_INSET - 1
+  const radius = raw.trim().endsWith('%') ? (Math.min(rect.w, rect.h) * value) / 100 : value
+  return radius + FRAME_INSET - 1
 }
 
 /**
@@ -33,7 +35,7 @@ export function LockedFrame({ rect, styles, selector }: LockedFrameProps) {
   const top = rect.y - FRAME_INSET
   const chipAbove = top - CHIP_GAP - CHIP_HEIGHT >= 0
   const radii = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
-    .map((corner) => `${cornerRadius(styles, corner)}px`)
+    .map((corner) => `${cornerRadius(styles, corner, rect)}px`)
     .join(' ')
 
   return (

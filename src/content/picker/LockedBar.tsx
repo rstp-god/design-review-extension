@@ -23,11 +23,17 @@ export interface LockedBarProps {
 export function LockedBar({ path, active, onPick }: LockedBarProps) {
   const { t } = useTranslation('overlay')
   const { t: tCommon } = useTranslation('common')
-  const start = Math.max(0, path.length - MAX_VISIBLE_ENTRIES)
-  const visible = path.slice(start)
+  // The last entries, shifted so the active one is always on screen.
+  const activeIndex = Math.max(
+    0,
+    path.findIndex((entry) => entry.node === active),
+  )
+  const start = Math.min(Math.max(0, path.length - MAX_VISIBLE_ENTRIES), activeIndex)
+  const end = Math.min(path.length, start + MAX_VISIBLE_ENTRIES)
+  const visible = path.slice(start, end)
 
   return (
-    <HintPill testId={TestId.PickerLockedBar} className="gap-8">
+    <HintPill testId={TestId.PickerLockedBar} interactive className="gap-8">
       <nav
         aria-label={t('picker.path')}
         data-testid={TestId.PickerBreadcrumbs}
@@ -65,6 +71,14 @@ export function LockedBar({ path, active, onPick }: LockedBarProps) {
             </span>
           )
         })}
+        {end < path.length && (
+          <>
+            <Separator />
+            <span aria-hidden="true" className="text-fg-muted">
+              …
+            </span>
+          </>
+        )}
       </nav>
       <span aria-hidden="true" className="h-9 w-px shrink-0 bg-border-strong" />
       <span className="flex shrink-0 items-center gap-4">
