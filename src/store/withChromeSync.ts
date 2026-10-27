@@ -1,4 +1,4 @@
-import type { z } from 'zod'
+import type * as z from 'zod/mini'
 import type { StateCreator, StoreApi } from 'zustand'
 import { getArea, onStorageChanged, type StorageArea, setArea } from '@/services/chrome/storage'
 
@@ -36,7 +36,7 @@ export type Synced<State> = State & ChromeSyncActions
 export interface WithChromeSyncOptions<State extends object, Persisted> {
   key: string
   area: StorageArea
-  schema: z.ZodType<Envelope<Persisted>>
+  schema: z.ZodMiniType<Envelope<Persisted>>
   partialize: (state: State) => Persisted
   merge?: (current: State, persisted: Persisted) => Partial<State>
   debounceMs?: number

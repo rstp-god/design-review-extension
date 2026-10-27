@@ -1,9 +1,13 @@
-import { z } from 'zod'
+import * as z from 'zod/mini'
 
 /**
  * Zod schemas are the single source of truth for the data model (spec 5.3). Types are inferred
  * from them and re-exported by `model.ts`. Everything that crosses a context boundary (messages,
  * `chrome.storage`, IndexedDB records) is validated against these.
+ *
+ * `zod/mini`, not `zod`: the same core and the same parsing, but tree-shakeable functions instead
+ * of methods — the content script, injected into every reviewed page, carries ~28 kB of it
+ * instead of ~93 kB. One build for every context keeps these schemas the only definition.
  */
 
 export const SEVERITIES = ['blocker', 'major', 'minor'] as const
@@ -16,6 +20,11 @@ export const FREEZE_DELAYS = [3, 5, 10] as const
 export const THEMES = ['light', 'dark', 'system'] as const
 export const REPORT_LANGS = ['ru', 'en'] as const
 export const SHOT_QUALITIES = ['low', 'medium', 'high'] as const
+
+export const nonEmptyString = () => z.string().check(z.minLength(1))
+const nonNegativeNumber = () => z.number().check(z.nonnegative())
+export const nonNegativeInt = () => z.int().check(z.nonnegative())
+const positiveInt = () => z.int().check(z.positive())
 
 export const severitySchema = z.enum(SEVERITIES)
 export const sessionScopeSchema = z.enum(SESSION_SCOPES)
@@ -36,30 +45,30 @@ export const shotQualitySchema = z.enum(SHOT_QUALITIES)
 export const rectSchema = z.object({
   x: z.number(),
   y: z.number(),
-  w: z.number().nonnegative(),
-  h: z.number().nonnegative(),
+  w: nonNegativeNumber(),
+  h: nonNegativeNumber(),
 })
 
 export const envSchema = z.object({
-  viewport: z.object({ w: z.number().nonnegative(), h: z.number().nonnegative() }),
-  dpr: z.number().positive(),
+  viewport: z.object({ w: nonNegativeNumber(), h: nonNegativeNumber() }),
+  dpr: z.number().check(z.positive()),
   userAgent: z.string(),
 })
 
 export const reviewSessionSchema = z.object({
-  id: z.string().min(1),
+  id: nonEmptyString(),
   /** Fixed at creation; the settings only affect new sessions. */
   scope: sessionScopeSchema,
   /** `domain`: origin · `page`: origin + normalized pathname, no query, no hash. */
-  key: z.string().min(1),
-  origin: z.string().min(1),
+  key: nonEmptyString(),
+  origin: nonEmptyString(),
   /** Normalized pathname, only for `scope: 'page'`. */
-  path: z.string().optional(),
+  path: z.optional(z.string()),
   title: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
   /** Next issue number; numbers are never reused after deletion. */
-  nextNumber: z.number().int().positive(),
+  nextNumber: positiveInt(),
 })
 
 export const issueTargetSchema = z.discriminatedUnion('kind', [
@@ -73,9 +82,9 @@ export const issueTargetSchema = z.discriminatedUnion('kind', [
 ])
 
 export const issueSchema = z.object({
-  id: z.string().min(1),
-  sessionId: z.string().min(1),
-  number: z.number().int().positive(),
+  id: nonEmptyString(),
+  sessionId: nonEmptyString(),
+  number: positiveInt(),
   pageUrl: z.string(),
   pagePath: z.string(),
   pageTitle: z.string(),
@@ -84,13 +93,13 @@ export const issueSchema = z.object({
   text: z.string(),
   target: issueTargetSchema,
   source: z.enum(['live', 'snapshot']),
-  snapshotAt: z.string().optional(),
-  clipped: z.boolean().optional(),
+  snapshotAt: z.optional(z.string()),
+  clipped: z.optional(z.boolean()),
   scroll: z.object({ x: z.number(), y: z.number() }),
-  styles: z.record(z.string(), z.string()).optional(),
+  styles: z.optional(z.record(z.string(), z.string())),
   shots: z.object({ cropId: z.string(), viewportId: z.string() }),
   status: z.enum(['open', 'resolved']),
-  external: z.object({ tracker: z.string(), key: z.string(), url: z.string() }).optional(),
+  external: z.optional(z.object({ tracker: z.string(), key: z.string(), url: z.string() })),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -101,45 +110,48 @@ export const issueSchema = z.object({
  * language at store creation (see `defaultSettings`); `en` here is only the schema-level fallback.
  */
 export const settingsSchema = z.object({
-  sessionScope: sessionScopeSchema.catch('domain'),
-  reviewer: z.string().max(120).catch(''),
-  reportLang: reportLangSchema.catch('en'),
-  shotQuality: shotQualitySchema.catch('medium'),
-  tooltipFields: z.array(tooltipFieldSchema).catch(['typography', 'colors', 'spacing', 'size']),
-  colorFormat: colorFormatSchema.catch('hex'),
-  units: unitsSchema.catch('px'),
-  cropPadding: cropPaddingSchema.catch(24),
-  freezeDelay: freezeDelaySchema.catch(5),
-  defaultSeverity: severitySchema.catch('major'),
-  theme: themeSchema.catch('system'),
+  sessionScope: z.catch(sessionScopeSchema, 'domain'),
+  reviewer: z.catch(z.string().check(z.maxLength(120)), ''),
+  reportLang: z.catch(reportLangSchema, 'en'),
+  shotQuality: z.catch(shotQualitySchema, 'medium'),
+  tooltipFields: z.catch(z.array(tooltipFieldSchema), ['typography', 'colors', 'spacing', 'size']),
+  colorFormat: z.catch(colorFormatSchema, 'hex'),
+  units: z.catch(unitsSchema, 'px'),
+  cropPadding: z.catch(cropPaddingSchema, 24),
+  freezeDelay: z.catch(freezeDelaySchema, 5),
+  defaultSeverity: z.catch(severitySchema, 'major'),
+  theme: z.catch(themeSchema, 'system'),
 })
 
-/** Toolbar position (viewport px, top-left corner) and collapsed flag; `chrome.storage.local`. */
+/**
+ * Toolbar position (viewport px, top-left corner) and collapsed flag; `chrome.storage.local`.
+ * `z.number()` already rejects `NaN` and infinities.
+ */
 export const toolbarStateSchema = z.object({
-  x: z.number().finite(),
-  y: z.number().finite(),
-  collapsed: z.boolean().catch(false),
+  x: z.number(),
+  y: z.number(),
+  collapsed: z.catch(z.boolean(), false),
 })
 
 export const severityCountsSchema = z.object({
-  blocker: z.number().int().nonnegative(),
-  major: z.number().int().nonnegative(),
-  minor: z.number().int().nonnegative(),
+  blocker: nonNegativeInt(),
+  major: nonNegativeInt(),
+  minor: nonNegativeInt(),
 })
 
 /** What the popup and the overlay need to know about a session without loading its issues. */
 export const sessionSummarySchema = z.object({
   session: reviewSessionSchema,
-  issueCount: z.number().int().nonnegative(),
-  pageCount: z.number().int().nonnegative(),
+  issueCount: nonNegativeInt(),
+  pageCount: nonNegativeInt(),
   bySeverity: severityCountsSchema,
 })
 
 export const storageUsageSchema = z.object({
-  bytes: z.number().nonnegative(),
+  bytes: nonNegativeNumber(),
   /** Origin quota as reported by the browser; absent when the API is unavailable. */
-  quota: z.number().nonnegative().optional(),
-  sessions: z.number().int().nonnegative(),
+  quota: z.optional(nonNegativeNumber()),
+  sessions: nonNegativeInt(),
 })
 
 export type Severity = z.infer<typeof severitySchema>
