@@ -14,7 +14,11 @@
   "hint": {
     "exit": "exit",
     "picker": "picker",
-    "pick": "Click to pick"
+    "pick": "Click to pick",
+    "parentChild": "parent / child",
+    "siblings": "siblings",
+    "issue": "issue",
+    "back": "back"
   },
   "picker": {
     "tooltip": "Element styles",
@@ -30,6 +34,8 @@
       "display": "Display",
       "radius": "Radius",
       "shadow": "Shadow"
-    }
+    },
+    "path": "Path to the element",
+    "chip": "Selected element"
   }
 }

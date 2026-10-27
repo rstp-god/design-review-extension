@@ -159,6 +159,97 @@ describe('picker', () => {
     expect(onButton).toHaveBeenCalledTimes(2)
   })
 
+  describe('locked', () => {
+    const article = () => document.querySelector('article') as HTMLElement
+
+    it('a click locks the node: frame, chip, breadcrumbs; Escape returns to picking', async () => {
+      press('p', 'KeyP')
+      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      expect(useOverlayStore.getState().pickerMode).toBe('locked')
+
+      const frame = q('picker-locked-frame') as HTMLElement
+      expect(frame.style.left).toBe('97px')
+      expect(frame.style.top).toBe('197px')
+      expect(frame.style.width).toBe('252px')
+      expect(q('picker-locked-chip')).toHaveTextContent('.card__cta · 246 × 40')
+      expect(q('picker-highlight')).toBeNull()
+      expect(q('picker-tooltip')).toBeNull()
+      expect(q('overlay-hint')).toBeNull()
+      const crumbs = q('picker-breadcrumbs') as HTMLElement
+      expect(crumbs.textContent).toContain('body')
+      expect(crumbs.textContent).toContain('button.card__cta')
+      expect(q('picker-breadcrumb-3')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-hint-enter')).toHaveTextContent(/Enter.*issue.*soon/)
+
+      press('Escape')
+      expect(useOverlayStore.getState().pickerMode).toBe('picking')
+      expect(useOverlayStore.getState().tool).toBe('picker')
+      expect(q('picker-locked-frame')).toBeNull()
+      expect(q('overlay-hint')).not.toBeNull()
+      expect(onExit).not.toHaveBeenCalled()
+    })
+
+    it('arrow keys walk the tree and are swallowed; nothing happens at the edges', () => {
+      press('p', 'KeyP')
+      fireEvent.click(button, { clientX: 120, clientY: 210 })
+
+      const up = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })
+      act(() => {
+        document.body.dispatchEvent(up)
+      })
+      expect(up.defaultPrevented).toBe(true)
+      expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-breadcrumb-2')).toHaveTextContent('article.product-card')
+
+      press('ArrowDown')
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('a.link')
+      press('ArrowRight')
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('button.card__cta')
+      press('ArrowRight')
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('button.card__cta')
+      press('ArrowLeft')
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('a.link')
+
+      press('ArrowUp')
+      press('ArrowUp')
+      press('ArrowUp')
+      expect(q('picker-breadcrumb-0')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-breadcrumb-0')).toHaveTextContent('body')
+      press('ArrowUp')
+      expect(q('picker-breadcrumb-0')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-breadcrumb-1')).toBeNull()
+    })
+
+    it('a breadcrumb or another page click re-locks', () => {
+      press('p', 'KeyP')
+      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      fireEvent.click(q('picker-breadcrumb-2') as HTMLElement)
+      expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-breadcrumb-2')).toHaveTextContent('article.product-card')
+
+      document.elementsFromPoint = vi.fn(() => [article(), document.body])
+      fireEvent.click(article(), { clientX: 10, clientY: 10 })
+      expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-breadcrumb-3')).toBeNull()
+    })
+
+    it('P turns the picker off from Locked and removes everything', () => {
+      press('p', 'KeyP')
+      fireEvent.click(button, { clientX: 120, clientY: 210 })
+      press('p', 'KeyP')
+      expect(useOverlayStore.getState().tool).toBe('none')
+      expect(q('picker-locked-frame')).toBeNull()
+      expect(q('picker-locked-bar')).toBeNull()
+      const down = new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        bubbles: true,
+        cancelable: true,
+      })
+      document.body.dispatchEvent(down)
+      expect(down.defaultPrevented).toBe(false)
+    })
+  })
+
   it('leaves arrow keys to the page while picking', () => {
     press('p', 'KeyP')
     const event = new KeyboardEvent('keydown', {

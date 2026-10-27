@@ -14,6 +14,7 @@ import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
 import { useSettingsStore } from '@/store/settings'
 import { useFloatingRoot } from '@/ui'
+import { entrySuffix } from './label'
 import type { NodeStyles, PathEntry } from './source'
 import { tooltipRows } from './styles'
 
@@ -25,11 +26,6 @@ export interface PickerTooltipProps {
   rect: Rect
   entry: PathEntry
   styles: NodeStyles
-}
-
-/** `#id.class.class` after the tag; empty for a bare tag. */
-export function entrySuffix(entry: PathEntry): string {
-  return `${entry.id ? `#${entry.id}` : ''}${entry.classes.map((name) => `.${name}`).join('')}`
 }
 
 /**
