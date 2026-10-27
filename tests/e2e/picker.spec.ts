@@ -66,51 +66,21 @@ function computedOf(locator: Locator) {
   })
 }
 
-interface Clip {
-  x: number
-  y: number
-  width: number
-  height: number
-}
-
 /**
- * Visual check of a pointer-dependent state. Playwright's screenshots prepare the page first
- * (style injection, a frame wait, metrics) and Chromium answers that with a mouse move from the
- * real cursor position — headed on macOS it lands wherever the cursor is, under xvfb outside
- * the page — which moves or clears the hover before the capture. A raw CDP capture takes the
- * frame as it is. The page is not scrolled when this runs, so viewport and document coincide.
+ * Runs `capture` with the overlay's pointer tracking frozen. Any screenshot makes Chromium
+ * re-dispatch a mouse move from the real cursor position (headed on macOS: wherever the cursor
+ * is; under xvfb: outside the page), which would move or clear the hover being photographed, and
+ * `toHaveScreenshot` captures at least twice. The E2E build honours `data-dr-e2e-freeze` on
+ * the host; the attribute is set from the page's own world, as any site could.
  */
-/** Width from the PNG header (IHDR follows the 8-byte signature; width is its first field). */
-function pngWidth(png: Buffer): number {
-  return png.readUInt32BE(16)
-}
-
-async function expectFrame(page: Page, name: string, clip: Clip) {
-  const cdp = await page.context().newCDPSession(page)
+async function withFrozenPointer(page: Page, capture: () => Promise<void>) {
+  const host = page.locator(OVERLAY_HOST_TAG)
+  await host.evaluate((element) => element.setAttribute('data-dr-e2e-freeze', ''))
   try {
-    const capture = async (scale: number) => {
-      const { data } = await cdp.send('Page.captureScreenshot', {
-        format: 'png',
-        clip: { ...clip, scale },
-      })
-      return Buffer.from(data, 'base64')
-    }
-    // One image pixel per CSS pixel, like Playwright's `scale: 'css'`. Headed Chromium on a
-    // Retina display sometimes renders the clip at the physical scale although the page reports
-    // DPR 1; the header tells, and a second capture corrects it.
-    let image = await capture(1)
-    const width = pngWidth(image)
-    if (width !== Math.round(clip.width)) image = await capture(clip.width / width)
-    expect(image).toMatchSnapshot(name)
+    await capture()
   } finally {
-    await cdp.detach()
+    await host.evaluate((element) => element.removeAttribute('data-dr-e2e-freeze'))
   }
-}
-
-async function expectElementFrame(page: Page, locator: Locator, name: string) {
-  const box = await locator.boundingBox()
-  if (!box) throw new Error(`${name}: element not laid out`)
-  await expectFrame(page, name, box)
 }
 
 function activeCrumb(page: Page) {
@@ -205,12 +175,11 @@ test.describe('picker', () => {
     await expect(page.getByTestId(testIds.pickerRow('radius'))).toHaveCount(0)
     expect((await tooltip.boundingBox())?.width).toBe(290)
 
-    await expectFrame(page, 'picker-hover.png', {
-      x: expected.rect.x - 24,
-      y: expected.rect.y - 48,
-      width: 360,
-      height: 300,
-    })
+    await withFrozenPointer(page, () =>
+      expect(page).toHaveScreenshot('picker-hover.png', {
+        clip: { x: expected.rect.x - 24, y: expected.rect.y - 48, width: 360, height: 300 },
+      }),
+    )
     await expect(page.getByTestId(TestId.Toolbar)).toHaveScreenshot('toolbar-picker-active.png')
     await page.emulateMedia({ colorScheme: 'light' })
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveAttribute('data-theme', 'light')
@@ -273,17 +242,12 @@ test.describe('picker', () => {
     await expect(page.getByTestId(TestId.PickerBreadcrumbs)).toContainText('body')
     await expect(activeCrumb(page)).toHaveText('button.card__cta')
     await expect(page.getByTestId(TestId.PickerHintEnter)).toContainText('soon')
-    await expectFrame(page, 'picker-locked.png', {
-      x: expected.rect.x - 24,
-      y: expected.rect.y - 48,
-      width: 360,
-      height: 130,
+    await expect(page).toHaveScreenshot('picker-locked.png', {
+      clip: { x: expected.rect.x - 24, y: expected.rect.y - 48, width: 360, height: 130 },
     })
-    await expectElementFrame(
-      page,
-      page.getByTestId(TestId.PickerLockedBar),
-      'picker-locked-bar.png',
-    )
+    // The re-dispatched mouse move may land on the bar: park the pointer first.
+    await page.mouse.move(640, 300)
+    await expect(page.getByTestId(TestId.PickerLockedBar)).toHaveScreenshot('picker-locked-bar.png')
 
     // `↓` on a leaf: nothing happens, and the page does not scroll in Locked.
     await page.keyboard.press('ArrowDown')

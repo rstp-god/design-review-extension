@@ -28,10 +28,6 @@ export default defineConfig({
       // Tolerate sub-pixel anti-aliasing drift between otherwise identical renders.
       maxDiffPixelRatio: 0.005,
     },
-    // For `page.screenshot()` buffers compared by hand (states that a second capture would disturb).
-    toMatchSnapshot: {
-      maxDiffPixelRatio: 0.005,
-    },
   },
   use: {
     viewport: { width: 1280, height: 720 },

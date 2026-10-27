@@ -13,6 +13,12 @@ export type E2EDebugKey = 'page-path' | 'nav' | 'pointermove'
 
 export interface E2EDebug {
   set: (key: E2EDebugKey, value: string) => void
+  /**
+   * Whether the test asked to freeze pointer-dependent state (`data-dr-e2e-freeze` on the host):
+   * a screenshot makes Chromium re-dispatch a mouse move from the real cursor position, which
+   * would clear the hover being photographed.
+   */
+  frozen: () => boolean
 }
 
 export function createE2EDebug(host: HTMLElement): E2EDebug | null {
@@ -21,5 +27,6 @@ export function createE2EDebug(host: HTMLElement): E2EDebug | null {
     set: (key, value) => {
       host.setAttribute(`data-dr-e2e-${key}`, value)
     },
+    frozen: () => host.hasAttribute('data-dr-e2e-freeze'),
   }
 }

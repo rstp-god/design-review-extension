@@ -20,6 +20,8 @@ export interface PointerTrackingOptions {
   onHover: (hover: HoverState | null) => void
   /** Duration of one tracking step, ms — the E2E build collects these. */
   onSample?: (ms: number) => void
+  /** E2E build only: while `true`, pointer events are ignored so a screenshot cannot disturb the hover. */
+  frozen?: () => boolean
   target?: Window
 }
 
@@ -34,6 +36,7 @@ export function usePointerTracking({
   active,
   onHover,
   onSample,
+  frozen,
   target = window,
 }: PointerTrackingOptions): void {
   const last = useRef<{ x: number; y: number } | null>(null)
@@ -80,11 +83,12 @@ export function usePointerTracking({
     }
     // Only the user's pointer steers the hover: a page dispatching synthetic moves cannot.
     const onMove = (event: PointerEvent) => {
-      if (!isTrustedEvent(event)) return
+      if (!isTrustedEvent(event) || frozen?.()) return
       last.current = { x: event.clientX, y: event.clientY }
       schedule()
     }
     const onLeave = () => {
+      if (frozen?.()) return
       last.current = null
       current.current = null
       onHover(null)
@@ -101,5 +105,5 @@ export function usePointerTracking({
       doc.documentElement.removeEventListener('pointerleave', onLeave)
       unsubscribe()
     }
-  }, [active, source, onHover, onSample, target])
+  }, [active, source, onHover, onSample, frozen, target])
 }

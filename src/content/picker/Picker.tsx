@@ -104,7 +104,13 @@ export function Picker({ host, source }: PickerProps) {
   }, [debug, sampler])
 
   const onHover = useCallback((next: HoverState | null) => setHover(next), [])
-  usePointerTracking({ source, active: mode === 'picking', onHover, onSample })
+  usePointerTracking({
+    source,
+    active: mode === 'picking',
+    onHover,
+    onSample,
+    frozen: debug?.frozen,
+  })
 
   // Going up (`↑`, a crumb) keeps the trail below the new node, like the mockup's
   // `main › section › [div.product-card] › button`; anywhere else the path is rebuilt.
