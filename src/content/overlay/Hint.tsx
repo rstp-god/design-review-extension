@@ -1,5 +1,5 @@
 import { TestId } from '@tests/constants/testIds'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
 import { useOverlayStore } from '@/content/store/overlay'
 import { HintDot, HintKeys, HintPill } from './HintPill'
 
@@ -8,7 +8,7 @@ import { HintDot, HintKeys, HintPill } from './HintPill'
  * breadcrumbs (picker/LockedBar.tsx), so nothing is rendered here then.
  */
 export function Hint() {
-  const { t } = useTranslation('overlay')
+  const t = useT('overlay')
   const tool = useOverlayStore((state) => state.tool)
   const mode = useOverlayStore((state) => state.pickerMode)
   if (tool === 'picker' && mode === 'locked') return null

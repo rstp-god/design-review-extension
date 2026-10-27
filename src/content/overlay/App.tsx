@@ -1,14 +1,14 @@
-import type { i18n as I18n } from 'i18next'
 import { useEffect, useMemo } from 'react'
-import { I18nextProvider } from 'react-i18next'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
+import { OverlayI18nProvider } from '@/content/i18n'
 import { createLiveSource } from '@/content/picker/live'
 import { Picker } from '@/content/picker/Picker'
 import { locationWatchStrategy, watchLocation } from '@/content/spaNavigation'
 import { useOverlayStore } from '@/content/store/overlay'
 import { applyTheme } from '@/content/theme'
+import type { UiLanguage } from '@/i18n/resolveLanguage'
 import { normalizePath } from '@/shared/sessionKey'
 import { useSettingsStore } from '@/store/settings'
 import { FloatingRootProvider } from '@/ui'
@@ -17,7 +17,7 @@ import { Toolbar } from './Toolbar'
 
 export interface AppProps {
   host: OverlayHost
-  i18n: I18n
+  language: UiLanguage
   onExit: () => void
 }
 
@@ -39,7 +39,7 @@ function stepBack(onExit: () => void): void {
 }
 
 /** Root of the overlay: providers, theme, hotkeys, SPA tracking, then the toolbar, tools and hint. */
-export function App({ host, i18n, onExit }: AppProps) {
+export function App({ host, language, onExit }: AppProps) {
   const theme = useSettingsStore((state) => state.theme)
   const setPagePath = useOverlayStore((state) => state.setPagePath)
   const tool = useOverlayStore((state) => state.tool)
@@ -70,12 +70,12 @@ export function App({ host, i18n, onExit }: AppProps) {
   }, [host, setPagePath])
 
   return (
-    <I18nextProvider i18n={i18n}>
+    <OverlayI18nProvider language={language}>
       <FloatingRootProvider container={host.floating}>
         <Toolbar onExit={onExit} />
         {tool === 'picker' && <Picker host={host} source={source} />}
         <Hint />
       </FloatingRootProvider>
-    </I18nextProvider>
+    </OverlayI18nProvider>
   )
 }

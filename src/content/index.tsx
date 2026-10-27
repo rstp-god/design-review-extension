@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createI18n } from '@/i18n'
+import { resolveLanguage } from '@/i18n/resolveLanguage'
+import { getUILanguage } from '@/services/chrome/i18n'
 import { onRuntimeMessage } from '@/services/chrome/runtime'
 import { createMessageListener } from '@/shared/messaging'
 import overlayCss from '@/styles/overlay.css?inline'
@@ -20,7 +21,7 @@ import { useOverlayStore } from './store/overlay'
  */
 function mount(): void {
   const host = createOverlayHost(overlayCss)
-  const i18n = createI18n()
+  const language = resolveLanguage(getUILanguage())
   const root = createRoot(host.app)
   let disposed = false
 
@@ -49,7 +50,7 @@ function mount(): void {
 
   root.render(
     <StrictMode>
-      <App host={host} i18n={i18n} onExit={dispose} />
+      <App host={host} language={language} onExit={dispose} />
     </StrictMode>,
   )
 }

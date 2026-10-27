@@ -17,7 +17,7 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
 import { clampToViewport, defaultToolbarPosition, type Point } from '@/content/position'
 import { useOverlayStore } from '@/content/store/overlay'
 import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
@@ -44,8 +44,8 @@ function viewportSize() {
  * Position and collapsed state persist per device through toolbarState.ts.
  */
 export function Toolbar({ onExit }: ToolbarProps) {
-  const { t } = useTranslation('overlay')
-  const { t: tCommon } = useTranslation('common')
+  const t = useT('overlay')
+  const tCommon = useT('common')
   const collapsed = useOverlayStore((state) => state.collapsed)
   const position = useOverlayStore((state) => state.position)
   const setCollapsed = useOverlayStore((state) => state.setCollapsed)

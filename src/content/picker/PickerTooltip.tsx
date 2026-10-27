@@ -9,7 +9,7 @@ import {
 } from '@floating-ui/react'
 import { TestId, testIds } from '@tests/constants/testIds'
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
 import { surfaceProps } from '@/content/overlay/surfaces'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
@@ -36,7 +36,7 @@ export interface PickerTooltipProps {
  * assistive tech — it changes on every frame, and the Locked chip is the state worth announcing.
  */
 export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
-  const { t } = useTranslation('overlay')
+  const t = useT('overlay')
   const root = useFloatingRoot()
   const fields = useSettingsStore((state) => state.tooltipFields)
   const colorFormat = useSettingsStore((state) => state.colorFormat)

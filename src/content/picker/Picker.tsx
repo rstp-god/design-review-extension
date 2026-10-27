@@ -1,9 +1,9 @@
 import { testIds } from '@tests/constants/testIds'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
+import { useT } from '@/content/i18n'
 import { overlaySurfaceAt } from '@/content/overlay/surfaces'
 import { useOverlayStore } from '@/content/store/overlay'
 import type { Rect } from '@/shared/model'
@@ -55,7 +55,7 @@ interface LockedState {
  * top document, so without them a frame could be neither hovered nor locked as a whole.
  */
 function Shields({ rects, onPick }: { rects: Rect[]; onPick: (x: number, y: number) => void }) {
-  const { t } = useTranslation('overlay')
+  const t = useT('overlay')
   if (rects.length === 0) return null
   return (
     <div className="pointer-events-none fixed inset-0 z-0">

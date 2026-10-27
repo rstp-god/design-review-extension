@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createOverlayHost, type OverlayHost } from '@/content/host'
 import { App } from '@/content/overlay/App'
 import { useOverlayStore } from '@/content/store/overlay'
-import { createI18n } from '@/i18n'
 import { TOOLBAR_STATE_KEY } from '@/shared/constants'
 import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 
@@ -16,7 +15,7 @@ const css = ':host{all:initial}'
 
 function renderOverlay(onExit = vi.fn()) {
   const host = createOverlayHost(css)
-  const result = render(<App host={host} i18n={createI18n('en')} onExit={onExit} />, {
+  const result = render(<App host={host} language="en" onExit={onExit} />, {
     container: host.app,
   })
   return { host, onExit, ...result }

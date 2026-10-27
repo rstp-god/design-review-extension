@@ -1,5 +1,5 @@
 import { TestId } from '@tests/constants/testIds'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
 import type { NodeStyles } from './source'
@@ -30,7 +30,7 @@ function cornerRadius(styles: NodeStyles, corner: string, rect: Rect): number {
  * node touches the top of the viewport.
  */
 export function LockedFrame({ rect, styles, selector }: LockedFrameProps) {
-  const { t } = useTranslation('overlay')
+  const t = useT('overlay')
   const left = rect.x - FRAME_INSET
   const top = rect.y - FRAME_INSET
   const chipAbove = top - CHIP_GAP - CHIP_HEIGHT >= 0

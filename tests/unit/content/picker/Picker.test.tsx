@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vite
 import { createOverlayHost, type OverlayHost } from '@/content/host'
 import { App } from '@/content/overlay/App'
 import { useOverlayStore } from '@/content/store/overlay'
-import { createI18n } from '@/i18n'
 import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 import { useSettingsStore } from '@/store/settings'
 
@@ -59,7 +58,7 @@ describe('picker', () => {
 
     host = createOverlayHost(css)
     onExit = vi.fn<() => void>()
-    render(<App host={host} i18n={createI18n('en')} onExit={onExit} />, { container: host.app })
+    render(<App host={host} language="en" onExit={onExit} />, { container: host.app })
   })
 
   afterEach(() => {

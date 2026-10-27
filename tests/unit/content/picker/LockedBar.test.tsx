@@ -1,11 +1,10 @@
 // @vitest-environment jsdom
 
 import { cleanup, render, screen } from '@testing-library/react'
-import { I18nextProvider } from 'react-i18next'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { OverlayI18nProvider } from '@/content/i18n'
 import { LockedBar } from '@/content/picker/LockedBar'
 import type { PathEntry } from '@/content/picker/source'
-import { createI18n } from '@/i18n'
 
 const tags = ['body', 'main', 'section', 'article', 'div', 'p', 'span', 'a']
 const path: PathEntry[] = tags.map((tag, index) => ({
@@ -19,9 +18,9 @@ function renderBar(activeIndex: number, onPick = vi.fn()) {
   const active = path[activeIndex]?.node
   if (!active) throw new Error('bad index')
   render(
-    <I18nextProvider i18n={createI18n('en')}>
+    <OverlayI18nProvider language="en">
       <LockedBar path={path} active={active} onPick={onPick} />
-    </I18nextProvider>,
+    </OverlayI18nProvider>,
   )
   return onPick
 }
