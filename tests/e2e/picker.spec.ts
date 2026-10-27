@@ -188,6 +188,26 @@ test.describe('picker', () => {
     )
   })
 
+  test('nothing is highlighted while the pointer is over our own UI', async () => {
+    await activatePicker(page)
+    const cta = page.locator(CTA).first()
+    await cta.hover()
+    await expect(page.getByTestId(TestId.PickerHighlight)).toBeVisible()
+    await expect(page.getByTestId(TestId.PickerTooltip)).toBeVisible()
+
+    // The hint is pointer-events: none, so `hover()` would wait for it to receive events.
+    for (const id of [TestId.Toolbar, TestId.OverlayHint]) {
+      const box = await page.getByTestId(id).boundingBox()
+      if (!box) throw new Error(`${id} not laid out`)
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await expect(page.getByTestId(TestId.PickerHighlight)).toHaveCount(0)
+      await expect(page.getByTestId(TestId.PickerTooltip)).toHaveCount(0)
+    }
+
+    await cta.hover()
+    await expect(page.getByTestId(TestId.PickerHighlight)).toBeVisible()
+  })
+
   test('page clicks are blocked only while picking; a click locks the node, Esc steps back', async () => {
     const counts = await installEventCounter(page)
     await activatePicker(page)
