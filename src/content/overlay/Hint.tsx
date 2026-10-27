@@ -16,12 +16,18 @@ export function Hint() {
   return (
     <HintPill testId={TestId.OverlayHint}>
       {tool === 'picker' ? (
-        <span>{t('hint.pick')}</span>
+        <>
+          <span>{t('hint.pick')}</span>
+          <HintDot />
+          <HintKeys keys={['Esc']} label={t('hint.pickerOff')} />
+        </>
       ) : (
-        <HintKeys keys={['P']} label={t('hint.picker')} />
+        <>
+          <HintKeys keys={['P']} label={t('hint.picker')} />
+          <HintDot />
+          <HintKeys keys={['Esc']} label={t('hint.exit')} />
+        </>
       )}
-      <HintDot />
-      <HintKeys keys={['Esc']} label={t('hint.exit')} />
     </HintPill>
   )
 }

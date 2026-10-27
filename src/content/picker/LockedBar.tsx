@@ -90,8 +90,7 @@ export function LockedBar({ path, active, onPick }: LockedBarProps) {
         >
           <Kbd className="text-fg-disabled">Enter</Kbd>
           <span>
-            {t('hint.issue')}
-            <HintDot /> {tCommon('soon')}
+            {t('hint.issue')} <HintDot /> {tCommon('soon')}
           </span>
         </span>
         <HintKeys keys={['Esc']} label={t('hint.back')} />

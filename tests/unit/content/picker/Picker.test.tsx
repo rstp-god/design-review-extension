@@ -74,7 +74,7 @@ describe('picker', () => {
     expect(useOverlayStore.getState().tool).toBe('picker')
     expect(q('toolbar-picker')).toHaveAttribute('aria-pressed', 'true')
     expect(q('toolbar-picker')).toHaveAttribute('data-active', 'true')
-    expect(q('overlay-hint')).toHaveTextContent(/^Click to pick\s*·\s*Esc\s*exit$/)
+    expect(q('overlay-hint')).toHaveTextContent(/^Click to pick\s*·\s*Esc\s*turn off picker$/)
 
     fireEvent.click(q('toolbar-picker') as HTMLElement)
     expect(useOverlayStore.getState().tool).toBe('none')
@@ -223,7 +223,8 @@ describe('picker', () => {
       expect(crumbs.textContent).toContain('body')
       expect(crumbs.textContent).toContain('button.card__cta')
       expect(q('picker-breadcrumb-3')).toHaveAttribute('aria-current', 'true')
-      expect(q('picker-hint-enter')).toHaveTextContent(/Enter.*issue.*soon/)
+      // The key cap and the label are separated by a flex gap, the words by real spaces.
+      expect(q('picker-hint-enter')).toHaveTextContent(/^Enter\s*issue · Coming soon$/)
 
       press('Escape')
       expect(useOverlayStore.getState().pickerMode).toBe('picking')

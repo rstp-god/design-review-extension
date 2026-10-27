@@ -15,6 +15,7 @@
     "exit": "exit",
     "picker": "picker",
     "pick": "Click to pick",
+    "pickerOff": "turn off picker",
     "parentChild": "parent / child",
     "siblings": "siblings",
     "issue": "issue",
