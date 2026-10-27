@@ -11,7 +11,6 @@ import {
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
 import { OVERLAY_HOST_TAG, TOOLBAR_STATE_KEY } from '@/shared/constants'
-import { LOCATION_CHANGE_EVENT } from '@/shared/spaPatch'
 
 /** Computed style of an element inside our shadow root (locators pierce open shadow roots). */
 function computed(page: Page, testId: string, property: string) {
@@ -55,7 +54,7 @@ test.describe('toolbar', () => {
     await closePagesExcept(context, keeper)
   })
 
-  test('start mounts one shadow host with the toolbar; tools are soft-disabled with tooltips', async () => {
+  test('start mounts one shadow host with the toolbar; unfinished tools are soft-disabled with tooltips', async () => {
     const before = await pageFingerprint(page)
     const started = Date.now()
     await startReview(context, page)
@@ -67,7 +66,6 @@ test.describe('toolbar', () => {
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveCount(1)
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('Esc')
     for (const id of [
-      TestId.ToolbarPicker,
       TestId.ToolbarArea,
       TestId.ToolbarFreeze,
       TestId.ToolbarIssues,
@@ -75,8 +73,13 @@ test.describe('toolbar', () => {
     ]) {
       await expect(page.getByTestId(id)).toHaveAttribute('aria-disabled', 'true')
     }
+    await expect(page.getByTestId(TestId.ToolbarPicker)).not.toHaveAttribute('aria-disabled')
+    await page.getByTestId(TestId.ToolbarArea).hover()
+    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Area · Coming soon/)
     await page.getByTestId(TestId.ToolbarPicker).hover()
-    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Picker · Coming soon/)
+    await expect(page.getByTestId(TestId.Tooltip)).toHaveText(/^PickerP$/)
+    await page.mouse.move(400, 400)
+    await expect(page.getByTestId(TestId.Tooltip)).toHaveCount(0)
 
     // Our styles stay inside: the page did not change.
     expect(await pageFingerprint(page)).toEqual(before)
@@ -215,26 +218,5 @@ test.describe('toolbar', () => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await expect(host).toHaveAttribute('data-theme', 'dark')
     expect(await computed(page, TestId.Toolbar, 'background-color')).toBe('rgb(30, 31, 34)')
-  })
-
-  test('SPA navigation is reported through the main-world history patch', async () => {
-    await page.goto(`${FIXTURE_SITE_URL}/spa/`)
-    await startReview(context, page)
-    await expect(page.getByTestId(TestId.Toolbar)).toBeVisible()
-
-    const events = page.evaluate(
-      (eventName) =>
-        new Promise<string[]>((resolve) => {
-          const seen: string[] = []
-          window.addEventListener(eventName, () => {
-            seen.push(location.pathname)
-            if (seen.length === 2) resolve(seen)
-          })
-        }),
-      LOCATION_CHANGE_EVENT,
-    )
-    await page.locator('[data-fixture="spa-link-products"]').click()
-    await page.locator('[data-fixture="spa-replace"]').click()
-    expect(await events).toEqual(['/spa/products', '/spa/replaced'])
   })
 })

@@ -7,6 +7,13 @@ import { CONTENT_SCRIPT_FILE } from '@/shared/constants'
 
 /** Vitest runs from the repository root. */
 const repoRoot = process.cwd()
+
+/**
+ * Upper bound for `content.js`, uncompressed, in Vite's kB (1000 bytes). The overlay is injected
+ * into a live page on every start; a heavier bundle means a slower start and more to parse on the
+ * host page. Raise it deliberately, with a reason, not because a dependency crept in.
+ */
+const CONTENT_SCRIPT_BUDGET_BYTES = 520_000
 const distDir = path.join(repoRoot, 'dist')
 
 function hasProductionBuild(): boolean {
@@ -64,6 +71,14 @@ describe('contract: production bundle', () => {
     expect(offenders).toEqual([])
   })
 
+  it('content script stays within its size budget', () => {
+    const size = Buffer.byteLength(contentScript, 'utf8')
+    expect(
+      size,
+      `content.js is ${size} bytes, the budget is ${CONTENT_SCRIPT_BUDGET_BYTES}`,
+    ).toBeLessThanOrEqual(CONTENT_SCRIPT_BUDGET_BYTES)
+  })
+
   it('content script uses no rem units', () => {
     expect(contentScript).not.toMatch(/\d*\.?\d+rem\b/)
   })
@@ -83,5 +98,17 @@ describe('contract: production bundle', () => {
   it('content script is a production React build without bundled fonts', () => {
     expect(contentScript).not.toContain('process.env.NODE_ENV')
     expect(contentScript).not.toMatch(/\.woff2?\b/)
+  })
+
+  it('content script carries no E2E observation surface', () => {
+    expect(contentScript).not.toMatch(/dr-e2e/)
+  })
+
+  it('no file runs code in the main world of a page', () => {
+    const offenders = listFiles(distDir).filter((file) => {
+      if (!/\.(js|mjs)$/.test(file)) return false
+      return /world\s*:\s*["']MAIN["']/.test(readFileSync(file, 'utf8'))
+    })
+    expect(offenders).toEqual([])
   })
 })

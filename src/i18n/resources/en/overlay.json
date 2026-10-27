@@ -12,6 +12,30 @@
     "exit": "Exit review"
   },
   "hint": {
-    "exit": "exit"
+    "exit": "exit",
+    "picker": "picker",
+    "pick": "Click to pick",
+    "parentChild": "parent / child",
+    "siblings": "siblings",
+    "issue": "issue",
+    "back": "back"
+  },
+  "picker": {
+    "row": {
+      "font": "Font",
+      "text": "Text",
+      "color": "Color",
+      "background": "Background",
+      "border": "Border",
+      "padding": "Padding",
+      "margin": "Margin",
+      "size": "Size",
+      "display": "Display",
+      "radius": "Radius",
+      "shadow": "Shadow"
+    },
+    "path": "Path to the element",
+    "chip": "Selected element",
+    "shield": "Pick the frame"
   }
 }

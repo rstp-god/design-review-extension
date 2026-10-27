@@ -12,6 +12,30 @@
     "exit": "Выйти из ревью"
   },
   "hint": {
-    "exit": "выйти"
+    "exit": "выйти",
+    "picker": "пикер",
+    "pick": "Клик — выбрать",
+    "parentChild": "родитель / ребёнок",
+    "siblings": "соседи",
+    "issue": "замечание",
+    "back": "назад"
+  },
+  "picker": {
+    "row": {
+      "font": "Шрифт",
+      "text": "Текст",
+      "color": "Цвет",
+      "background": "Фон",
+      "border": "Рамка",
+      "padding": "Padding",
+      "margin": "Margin",
+      "size": "Размер",
+      "display": "Display",
+      "radius": "Radius",
+      "shadow": "Тень"
+    },
+    "path": "Путь до элемента",
+    "chip": "Выбранный элемент",
+    "shield": "Выбрать фрейм"
   }
 }

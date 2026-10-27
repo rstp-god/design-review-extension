@@ -52,19 +52,15 @@ describe('background review orchestration', () => {
     expect(await isOverlayActive(TAB_ID)).toBe(true)
   })
 
-  it('injects the content script and the main-world history patch when the overlay is absent', async () => {
+  it('injects the content script into the isolated world when the overlay is absent', async () => {
     overlayAbsent()
     await injectOverlay(TAB_ID)
 
-    expect(mock.scripting.executeScript).toHaveBeenCalledTimes(2)
-    expect(mock.scripting.executeScript).toHaveBeenNthCalledWith(1, {
+    expect(mock.scripting.executeScript).toHaveBeenCalledTimes(1)
+    expect(mock.scripting.executeScript).toHaveBeenCalledWith({
       target: { tabId: TAB_ID },
       files: [CONTENT_SCRIPT_FILE],
     })
-    expect(mock.scripting.executeScript).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ target: { tabId: TAB_ID }, world: 'MAIN' }),
-    )
   })
 
   it('does not inject the content script twice', async () => {

@@ -6,6 +6,11 @@ export interface HotkeyBinding {
   /** `event.code` for layout-independent letters: `'KeyP'` fires on a Cyrillic layout too. */
   code?: string
   shift?: boolean
+  /**
+   * Leave the key to the page while the focus is in a text field (spec 3.11). Defaults to `true`
+   * for single characters (`P` types a letter) and `false` for named keys (`Escape`).
+   */
+  ignoreInEditable?: boolean
   handler: (event: KeyboardEvent) => void
 }
 
@@ -45,9 +50,9 @@ export function installHotkeys(bindings: readonly HotkeyBinding[], target: Windo
     const binding = bindings.find((candidate) => matches(candidate, event))
     if (!binding) return
 
-    const singleKey = binding.key.length === 1
+    const ignoreInEditable = binding.ignoreInEditable ?? binding.key.length === 1
     const realTarget = event.composedPath?.()[0] ?? event.target
-    if (singleKey && isEditableTarget(realTarget)) return
+    if (ignoreInEditable && isEditableTarget(realTarget)) return
 
     event.preventDefault()
     event.stopImmediatePropagation()
