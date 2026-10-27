@@ -39,9 +39,9 @@ function viewportSize() {
 }
 
 /**
- * Floating toolbar (spec 3.2, screens.md §03). The picker is live; area, snapshot, issues and
- * export are visible but `softDisabled` with a "coming soon" tooltip until their features land.
- * Position and collapsed state persist per device through toolbarState.ts.
+ * Floating toolbar (spec 3.2, screens.md §03). The picker and the area are live; snapshot,
+ * issues and export are visible but `softDisabled` with a "coming soon" tooltip until their
+ * features land. Position and collapsed state persist per device through toolbarState.ts.
  */
 export function Toolbar({ onExit }: ToolbarProps) {
   const t = useT('overlay')
@@ -52,7 +52,9 @@ export function Toolbar({ onExit }: ToolbarProps) {
   const setPosition = useOverlayStore((state) => state.setPosition)
   const issueCount = useOverlayStore((state) => state.session?.issueCount ?? 0)
   const pickerActive = useOverlayStore((state) => state.tool === 'picker')
+  const areaActive = useOverlayStore((state) => state.tool === 'area')
   const togglePicker = useOverlayStore((state) => state.togglePicker)
+  const toggleArea = useOverlayStore((state) => state.toggleArea)
   const box = useRef<HTMLDivElement>(null)
   const restored = useRef(false)
   /** Set by the user toggling collapse; consumed once the new box is laid out. */
@@ -244,13 +246,20 @@ export function Toolbar({ onExit }: ToolbarProps) {
           <MousePointer2 size={ICON_SIZE} aria-hidden="true" />
         </Button>
       </Tooltip>
-      <Tool
-        testId={TestId.ToolbarArea}
-        tooltip={soon(t('toolbar.area'), ['A'])}
-        label={t('toolbar.area')}
-      >
-        <SquareDashed size={ICON_SIZE} aria-hidden="true" />
-      </Tool>
+      <Tooltip content={{ label: t('toolbar.area'), keys: ['A'] }}>
+        <Button
+          variant="tool"
+          size="lg"
+          iconOnly
+          active={areaActive}
+          aria-pressed={areaActive}
+          aria-label={t('toolbar.area')}
+          data-testid={TestId.ToolbarArea}
+          onClick={trusted(toggleArea)}
+        >
+          <SquareDashed size={ICON_SIZE} aria-hidden="true" />
+        </Button>
+      </Tooltip>
       <Tool
         testId={TestId.ToolbarFreeze}
         tooltip={soon(t('toolbar.freeze'), ['F'])}

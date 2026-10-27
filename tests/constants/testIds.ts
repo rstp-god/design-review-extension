@@ -73,6 +73,15 @@ export const TestId = {
   PickerBreadcrumbs: 'picker-breadcrumbs',
   PickerHintEnter: 'picker-hint-enter',
 
+  // Area
+  AreaLayer: 'area-layer',
+  AreaDim: 'area-dim',
+  AreaSelection: 'area-selection',
+  AreaChip: 'area-chip',
+  AreaActions: 'area-actions',
+  AreaIssue: 'area-issue',
+  AreaReselect: 'area-reselect',
+
   // UI primitives
   Tooltip: 'ui-tooltip',
   Menu: 'ui-menu',
@@ -91,4 +100,5 @@ export const testIds = {
   pickerRow: (key: string) => `picker-tooltip-row-${key}`,
   pickerBreadcrumb: (index: number) => `picker-breadcrumb-${index}`,
   pickerShield: (index: number) => `picker-shield-${index}`,
+  areaHandle: (corner: string) => `area-handle-${corner}`,
 } as const

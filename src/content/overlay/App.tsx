@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { AreaSelect } from '@/content/area/AreaSelect'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
@@ -23,7 +24,8 @@ export interface AppProps {
 
 /**
  * `Esc` is one step back everywhere (spec 3.11): Locked → Picking → picker off → leave the
- * review. The toolbar's exit button leaves at once.
+ * review; for the area: adjusting (or a drag in progress) → drawing → tool off → leave. The
+ * toolbar's exit button leaves at once.
  */
 function stepBack(onExit: () => void): void {
   const state = useOverlayStore.getState()
@@ -31,7 +33,11 @@ function stepBack(onExit: () => void): void {
     state.setPickerMode('picking')
     return
   }
-  if (state.tool === 'picker') {
+  if (state.tool === 'area' && state.areaMode !== 'drawing') {
+    state.setAreaMode('drawing')
+    return
+  }
+  if (state.tool !== 'none') {
     state.setTool('none')
     return
   }
@@ -54,6 +60,7 @@ export function App({ host, language, onExit }: AppProps) {
       installHotkeys([
         { key: 'Escape', handler: () => stepBack(onExit) },
         { key: 'p', code: 'KeyP', handler: () => useOverlayStore.getState().togglePicker() },
+        { key: 'a', code: 'KeyA', handler: () => useOverlayStore.getState().toggleArea() },
       ]),
     [onExit],
   )
@@ -74,6 +81,7 @@ export function App({ host, language, onExit }: AppProps) {
       <FloatingRootProvider container={host.floating}>
         <Toolbar onExit={onExit} />
         {tool === 'picker' && <Picker host={host} source={source} />}
+        {tool === 'area' && <AreaSelect host={host} source={source} />}
         <Hint />
       </FloatingRootProvider>
     </OverlayI18nProvider>

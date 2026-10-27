@@ -57,14 +57,23 @@ describe('overlay app', () => {
     expect(toolbar).toHaveAttribute('role', 'toolbar')
     expect(toolbar).toHaveAttribute('aria-label', 'Design Review toolbar')
 
-    for (const id of ['toolbar-area', 'toolbar-freeze', 'toolbar-issues', 'toolbar-export']) {
+    for (const id of ['toolbar-freeze', 'toolbar-issues', 'toolbar-export']) {
       expect(q.byTestId(id), id).toHaveAttribute('aria-disabled', 'true')
     }
-    for (const id of ['toolbar-grip', 'toolbar-picker', 'toolbar-collapse', 'toolbar-exit']) {
+    for (const id of [
+      'toolbar-grip',
+      'toolbar-picker',
+      'toolbar-area',
+      'toolbar-collapse',
+      'toolbar-exit',
+    ]) {
       expect(q.byTestId(id), id).not.toHaveAttribute('aria-disabled')
     }
     expect(q.byTestId('toolbar-picker')).toHaveAttribute('aria-pressed', 'false')
-    expect(q.byTestId('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*Esc\s*exit$/)
+    expect(q.byTestId('toolbar-area')).toHaveAttribute('aria-pressed', 'false')
+    expect(q.byTestId('overlay-hint')).toHaveTextContent(
+      /^P\s*picker\s*·\s*A\s*area\s*·\s*Esc\s*exit$/,
+    )
     expect(screen.queryByRole('toolbar')).toBeNull()
   })
 

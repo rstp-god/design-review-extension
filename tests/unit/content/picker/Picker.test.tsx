@@ -77,7 +77,7 @@ describe('picker', () => {
 
     fireEvent.click(q('toolbar-picker') as HTMLElement)
     expect(useOverlayStore.getState().tool).toBe('none')
-    expect(q('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*Esc\s*exit$/)
+    expect(q('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*A\s*area\s*·\s*Esc\s*exit$/)
   })
 
   it('Escape steps back: picker off first, then exit', () => {
