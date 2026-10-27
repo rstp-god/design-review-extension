@@ -10,6 +10,7 @@ import {
 import { TestId, testIds } from '@tests/constants/testIds'
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { surfaceProps } from '@/content/overlay/surfaces'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
 import { useSettingsStore } from '@/store/settings'
@@ -87,6 +88,7 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
         style={{ ...floatingStyles, width: TOOLTIP_WIDTH }}
         aria-hidden="true"
         data-testid={TestId.PickerTooltip}
+        {...surfaceProps('tooltip')}
         className="pointer-events-none z-20 flex flex-col gap-3 rounded-lg bg-bg px-6 py-5 text-fg shadow-popover"
       >
         <FloatingArrow

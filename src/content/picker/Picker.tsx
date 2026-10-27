@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
+import { overlaySurfaceAt } from '@/content/overlay/surfaces'
 import { useOverlayStore } from '@/content/store/overlay'
 import type { Rect } from '@/shared/model'
 import { isTrustedEvent } from '@/shared/trustedEvents'
@@ -104,12 +105,17 @@ export function Picker({ host, source }: PickerProps) {
   }, [debug, sampler])
 
   const onHover = useCallback((next: HoverState | null) => setHover(next), [])
+  const isOverUi = useCallback(
+    (x: number, y: number) => overlaySurfaceAt(host.shadowRoot, x, y),
+    [host],
+  )
   usePointerTracking({
     source,
     active: mode === 'picking',
     onHover,
     onSample,
     frozen: debug?.frozen,
+    isOverUi,
   })
 
   // Going up (`↑`, a crumb) keeps the trail below the new node, like the mockup's

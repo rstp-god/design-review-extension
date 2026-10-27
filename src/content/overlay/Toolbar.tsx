@@ -24,6 +24,7 @@ import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
 import { TOOLBAR_DEFAULT_INSET } from '@/shared/constants'
 import { isTrustedEvent } from '@/shared/trustedEvents'
 import { Badge, Button, cn, Logo, Tooltip } from '@/ui'
+import { surfaceProps } from './surfaces'
 import { useDrag } from './useDrag'
 
 const ICON_SIZE = 20
@@ -166,6 +167,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
       <div
         ref={box}
         style={style}
+        {...surfaceProps('toolbar')}
         className={cn('pointer-events-auto fixed z-10', dragging && 'select-none')}
       >
         <button
@@ -205,6 +207,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
       role="toolbar"
       aria-label={t('toolbar.label')}
       data-testid={TestId.Toolbar}
+      {...surfaceProps('toolbar')}
       style={style}
       className={cn(
         'pointer-events-auto fixed z-10 flex items-center gap-1 rounded-2xl border border-border',

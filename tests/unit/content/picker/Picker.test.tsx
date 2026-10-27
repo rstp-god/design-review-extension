@@ -123,6 +123,49 @@ describe('picker', () => {
     expect(q('picker-tooltip')).toBeNull()
   })
 
+  it('highlights nothing while the pointer is over our own UI', async () => {
+    press('p', 'KeyP')
+    const toolbar = q('toolbar') as HTMLElement
+    toolbar.getBoundingClientRect = () =>
+      ({ left: 100, top: 190, width: 400, height: 56, right: 500, bottom: 246 }) as DOMRect
+
+    // The toolbar sits over the button: the page element under the pointer is not highlighted.
+    moveTo(120, 210)
+    await nextFrame()
+    expect(q('picker-highlight')).toBeNull()
+    expect(q('picker-tooltip')).toBeNull()
+
+    moveTo(120, 300)
+    await nextFrame()
+    expect(q('picker-highlight')).not.toBeNull()
+    expect(q('picker-tooltip')).not.toBeNull()
+  })
+
+  it('hides the tooltip under the pointer and keeps it hidden until the pointer leaves that spot', async () => {
+    press('p', 'KeyP')
+    moveTo(120, 210)
+    await nextFrame()
+    const tooltip = q('picker-tooltip') as HTMLElement
+    expect(tooltip).not.toBeNull()
+    tooltip.getBoundingClientRect = () =>
+      ({ left: 100, top: 250, width: 290, height: 200, right: 390, bottom: 450 }) as DOMRect
+
+    moveTo(130, 300)
+    await nextFrame()
+    expect(q('picker-tooltip')).toBeNull()
+    expect(q('picker-highlight')).toBeNull()
+
+    // Still inside the spot the tooltip occupied, although it is gone: no flicker.
+    moveTo(140, 400)
+    await nextFrame()
+    expect(q('picker-highlight')).toBeNull()
+
+    moveTo(120, 210)
+    await nextFrame()
+    expect(q('picker-highlight')).not.toBeNull()
+    expect(q('picker-tooltip')).not.toBeNull()
+  })
+
   it('re-renders the tooltip when the settings change, without a new hover', async () => {
     press('p', 'KeyP')
     moveTo(120, 210)
