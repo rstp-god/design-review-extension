@@ -36,6 +36,7 @@
       "shadow": "Shadow"
     },
     "path": "Path to the element",
-    "chip": "Selected element"
+    "chip": "Selected element",
+    "shield": "Pick the frame"
   }
 }

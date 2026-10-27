@@ -54,7 +54,7 @@ test.describe('toolbar', () => {
     await closePagesExcept(context, keeper)
   })
 
-  test('start mounts one shadow host with the toolbar; tools are soft-disabled with tooltips', async () => {
+  test('start mounts one shadow host with the toolbar; unfinished tools are soft-disabled with tooltips', async () => {
     const before = await pageFingerprint(page)
     const started = Date.now()
     await startReview(context, page)
@@ -66,7 +66,6 @@ test.describe('toolbar', () => {
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveCount(1)
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('Esc')
     for (const id of [
-      TestId.ToolbarPicker,
       TestId.ToolbarArea,
       TestId.ToolbarFreeze,
       TestId.ToolbarIssues,
@@ -74,8 +73,13 @@ test.describe('toolbar', () => {
     ]) {
       await expect(page.getByTestId(id)).toHaveAttribute('aria-disabled', 'true')
     }
+    await expect(page.getByTestId(TestId.ToolbarPicker)).not.toHaveAttribute('aria-disabled')
+    await page.getByTestId(TestId.ToolbarArea).hover()
+    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Area · Coming soon/)
     await page.getByTestId(TestId.ToolbarPicker).hover()
-    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Picker · Coming soon/)
+    await expect(page.getByTestId(TestId.Tooltip)).toHaveText(/^PickerP$/)
+    await page.mouse.move(400, 400)
+    await expect(page.getByTestId(TestId.Tooltip)).toHaveCount(0)
 
     // Our styles stay inside: the page did not change.
     expect(await pageFingerprint(page)).toEqual(before)

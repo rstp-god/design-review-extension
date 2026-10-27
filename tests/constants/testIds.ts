@@ -90,4 +90,5 @@ export const testIds = {
   menuItem: (id: string) => `ui-menu-item-${id}`,
   pickerRow: (key: string) => `picker-tooltip-row-${key}`,
   pickerBreadcrumb: (index: number) => `picker-breadcrumb-${index}`,
+  pickerShield: (index: number) => `picker-shield-${index}`,
 } as const

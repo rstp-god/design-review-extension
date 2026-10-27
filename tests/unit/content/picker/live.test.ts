@@ -146,6 +146,13 @@ describe('LiveSource', () => {
     expect(Object.keys(styles.values)).toContain('box-shadow')
   })
 
+  it('reports visible frames as shield regions', () => {
+    expect(source.shieldRects()).toEqual([])
+    dom.iframe.getBoundingClientRect = () =>
+      ({ left: 10, top: 300, width: 400, height: 160, right: 410, bottom: 460 }) as DOMRect
+    expect(source.shieldRects()).toEqual([{ x: 10, y: 300, w: 400, h: 160 }])
+  })
+
   it('falls back to 16px when the root font size is unreadable', () => {
     document.documentElement.style.fontSize = ''
     vi.spyOn(window, 'getComputedStyle').mockReturnValue({

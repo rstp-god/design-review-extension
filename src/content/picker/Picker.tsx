@@ -1,9 +1,12 @@
+import { testIds } from '@tests/constants/testIds'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
 import { useOverlayStore } from '@/content/store/overlay'
 import type { Rect } from '@/shared/model'
+import { isTrustedEvent } from '@/shared/trustedEvents'
 import { blockPageEvents } from './blockPageEvents'
 import { Highlight } from './Highlight'
 import { LockedBar } from './LockedBar'
@@ -30,6 +33,34 @@ interface LockedState {
 }
 
 /**
+ * Transparent covers over iframes while picking: pointer events inside a frame never reach the
+ * top document, so without them a frame could be neither hovered nor locked as a whole.
+ */
+function Shields({ rects, onPick }: { rects: Rect[]; onPick: (x: number, y: number) => void }) {
+  const { t } = useTranslation('overlay')
+  if (rects.length === 0) return null
+  return (
+    <div className="pointer-events-none fixed inset-0 z-0">
+      {rects.map((rect, index) => (
+        <button
+          key={`${rect.x}:${rect.y}:${rect.w}:${rect.h}`}
+          type="button"
+          tabIndex={-1}
+          aria-label={t('picker.shield')}
+          data-testid={testIds.pickerShield(index)}
+          className="pointer-events-auto absolute m-0 cursor-default border-0 bg-transparent p-0"
+          style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+          onClick={(event) => {
+            if (isTrustedEvent(event)) onPick(event.clientX, event.clientY)
+          }}
+          onContextMenu={(event) => event.preventDefault()}
+        />
+      ))}
+    </div>
+  )
+}
+
+/**
  * The element picker (spec 3.3). Mounted while the tool is active: installs the page click
  * blocker and the pointer tracking, renders the box-model highlight and the tooltip for the
  * hovered node; a click locks the node (frame, chip, breadcrumbs, arrow keys) until `Esc` or
@@ -40,6 +71,7 @@ export function Picker({ host, source }: PickerProps) {
   const setMode = useOverlayStore((state) => state.setPickerMode)
   const [hover, setHover] = useState<HoverState | null>(null)
   const [locked, setLocked] = useState<LockedState | null>(null)
+  const [shields, setShields] = useState<Rect[]>([])
   const lockedNode = locked?.node ?? null
 
   const debug = useMemo(() => createE2EDebug(host.host), [host])
@@ -57,18 +89,30 @@ export function Picker({ host, source }: PickerProps) {
   const onHover = useCallback((next: HoverState | null) => setHover(next), [])
   usePointerTracking({ source, active: mode === 'picking', onHover, onSample })
 
+  // Going up (`↑`, a crumb) keeps the trail below the new node, like the mockup's
+  // `main › section › [div.product-card] › button`; anywhere else the path is rebuilt.
   const lock = useCallback(
     (node: PickNode) => {
-      setLocked({
+      setLocked((previous) => ({
         node,
         rect: source.rectOf(node),
         styles: source.stylesOf(node),
-        path: source.pathOf(node),
+        path: previous?.path.some((entry) => entry.node === node)
+          ? previous.path
+          : source.pathOf(node),
         selector: source.selectorOf(node),
-      })
+      }))
       setMode('locked')
     },
     [source, setMode],
+  )
+
+  const pickAt = useCallback(
+    (x: number, y: number) => {
+      const node = source.hitTest(x, y)
+      if (node) lock(node)
+    },
+    [source, lock],
   )
 
   // `Esc` (App) switches back to picking: the locked node is forgotten.
@@ -76,16 +120,37 @@ export function Picker({ host, source }: PickerProps) {
     if (mode === 'picking') setLocked(null)
   }, [mode])
 
+  // Shields over frames follow the layout through scroll and resize, one measurement per frame.
+  useEffect(() => {
+    if (mode !== 'picking') {
+      setShields([])
+      return
+    }
+    let frame = 0
+    const measure = () => {
+      frame = 0
+      setShields(source.shieldRects())
+    }
+    const schedule = () => {
+      if (frame === 0) frame = requestAnimationFrame(measure)
+    }
+    measure()
+    window.addEventListener('scroll', schedule, { capture: true, passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', schedule, { capture: true })
+      window.removeEventListener('resize', schedule)
+    }
+  }, [mode, source])
+
   useEffect(
     () =>
       blockPageEvents({
         host: host.host,
-        onClick: (event) => {
-          const node = source.hitTest(event.clientX, event.clientY)
-          if (node) lock(node)
-        },
+        onClick: (event) => pickAt(event.clientX, event.clientY),
       }),
-    [host, source, lock],
+    [host, pickAt],
   )
 
   // Arrow keys only in Locked: while picking the page keeps scrolling with them.
@@ -135,11 +200,16 @@ export function Picker({ host, source }: PickerProps) {
   }
 
   const entry = hover?.path.at(-1)
-  if (mode !== 'picking' || !hover || !entry) return null
+  if (mode !== 'picking') return null
   return (
     <>
-      <Highlight box={hover.box} />
-      <PickerTooltip rect={hover.rect} entry={entry} styles={hover.styles} />
+      <Shields rects={shields} onPick={pickAt} />
+      {hover && entry && (
+        <>
+          <Highlight box={hover.box} />
+          <PickerTooltip rect={hover.rect} entry={entry} styles={hover.styles} />
+        </>
+      )}
     </>
   )
 }

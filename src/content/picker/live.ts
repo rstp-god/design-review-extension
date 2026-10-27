@@ -208,6 +208,17 @@ export function createLiveSource({
       return entries.reverse()
     },
 
+    shieldRects() {
+      const rects: Rect[] = []
+      for (const frame of doc.querySelectorAll('iframe, frame, object, embed')) {
+        const rect = frame.getBoundingClientRect()
+        if (rect.width > 0 && rect.height > 0) {
+          rects.push({ x: rect.left, y: rect.top, w: rect.width, h: rect.height })
+        }
+      }
+      return rects
+    },
+
     dispose() {
       // Handles live in a WeakMap: nothing to release.
     },

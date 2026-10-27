@@ -68,3 +68,33 @@ if (view) {
   window.addEventListener('popstate', render)
   render()
 }
+
+/** ~3000 nodes for the picker performance check (spec 3.3 AC, 4.2): 500 cards × 6 elements. */
+const heavyRoot = document.querySelector('[data-fixture="heavy-root"]')
+if (heavyRoot) {
+  const fragment = document.createDocumentFragment()
+  for (let i = 1; i <= 500; i += 1) {
+    const card = document.createElement('article')
+    card.className = 'product-card heavy-card'
+    const title = document.createElement('h2')
+    title.textContent = `Product ${i}`
+    const price = document.createElement('p')
+    price.className = 'product-card__price'
+    price.textContent = `${(i * 37) % 9000} ₽`
+    const meta = document.createElement('div')
+    meta.className = 'heavy-meta'
+    const sku = document.createElement('span')
+    sku.textContent = `SKU-${1000 + i}`
+    const stock = document.createElement('span')
+    stock.textContent = i % 3 === 0 ? 'out of stock' : 'in stock'
+    meta.append(sku, stock)
+    const cta = document.createElement('button')
+    cta.type = 'button'
+    cta.className = 'card__cta'
+    cta.textContent = 'Add'
+    card.append(title, price, meta, cta)
+    fragment.append(card)
+  }
+  heavyRoot.append(fragment)
+  document.documentElement.dataset.heavyNodes = String(document.querySelectorAll('*').length)
+}

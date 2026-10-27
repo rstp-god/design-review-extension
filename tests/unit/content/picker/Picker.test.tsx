@@ -200,6 +200,9 @@ describe('picker', () => {
       expect(up.defaultPrevented).toBe(true)
       expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
       expect(q('picker-breadcrumb-2')).toHaveTextContent('article.product-card')
+      // The trail below the new node stays visible.
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('button.card__cta')
+      expect(q('picker-breadcrumb-3')).not.toHaveAttribute('aria-current')
 
       press('ArrowDown')
       expect(q('picker-breadcrumb-3')).toHaveTextContent('a.link')
@@ -217,7 +220,7 @@ describe('picker', () => {
       expect(q('picker-breadcrumb-0')).toHaveTextContent('body')
       press('ArrowUp')
       expect(q('picker-breadcrumb-0')).toHaveAttribute('aria-current', 'true')
-      expect(q('picker-breadcrumb-1')).toBeNull()
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('a.link')
     })
 
     it('a breadcrumb or another page click re-locks', () => {
@@ -227,10 +230,15 @@ describe('picker', () => {
       expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
       expect(q('picker-breadcrumb-2')).toHaveTextContent('article.product-card')
 
+      // A page click on a node of the trail keeps it; a click elsewhere rebuilds the path.
       document.elementsFromPoint = vi.fn(() => [article(), document.body])
       fireEvent.click(article(), { clientX: 10, clientY: 10 })
       expect(q('picker-breadcrumb-2')).toHaveAttribute('aria-current', 'true')
-      expect(q('picker-breadcrumb-3')).toBeNull()
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('button.card__cta')
+      document.elementsFromPoint = vi.fn(() => [link, document.body])
+      fireEvent.click(link, { clientX: 10, clientY: 10 })
+      expect(q('picker-breadcrumb-3')).toHaveAttribute('aria-current', 'true')
+      expect(q('picker-breadcrumb-3')).toHaveTextContent('a.link')
     })
 
     it('P turns the picker off from Locked and removes everything', () => {
@@ -248,6 +256,25 @@ describe('picker', () => {
       document.body.dispatchEvent(down)
       expect(down.defaultPrevented).toBe(false)
     })
+  })
+
+  it('covers iframes with shields while picking and locks the frame on click', () => {
+    const iframe = document.createElement('iframe')
+    iframe.className = 'frame'
+    iframe.getBoundingClientRect = () =>
+      ({ left: 10, top: 300, width: 400, height: 160, right: 410, bottom: 460 }) as DOMRect
+    document.querySelector('main')?.append(iframe)
+
+    press('p', 'KeyP')
+    const shield = q('picker-shield-0') as HTMLElement
+    expect(shield.style.left).toBe('10px')
+    expect(shield.style.width).toBe('400px')
+
+    document.elementsFromPoint = vi.fn(() => [host.host, iframe, document.body])
+    fireEvent.click(shield, { clientX: 50, clientY: 350 })
+    expect(useOverlayStore.getState().pickerMode).toBe('locked')
+    expect(q('picker-locked-chip')).toHaveTextContent('.frame')
+    expect(q('picker-shield-0')).toBeNull()
   })
 
   it('leaves arrow keys to the page while picking', () => {

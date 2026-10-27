@@ -150,3 +150,25 @@ a {
 .spacer {
   height: 60vh;
 }
+
+.heavy-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.8rem;
+}
+
+.heavy-card {
+  padding: 0.8rem;
+}
+
+.heavy-card h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.heavy-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+  color: #6b7280;
+}

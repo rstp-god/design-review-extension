@@ -108,5 +108,11 @@ export interface PickSource {
   selectorOf(node: PickNode): string
   /** Breadcrumbs from `<body>` down to the node. */
   pathOf(node: PickNode): PathEntry[]
+  /**
+   * Viewport regions where the page would swallow pointer events (iframes, plugins): the picker
+   * covers them with transparent shields while active so the frame can be hovered and locked as
+   * a whole (spec F3.7). Empty for a snapshot — an image swallows nothing.
+   */
+  shieldRects(): Rect[]
   dispose(): void
 }
