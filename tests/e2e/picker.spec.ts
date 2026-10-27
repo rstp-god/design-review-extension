@@ -66,23 +66,51 @@ function computedOf(locator: Locator) {
   })
 }
 
-/**
- * Visual check of a pointer-dependent state. `toHaveScreenshot` captures twice and the first
- * capture makes headed Chromium re-dispatch a mouse move from the real cursor position, which
- * moves the hover; a single `page.screenshot` is taken before that happens.
- */
-async function expectFrame(
-  page: Page,
-  name: string,
-  clip: { x: number; y: number; width: number; height: number },
-) {
-  const image = await page.screenshot({ animations: 'disabled', caret: 'hide', clip })
-  expect(image).toMatchSnapshot(name)
+interface Clip {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
-async function expectElementFrame(locator: Locator, name: string) {
-  const image = await locator.screenshot({ animations: 'disabled', caret: 'hide' })
-  expect(image).toMatchSnapshot(name)
+/**
+ * Visual check of a pointer-dependent state. Playwright's screenshots prepare the page first
+ * (style injection, a frame wait, metrics) and Chromium answers that with a mouse move from the
+ * real cursor position — headed on macOS it lands wherever the cursor is, under xvfb outside
+ * the page — which moves or clears the hover before the capture. A raw CDP capture takes the
+ * frame as it is. The page is not scrolled when this runs, so viewport and document coincide.
+ */
+/** Width from the PNG header (IHDR follows the 8-byte signature; width is its first field). */
+function pngWidth(png: Buffer): number {
+  return png.readUInt32BE(16)
+}
+
+async function expectFrame(page: Page, name: string, clip: Clip) {
+  const cdp = await page.context().newCDPSession(page)
+  try {
+    const capture = async (scale: number) => {
+      const { data } = await cdp.send('Page.captureScreenshot', {
+        format: 'png',
+        clip: { ...clip, scale },
+      })
+      return Buffer.from(data, 'base64')
+    }
+    // One image pixel per CSS pixel, like Playwright's `scale: 'css'`. Headed Chromium on a
+    // Retina display sometimes renders the clip at the physical scale although the page reports
+    // DPR 1; the header tells, and a second capture corrects it.
+    let image = await capture(1)
+    const width = pngWidth(image)
+    if (width !== Math.round(clip.width)) image = await capture(clip.width / width)
+    expect(image).toMatchSnapshot(name)
+  } finally {
+    await cdp.detach()
+  }
+}
+
+async function expectElementFrame(page: Page, locator: Locator, name: string) {
+  const box = await locator.boundingBox()
+  if (!box) throw new Error(`${name}: element not laid out`)
+  await expectFrame(page, name, box)
 }
 
 function activeCrumb(page: Page) {
@@ -251,7 +279,11 @@ test.describe('picker', () => {
       width: 360,
       height: 130,
     })
-    await expectElementFrame(page.getByTestId(TestId.PickerLockedBar), 'picker-locked-bar.png')
+    await expectElementFrame(
+      page,
+      page.getByTestId(TestId.PickerLockedBar),
+      'picker-locked-bar.png',
+    )
 
     // `↓` on a leaf: nothing happens, and the page does not scroll in Locked.
     await page.keyboard.press('ArrowDown')
