@@ -65,17 +65,16 @@ test.describe('toolbar', () => {
 
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveCount(1)
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('Esc')
-    for (const id of [
-      TestId.ToolbarArea,
-      TestId.ToolbarFreeze,
-      TestId.ToolbarIssues,
-      TestId.ToolbarExport,
-    ]) {
+    for (const id of [TestId.ToolbarFreeze, TestId.ToolbarIssues, TestId.ToolbarExport]) {
       await expect(page.getByTestId(id)).toHaveAttribute('aria-disabled', 'true')
     }
-    await expect(page.getByTestId(TestId.ToolbarPicker)).not.toHaveAttribute('aria-disabled')
+    for (const id of [TestId.ToolbarPicker, TestId.ToolbarArea]) {
+      await expect(page.getByTestId(id)).not.toHaveAttribute('aria-disabled')
+    }
+    await page.getByTestId(TestId.ToolbarFreeze).hover()
+    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Snapshot · Coming soon/)
     await page.getByTestId(TestId.ToolbarArea).hover()
-    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Area · Coming soon/)
+    await expect(page.getByTestId(TestId.Tooltip)).toHaveText(/^AreaA$/)
     await page.getByTestId(TestId.ToolbarPicker).hover()
     await expect(page.getByTestId(TestId.Tooltip)).toHaveText(/^PickerP$/)
     await page.mouse.move(400, 400)

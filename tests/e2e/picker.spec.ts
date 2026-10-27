@@ -10,6 +10,7 @@ import {
   startReview,
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
+import { installEventCounter, withFrozenPointer } from '@tests/helpers/pageEvents'
 import { formatCssColor } from '@/shared/colorFormat'
 import { OVERLAY_HOST_TAG } from '@/shared/constants'
 import { convertLengths, formatBoxSize, shorthand } from '@/shared/cssUnits'
@@ -66,23 +67,6 @@ function computedOf(locator: Locator) {
   })
 }
 
-/**
- * Runs `capture` with the overlay's pointer tracking frozen. Any screenshot makes Chromium
- * re-dispatch a mouse move from the real cursor position (headed on macOS: wherever the cursor
- * is; under xvfb: outside the page), which would move or clear the hover being photographed, and
- * `toHaveScreenshot` captures at least twice. The E2E build honours `data-dr-e2e-freeze` on
- * the host; the attribute is set from the page's own world, as any site could.
- */
-async function withFrozenPointer(page: Page, capture: () => Promise<void>) {
-  const host = page.locator(OVERLAY_HOST_TAG)
-  await host.evaluate((element) => element.setAttribute('data-dr-e2e-freeze', ''))
-  try {
-    await capture()
-  } finally {
-    await host.evaluate((element) => element.removeAttribute('data-dr-e2e-freeze'))
-  }
-}
-
 function activeCrumb(page: Page) {
   return page.getByTestId(TestId.PickerBreadcrumbs).locator('[aria-current="true"]')
 }
@@ -90,23 +74,6 @@ function activeCrumb(page: Page) {
 async function activatePicker(page: Page) {
   await page.keyboard.press('p')
   await expect(page.getByTestId(TestId.ToolbarPicker)).toHaveAttribute('aria-pressed', 'true')
-}
-
-/** Counts page-level pointer events that got past the overlay. */
-async function installEventCounter(page: Page) {
-  await page.evaluate(() => {
-    const counts: Record<string, number> = { click: 0, contextmenu: 0, mousedown: 0 }
-    for (const type of Object.keys(counts)) {
-      document.addEventListener(type, () => {
-        counts[type] = (counts[type] ?? 0) + 1
-      })
-    }
-    ;(window as unknown as { __fixtureCounts: typeof counts }).__fixtureCounts = counts
-  })
-  return () =>
-    page.evaluate(
-      () => (window as unknown as { __fixtureCounts: Record<string, number> }).__fixtureCounts,
-    )
 }
 
 test.describe('picker', () => {
@@ -175,7 +142,7 @@ test.describe('picker', () => {
     await expect(page.getByTestId(testIds.pickerRow('radius'))).toHaveCount(0)
     expect((await tooltip.boundingBox())?.width).toBe(290)
 
-    await withFrozenPointer(page, () =>
+    await withFrozenPointer(page, OVERLAY_HOST_TAG, () =>
       expect(page).toHaveScreenshot('picker-hover.png', {
         clip: { x: expected.rect.x - 24, y: expected.rect.y - 48, width: 360, height: 300 },
       }),
