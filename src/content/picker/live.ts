@@ -1,6 +1,6 @@
 import type { Rect } from '@/shared/model'
 import { isUsableClass, isUsableId } from './classNames'
-import { cssPathSelector, type SelectorGenerator, selectorFor } from './selector'
+import { finderSelector, type SelectorGenerator, selectorFor } from './selector'
 import {
   type BoxModel,
   type Edges,
@@ -45,7 +45,7 @@ export interface LiveSourceOptions {
   /** Our overlay host: never a pick target, skipped by hit tests and sibling navigation. */
   host: Element
   document?: Document
-  /** Selector strategy; the structural `cssPathSelector` by default. */
+  /** Selector strategy; `finderSelector` by default, tests pass simpler ones. */
   selector?: SelectorGenerator
 }
 
@@ -80,7 +80,7 @@ function shadowHostOf(element: Element): Element | null {
 export function createLiveSource({
   host,
   document: doc = document,
-  selector = cssPathSelector,
+  selector = finderSelector,
 }: LiveSourceOptions): LiveSource {
   const win = doc.defaultView ?? window
   const handles = new WeakMap<Element, LiveNode>()

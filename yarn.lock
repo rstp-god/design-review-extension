@@ -460,6 +460,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@medv/finder@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "@medv/finder@npm:4.0.2"
+  checksum: 10c0/f9b7fec9ad7077a47901a9c4f4fc585b092e8fe8e91f05001c90d1da150cc041822c008fc12726f0458211d5663c82b67243e6e03ca55f3096b5b4feb3ce13e3
+  languageName: node
+  linkType: hard
+
 "@napi-rs/wasm-runtime@npm:^1.1.4":
   version: 1.2.6
   resolution: "@napi-rs/wasm-runtime@npm:1.2.6"
@@ -1261,6 +1268,7 @@ __metadata:
     "@floating-ui/react": "npm:^0.27.20"
     "@fontsource-variable/inter": "npm:^5.3.0"
     "@fontsource-variable/jetbrains-mono": "npm:^5.3.0"
+    "@medv/finder": "npm:^4.0.2"
     "@playwright/test": "npm:1.64.1"
     "@tailwindcss/vite": "npm:^4.3.3"
     "@testing-library/dom": "npm:^10.4.2"

@@ -154,13 +154,9 @@ describe('LiveSource', () => {
     expect(source.stylesOf(source.nodeFor(dom.button)).rootFontSize).toBe(16)
   })
 
-  it('produces structural selectors, joined with >>> through shadow roots', () => {
-    expect(source.selectorOf(source.nodeFor(dom.button))).toBe(
-      'main:nth-of-type(1) > section:nth-of-type(1) > article:nth-of-type(1) > button:nth-of-type(1)',
-    )
-    expect(source.selectorOf(source.nodeFor(dom.openButton))).toBe(
-      'main:nth-of-type(1) > section:nth-of-type(1) > fx-open-card:nth-of-type(1) >>> div:nth-of-type(1) > button:nth-of-type(1)',
-    )
+  it('produces short selectors, joined with >>> through shadow roots', () => {
+    expect(source.selectorOf(source.nodeFor(dom.button))).toBe('.card__cta')
+    expect(source.selectorOf(source.nodeFor(dom.openButton))).toBe('fx-open-card >>> button')
     const custom = createLiveSource({ host: dom.host, selector: (element) => element.localName })
     expect(custom.selectorOf(custom.nodeFor(dom.openButton))).toBe('fx-open-card >>> button')
   })
