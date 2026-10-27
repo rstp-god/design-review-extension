@@ -60,6 +60,7 @@ yarn dev
 | `yarn build:e2e` | Сборка для e2e в `dist-e2e/` — **обязательна перед Playwright** |
 | `yarn test:e2e:local` | Playwright на локальной фикстуре-сайте (`tests/fixtures/site`) |
 | `yarn test:e2e:update-snapshots` | Обновить локальные визуальные бейзлайны (mac) |
+| `yarn bundle:report` | Состав `content.js` по пакетам и модулям (бюджет размера — в контракт-тесте) |
 
 Визуальные бейзлайны хранятся отдельно для `chromium-mac/` и `chromium-ci/`. Бейзлайны CI обновляются только через воркфлоу `Update Visual Snapshots`.
 
@@ -190,6 +191,7 @@ Open any site → extension icon → "Start review" (or `Alt+Shift+R`).
 | `yarn build:e2e` | E2E build into `dist-e2e/` — **required before Playwright** |
 | `yarn test:e2e:local` | Playwright against the local fixture site (`tests/fixtures/site`) |
 | `yarn test:e2e:update-snapshots` | Refresh local visual baselines (mac) |
+| `yarn bundle:report` | Composition of `content.js` by package and module (the size budget lives in a contract test) |
 
 Visual baselines are stored separately for `chromium-mac/` and `chromium-ci/`. CI baselines are refreshed only via the `Update Visual Snapshots` workflow.
 
