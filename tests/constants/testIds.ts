@@ -58,6 +58,16 @@ export const TestId = {
   ToolbarCollapsedBadge: 'toolbar-collapsed-badge',
   OverlayHint: 'overlay-hint',
 
+  // Picker
+  PickerHighlight: 'picker-highlight',
+  PickerHighlightMargin: 'picker-highlight-margin',
+  PickerHighlightBorder: 'picker-highlight-border',
+  PickerHighlightPadding: 'picker-highlight-padding',
+  PickerHighlightContent: 'picker-highlight-content',
+  PickerTooltip: 'picker-tooltip',
+  PickerTooltipTag: 'picker-tooltip-tag',
+  PickerTooltipSize: 'picker-tooltip-size',
+
   // UI primitives
   Tooltip: 'ui-tooltip',
   Menu: 'ui-menu',
@@ -73,4 +83,5 @@ export const testIds = {
   recentItem: (sessionId: string) => `popup-recent-item-${sessionId}`,
   recentMenu: (sessionId: string) => `popup-recent-menu-${sessionId}`,
   menuItem: (id: string) => `ui-menu-item-${id}`,
+  pickerRow: (key: string) => `picker-tooltip-row-${key}`,
 } as const

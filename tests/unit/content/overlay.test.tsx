@@ -35,7 +35,14 @@ describe('overlay app', () => {
 
   beforeEach(() => {
     mock = installChromeMock()
-    useOverlayStore.setState({ session: null, collapsed: false, position: null, pagePath: '/' })
+    useOverlayStore.setState({
+      session: null,
+      collapsed: false,
+      position: null,
+      pagePath: '/',
+      tool: 'none',
+      pickerMode: 'picking',
+    })
   })
 
   afterEach(() => {
@@ -43,7 +50,7 @@ describe('overlay app', () => {
     for (const node of document.querySelectorAll('dr-overlay')) node.remove()
   })
 
-  it('renders the toolbar with live grip / collapse / exit and soft-disabled tools', async () => {
+  it('renders the toolbar with live grip / picker / collapse / exit and soft-disabled tools', async () => {
     const { host } = renderOverlay()
     const q = within(host)
 
@@ -51,19 +58,14 @@ describe('overlay app', () => {
     expect(toolbar).toHaveAttribute('role', 'toolbar')
     expect(toolbar).toHaveAttribute('aria-label', 'Design Review toolbar')
 
-    for (const id of [
-      'toolbar-picker',
-      'toolbar-area',
-      'toolbar-freeze',
-      'toolbar-issues',
-      'toolbar-export',
-    ]) {
+    for (const id of ['toolbar-area', 'toolbar-freeze', 'toolbar-issues', 'toolbar-export']) {
       expect(q.byTestId(id), id).toHaveAttribute('aria-disabled', 'true')
     }
-    for (const id of ['toolbar-grip', 'toolbar-collapse', 'toolbar-exit']) {
+    for (const id of ['toolbar-grip', 'toolbar-picker', 'toolbar-collapse', 'toolbar-exit']) {
       expect(q.byTestId(id), id).not.toHaveAttribute('aria-disabled')
     }
-    expect(q.byTestId('overlay-hint')).toHaveTextContent('Esc')
+    expect(q.byTestId('toolbar-picker')).toHaveAttribute('aria-pressed', 'false')
+    expect(q.byTestId('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*Esc\s*exit$/)
     expect(screen.queryByRole('toolbar')).toBeNull()
   })
 
@@ -108,7 +110,7 @@ describe('overlay app', () => {
     const { host, onExit } = renderOverlay()
     const q = within(host)
 
-    fireEvent.keyDown(document.body, { key: 'p', code: 'KeyP' })
+    fireEvent.keyDown(document.body, { key: 'x', code: 'KeyX' })
     expect(onExit).not.toHaveBeenCalled()
 
     fireEvent.keyDown(document.body, { key: 'Escape' })

@@ -38,8 +38,8 @@ function viewportSize() {
 }
 
 /**
- * Floating toolbar (spec 3.2, screens.md §03). In the extension shell the tools are visible but
- * `softDisabled` with a "coming soon" tooltip; the grip, collapse / expand and exit are live.
+ * Floating toolbar (spec 3.2, screens.md §03). The picker is live; area, snapshot, issues and
+ * export are visible but `softDisabled` with a "coming soon" tooltip until their features land.
  * Position and collapsed state persist per device through toolbarState.ts.
  */
 export function Toolbar({ onExit }: ToolbarProps) {
@@ -50,6 +50,8 @@ export function Toolbar({ onExit }: ToolbarProps) {
   const setCollapsed = useOverlayStore((state) => state.setCollapsed)
   const setPosition = useOverlayStore((state) => state.setPosition)
   const issueCount = useOverlayStore((state) => state.session?.issueCount ?? 0)
+  const pickerActive = useOverlayStore((state) => state.tool === 'picker')
+  const togglePicker = useOverlayStore((state) => state.togglePicker)
   const box = useRef<HTMLDivElement>(null)
   const restored = useRef(false)
   /** Set by the user toggling collapse; consumed once the new box is laid out. */
@@ -225,13 +227,20 @@ export function Toolbar({ onExit }: ToolbarProps) {
         <GripVertical size={16} aria-hidden="true" />
       </button>
 
-      <Tool
-        testId={TestId.ToolbarPicker}
-        tooltip={soon(t('toolbar.picker'), ['P'])}
-        label={t('toolbar.picker')}
-      >
-        <MousePointer2 size={ICON_SIZE} aria-hidden="true" />
-      </Tool>
+      <Tooltip content={{ label: t('toolbar.picker'), keys: ['P'] }}>
+        <Button
+          variant="tool"
+          size="lg"
+          iconOnly
+          active={pickerActive}
+          aria-pressed={pickerActive}
+          aria-label={t('toolbar.picker')}
+          data-testid={TestId.ToolbarPicker}
+          onClick={trusted(togglePicker)}
+        >
+          <MousePointer2 size={ICON_SIZE} aria-hidden="true" />
+        </Button>
+      </Tooltip>
       <Tool
         testId={TestId.ToolbarArea}
         tooltip={soon(t('toolbar.area'), ['A'])}

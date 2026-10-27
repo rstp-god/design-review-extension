@@ -85,6 +85,25 @@ describe('hotkeys', () => {
     expect(onEscape).toHaveBeenCalledTimes(1)
   })
 
+  it('ignores named keys in text fields only when a binding asks for it', () => {
+    const onUp = vi.fn()
+    const onDown = vi.fn()
+    uninstall = installHotkeys([
+      { key: 'ArrowUp', ignoreInEditable: true, handler: onUp },
+      { key: 'ArrowDown', handler: onDown },
+    ])
+    const input = document.createElement('input')
+    document.body.append(input)
+
+    const up = press(input, { key: 'ArrowUp' })
+    expect(onUp).not.toHaveBeenCalled()
+    expect(up.defaultPrevented).toBe(false)
+    press(input, { key: 'ArrowDown' })
+    expect(onDown).toHaveBeenCalledTimes(1)
+    press(document.body, { key: 'ArrowUp' })
+    expect(onUp).toHaveBeenCalledTimes(1)
+  })
+
   it('finds the real target behind an open shadow root', () => {
     const onPicker = vi.fn()
     uninstall = installHotkeys([{ key: 'p', code: 'KeyP', handler: onPicker }])

@@ -12,6 +12,24 @@
     "exit": "Exit review"
   },
   "hint": {
-    "exit": "exit"
+    "exit": "exit",
+    "picker": "picker",
+    "pick": "Click to pick"
+  },
+  "picker": {
+    "tooltip": "Element styles",
+    "row": {
+      "font": "Font",
+      "text": "Text",
+      "color": "Color",
+      "background": "Background",
+      "border": "Border",
+      "padding": "Padding",
+      "margin": "Margin",
+      "size": "Size",
+      "display": "Display",
+      "radius": "Radius",
+      "shadow": "Shadow"
+    }
   }
 }

@@ -102,6 +102,14 @@
 
   --color-white: #ffffff;
 
+  /* Picker: box-model layers and tooltip header (tokens.md §1) */
+  --color-box-margin: var(--dr-box-margin);
+  --color-box-border: var(--dr-box-border);
+  --color-box-padding: var(--dr-box-padding);
+  --color-box-content: var(--dr-box-content);
+  --color-tooltip-tag: var(--dr-tooltip-tag);
+  --color-tooltip-class: var(--dr-tooltip-class);
+
   --shadow-float: var(--dr-shadow-float);
   --shadow-popover: var(--dr-shadow-popover);
   --shadow-dialog: var(--dr-shadow-dialog);

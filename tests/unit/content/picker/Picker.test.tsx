@@ -1,0 +1,172 @@
+// @vitest-environment jsdom
+
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
+import { installChromeMock } from '@tests/mocks/chrome'
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
+import { createOverlayHost, type OverlayHost } from '@/content/host'
+import { App } from '@/content/overlay/App'
+import { useOverlayStore } from '@/content/store/overlay'
+import { createI18n } from '@/i18n'
+import { useSettingsStore } from '@/store/settings'
+
+const css = ':host{all:initial}'
+
+/** Runs a queued animation frame (stubbed to a macrotask) and lets React commit. */
+async function nextFrame() {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1))
+  })
+}
+
+describe('picker', () => {
+  let host: OverlayHost
+  let onExit: Mock<() => void>
+  let button: HTMLButtonElement
+  let link: HTMLAnchorElement
+
+  const q = (id: string) => host.shadowRoot.querySelector<HTMLElement>(`[data-testid="${id}"]`)
+  const press = (key: string, code?: string) =>
+    fireEvent.keyDown(document.body, { key, code: code ?? key })
+  const moveTo = (x: number, y: number) =>
+    fireEvent.pointerMove(document.body, { clientX: x, clientY: y })
+
+  beforeEach(() => {
+    installChromeMock()
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      setTimeout(() => callback(performance.now()), 0),
+    )
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id))
+    useOverlayStore.setState({ tool: 'none', pickerMode: 'picking', session: null })
+    useSettingsStore.setState({
+      tooltipFields: ['typography', 'colors', 'spacing', 'size'],
+      colorFormat: 'hex',
+      units: 'px',
+    })
+
+    document.body.innerHTML = `
+      <main><article class="product-card">
+        <a href="/cart/" class="link">Cart</a>
+        <button type="button" class="card__cta">Add to cart</button>
+      </article></main>`
+    button = document.querySelector('button') as HTMLButtonElement
+    link = document.querySelector('a') as HTMLAnchorElement
+    button.style.cssText =
+      'color: rgb(255, 255, 255); background-color: rgb(37, 99, 235); padding: 10px 16px; margin: 16px 0 0; font-size: 14px; display: flex'
+    button.getBoundingClientRect = () =>
+      ({ left: 100, top: 200, width: 246, height: 40, right: 346, bottom: 240 }) as DOMRect
+    document.elementsFromPoint = vi.fn((x: number) => (x < 150 ? [button, document.body] : []))
+
+    host = createOverlayHost(css)
+    onExit = vi.fn<() => void>()
+    render(<App host={host} i18n={createI18n('en')} onExit={onExit} />, { container: host.app })
+  })
+
+  afterEach(() => {
+    cleanup()
+    host.destroy()
+    document.body.innerHTML = ''
+  })
+
+  it('P and the toolbar button toggle the picker; the hint follows', () => {
+    expect(q('toolbar-picker')).toHaveAttribute('aria-pressed', 'false')
+    press('p', 'KeyP')
+    expect(useOverlayStore.getState().tool).toBe('picker')
+    expect(q('toolbar-picker')).toHaveAttribute('aria-pressed', 'true')
+    expect(q('toolbar-picker')).toHaveAttribute('data-active', 'true')
+    expect(q('overlay-hint')).toHaveTextContent(/^Click to pick\s*·\s*Esc\s*exit$/)
+
+    fireEvent.click(q('toolbar-picker') as HTMLElement)
+    expect(useOverlayStore.getState().tool).toBe('none')
+    expect(q('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*Esc\s*exit$/)
+  })
+
+  it('Escape steps back: picker off first, then exit', () => {
+    press('p', 'KeyP')
+    press('Escape')
+    expect(useOverlayStore.getState().tool).toBe('none')
+    expect(onExit).not.toHaveBeenCalled()
+    press('Escape')
+    expect(onExit).toHaveBeenCalledTimes(1)
+  })
+
+  it('highlights the node under the pointer with its box model and tooltip', async () => {
+    press('p', 'KeyP')
+    moveTo(120, 210)
+    await nextFrame()
+
+    const content = q('picker-highlight-content') as HTMLElement
+    expect(content.style.left).toBe('116px')
+    expect(content.style.top).toBe('210px')
+    expect(content.style.width).toBe('214px')
+    expect(content.style.height).toBe('20px')
+    const margin = q('picker-highlight-margin') as HTMLElement
+    expect(margin.style.top).toBe('184px')
+    expect(margin.style.borderTopWidth).toBe('16px')
+    expect(margin.style.borderLeftWidth).toBe('0px')
+
+    expect(q('picker-tooltip-tag')).toHaveTextContent('button.card__cta')
+    expect(q('picker-tooltip-size')).toHaveTextContent('246 × 40')
+    expect(q('picker-tooltip-row-color')).toHaveTextContent('#FFFFFF')
+    expect(q('picker-tooltip-row-background')).toHaveTextContent('#2563EB')
+    expect(q('picker-tooltip-row-padding')).toHaveTextContent('10px 16px')
+    expect(q('picker-tooltip-row-margin')).toHaveTextContent('16px 0 0')
+    expect(q('picker-tooltip-row-display')).toHaveTextContent('flex')
+    expect(q('picker-tooltip-row-radius')).toBeNull()
+
+    // One frame per burst of moves, and nothing where there is no page element.
+    moveTo(121, 210)
+    moveTo(122, 210)
+    moveTo(500, 210)
+    await nextFrame()
+    expect(q('picker-highlight')).toBeNull()
+    expect(q('picker-tooltip')).toBeNull()
+  })
+
+  it('re-renders the tooltip when the settings change, without a new hover', async () => {
+    press('p', 'KeyP')
+    moveTo(120, 210)
+    await nextFrame()
+    expect(q('picker-tooltip-row-color')).toHaveTextContent('#FFFFFF')
+
+    act(() => {
+      useSettingsStore.getState().update({ colorFormat: 'rgb', units: 'rem' })
+      useSettingsStore.getState().toggleTooltipField('spacing', false)
+    })
+    expect(q('picker-tooltip-row-color')).toHaveTextContent('rgb(255, 255, 255)')
+    expect(q('picker-tooltip-row-font')).toHaveTextContent('/')
+    expect(q('picker-tooltip-row-padding')).toBeNull()
+  })
+
+  it('blocks page clicks only while the picker is active', () => {
+    const onLink = vi.fn((event: Event) => event.preventDefault())
+    const onButton = vi.fn()
+    link.addEventListener('click', onLink)
+    button.addEventListener('click', onButton)
+
+    fireEvent.click(button)
+    expect(onButton).toHaveBeenCalledTimes(1)
+
+    press('p', 'KeyP')
+    const blocked = fireEvent.click(link)
+    expect(blocked).toBe(false)
+    expect(onLink).not.toHaveBeenCalled()
+    fireEvent.pointerDown(button)
+    fireEvent.click(button)
+    expect(onButton).toHaveBeenCalledTimes(1)
+
+    press('p', 'KeyP')
+    fireEvent.click(button)
+    expect(onButton).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves arrow keys to the page while picking', () => {
+    press('p', 'KeyP')
+    const event = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      bubbles: true,
+      cancelable: true,
+    })
+    document.body.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+  })
+})
