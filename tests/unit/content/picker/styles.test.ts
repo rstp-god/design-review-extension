@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { NodeStyles, StyleProp } from '@/content/picker/source'
 import { STYLE_PROPS } from '@/content/picker/source'
-import { type TooltipFormat, tooltipRows } from '@/content/picker/styles'
+import { contentBox, type TooltipFormat, tooltipRows } from '@/content/picker/styles'
 import { TOOLTIP_FIELDS } from '@/shared/model'
 
 /** The fixture button from screens.md §04 as Chrome would report it. */
@@ -49,6 +49,8 @@ function buttonStyles(overrides: Partial<Record<StyleProp, string>> = {}): NodeS
 }
 
 const all: TooltipFormat = { fields: TOOLTIP_FIELDS, colorFormat: 'hex', units: 'px' }
+/** Border box of the fixture button. */
+const box = { w: 246, h: 40 }
 
 function rowMap(rows: ReturnType<typeof tooltipRows>) {
   return Object.fromEntries(rows.map((row) => [row.key, row.value]))
@@ -56,7 +58,7 @@ function rowMap(rows: ReturnType<typeof tooltipRows>) {
 
 describe('tooltipRows', () => {
   it('renders the mockup rows for the fixture button', () => {
-    const rows = tooltipRows(buttonStyles(), all)
+    const rows = tooltipRows(buttonStyles(), all, box)
     expect(rowMap(rows)).toEqual({
       font: 'Inter 14px/20px · 600',
       text: 'center',
@@ -64,7 +66,7 @@ describe('tooltipRows', () => {
       background: '#2563EB',
       padding: '10px 16px',
       margin: '16px 0 0',
-      size: '246px × 40px',
+      content: '214px × 20px',
       display: 'flex',
       radius: '8px',
     })
@@ -82,27 +84,39 @@ describe('tooltipRows', () => {
     ])
   })
 
-  it('falls back to the box for inline elements whose computed size is auto', () => {
-    const rows = rowMap(
-      tooltipRows(buttonStyles({ width: 'auto', height: 'auto' }), all, { w: 134.6, h: 21.5 }),
+  it('content is the border box minus padding and borders, whatever box-sizing and width say', () => {
+    const bordered = buttonStyles({
+      width: 'auto',
+      height: 'auto',
+      'box-sizing': 'content-box',
+      'border-top-width': '1px',
+      'border-right-width': '2px',
+      'border-bottom-width': '1px',
+      'border-left-width': '2px',
+    })
+    expect(contentBox(bordered.values, { w: 300.46, h: 61.5 })).toEqual({ w: 264.46, h: 39.5 })
+    expect(rowMap(tooltipRows(bordered, all, { w: 300.46, h: 61.5 })).content).toBe(
+      '264.5px × 39.5px',
     )
-    expect(rows.size).toBe('134.6px × 21.5px')
-    expect(rowMap(tooltipRows(buttonStyles({ width: 'auto' }), all)).size).toBe('0 × 40px')
+    // Never negative: a box smaller than its own padding shows an empty content area.
+    expect(rowMap(tooltipRows(bordered, all, { w: 10, h: 10 })).content).toBe('0 × 0')
   })
 
   it('follows the enabled fields', () => {
-    const rows = tooltipRows(buttonStyles(), { ...all, fields: ['colors', 'spacing'] })
+    const rows = tooltipRows(buttonStyles(), { ...all, fields: ['colors', 'spacing'] }, box)
     expect(rows.map((row) => row.key)).toEqual(['color', 'background', 'padding', 'margin'])
-    expect(tooltipRows(buttonStyles(), { ...all, fields: [] })).toEqual([])
+    expect(tooltipRows(buttonStyles(), { ...all, fields: [] }, box)).toEqual([])
   })
 
   it('applies the color format and the units', () => {
-    const rows = rowMap(tooltipRows(buttonStyles(), { ...all, colorFormat: 'hsl', units: 'rem' }))
+    const rows = rowMap(
+      tooltipRows(buttonStyles(), { ...all, colorFormat: 'hsl', units: 'rem' }, box),
+    )
     expect(rows.font).toBe('Inter 0.875rem/1.25rem · 600')
     expect(rows.background).toBe('hsl(221, 83%, 53%)')
     expect(rows.padding).toBe('0.625rem 1rem')
     expect(rows.margin).toBe('1rem 0 0')
-    expect(rows.size).toBe('15.375rem × 2.5rem')
+    expect(rows.content).toBe('13.375rem × 1.25rem')
     expect(rows.radius).toBe('0.5rem')
   })
 
@@ -128,6 +142,7 @@ describe('tooltipRows', () => {
           'border-bottom-left-radius': '0px',
         }),
         all,
+        box,
       ),
     )
     expect(rows.font).toBe('JetBrains Mono 14px/normal · 600')

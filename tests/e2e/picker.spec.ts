@@ -336,7 +336,7 @@ test.describe('picker', () => {
     await expect(page.getByTestId(testIds.pickerRow('color'))).toContainText('hsl(0, 0%, 100%)')
     await expect(page.getByTestId(testIds.pickerRow('font'))).toContainText('rem')
     await expect(page.getByTestId(testIds.pickerRow('padding'))).toHaveCount(0)
-    await expect(page.getByTestId(testIds.pickerRow('size'))).toContainText('rem')
+    await expect(page.getByTestId(testIds.pickerRow('content'))).toContainText('rem')
   })
 
   test('hover handler stays within a frame on a page with ~3000 nodes', async () => {

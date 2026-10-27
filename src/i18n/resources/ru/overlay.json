@@ -29,7 +29,7 @@
       "border": "Рамка",
       "padding": "Padding",
       "margin": "Margin",
-      "size": "Размер",
+      "content": "Контент",
       "display": "Display",
       "radius": "Radius",
       "shadow": "Тень"

@@ -29,7 +29,7 @@
       "border": "Border",
       "padding": "Padding",
       "margin": "Margin",
-      "size": "Size",
+      "content": "Content",
       "display": "Display",
       "radius": "Radius",
       "shadow": "Shadow"

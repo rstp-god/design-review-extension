@@ -11,7 +11,7 @@ export type TooltipRowKey =
   | 'border'
   | 'padding'
   | 'margin'
-  | 'size'
+  | 'content'
   | 'display'
   | 'radius'
   | 'shadow'
@@ -30,6 +30,12 @@ export interface TooltipFormat {
   units: Units
 }
 
+/** Border box of the node in px: the header's `W × H` and the base of the content row. */
+export interface BoxSize {
+  w: number
+  h: number
+}
+
 /** `"Inter", system-ui` → `Inter`. */
 function firstFontFamily(value: string): string {
   const first = value.split(',')[0] ?? value
@@ -37,16 +43,25 @@ function firstFontFamily(value: string): string {
 }
 
 /**
+ * Content box from the border box: padding and borders off each side. Computed `width` and
+ * `height` would not do — under `box-sizing: border-box` they are the border box, and for
+ * inline elements they are `auto`.
+ */
+export function contentBox(values: Record<StyleProp, string>, box: BoxSize): BoxSize {
+  const px = (property: StyleProp) => Number.parseFloat(values[property] ?? '') || 0
+  const horizontal =
+    px('padding-left') + px('padding-right') + px('border-left-width') + px('border-right-width')
+  const vertical =
+    px('padding-top') + px('padding-bottom') + px('border-top-width') + px('border-bottom-width')
+  return { w: Math.max(0, box.w - horizontal), h: Math.max(0, box.h - vertical) }
+}
+
+/**
  * Turns captured computed values into the rows of the picker tooltip (screens.md §04), by the
  * fields enabled in the settings. Pure: the source captured raw values once, the user's color
  * format and units are applied here on every render, so a settings change needs no re-capture.
  */
-export function tooltipRows(
-  styles: NodeStyles,
-  format: TooltipFormat,
-  /** Border box of the node: computed `width` / `height` are `auto` for inline elements. */
-  box?: { w: number; h: number },
-): TooltipRow[] {
+export function tooltipRows(styles: NodeStyles, format: TooltipFormat, box: BoxSize): TooltipRow[] {
   const { values, rootFontSize } = styles
   const { colorFormat, units } = format
   const enabled = new Set(format.fields)
@@ -122,14 +137,11 @@ export function tooltipRows(
   }
 
   if (enabled.has('size')) {
-    const side = (property: 'width' | 'height', fallback: number | undefined) => {
-      const value = Number.parseFloat(get(property))
-      return formatLength(Number.isFinite(value) ? value : (fallback ?? 0), units, rootFontSize)
-    }
+    const content = contentBox(values, box)
     rows.push({
-      key: 'size',
+      key: 'content',
       field: 'size',
-      value: `${side('width', box?.w)} × ${side('height', box?.h)}`,
+      value: `${formatLength(content.w, units, rootFontSize)} × ${formatLength(content.h, units, rootFontSize)}`,
     })
     rows.push({ key: 'display', field: 'size', value: get('display') })
   }
