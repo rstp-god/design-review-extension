@@ -7,6 +7,13 @@ import { CONTENT_SCRIPT_FILE } from '@/shared/constants'
 
 /** Vitest runs from the repository root. */
 const repoRoot = process.cwd()
+
+/**
+ * Upper bound for `content.js`, uncompressed, in Vite's kB (1000 bytes). The overlay is injected
+ * into a live page on every start; a heavier bundle means a slower start and more to parse on the
+ * host page. Raise it deliberately, with a reason, not because a dependency crept in.
+ */
+const CONTENT_SCRIPT_BUDGET_BYTES = 520_000
 const distDir = path.join(repoRoot, 'dist')
 
 function hasProductionBuild(): boolean {
@@ -62,6 +69,14 @@ describe('contract: production bundle', () => {
       return readFileSync(file, 'utf8').includes('__drE2E')
     })
     expect(offenders).toEqual([])
+  })
+
+  it('content script stays within its size budget', () => {
+    const size = Buffer.byteLength(contentScript, 'utf8')
+    expect(
+      size,
+      `content.js is ${size} bytes, the budget is ${CONTENT_SCRIPT_BUDGET_BYTES}`,
+    ).toBeLessThanOrEqual(CONTENT_SCRIPT_BUDGET_BYTES)
   })
 
   it('content script uses no rem units', () => {
