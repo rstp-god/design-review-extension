@@ -11,7 +11,6 @@ import {
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
 import { OVERLAY_HOST_TAG, TOOLBAR_STATE_KEY } from '@/shared/constants'
-import { LOCATION_CHANGE_EVENT } from '@/shared/spaPatch'
 
 /** Computed style of an element inside our shadow root (locators pierce open shadow roots). */
 function computed(page: Page, testId: string, property: string) {
@@ -215,26 +214,5 @@ test.describe('toolbar', () => {
     await page.emulateMedia({ colorScheme: 'dark' })
     await expect(host).toHaveAttribute('data-theme', 'dark')
     expect(await computed(page, TestId.Toolbar, 'background-color')).toBe('rgb(30, 31, 34)')
-  })
-
-  test('SPA navigation is reported through the main-world history patch', async () => {
-    await page.goto(`${FIXTURE_SITE_URL}/spa/`)
-    await startReview(context, page)
-    await expect(page.getByTestId(TestId.Toolbar)).toBeVisible()
-
-    const events = page.evaluate(
-      (eventName) =>
-        new Promise<string[]>((resolve) => {
-          const seen: string[] = []
-          window.addEventListener(eventName, () => {
-            seen.push(location.pathname)
-            if (seen.length === 2) resolve(seen)
-          })
-        }),
-      LOCATION_CHANGE_EVENT,
-    )
-    await page.locator('[data-fixture="spa-link-products"]').click()
-    await page.locator('[data-fixture="spa-replace"]').click()
-    expect(await events).toEqual(['/spa/products', '/spa/replaced'])
   })
 })

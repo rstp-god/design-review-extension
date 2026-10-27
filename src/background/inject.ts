@@ -1,7 +1,6 @@
-import { executeScriptFile, executeScriptFunction } from '@/services/chrome/scripting'
+import { executeScriptFile } from '@/services/chrome/scripting'
 import { CONTENT_SCRIPT_FILE } from '@/shared/constants'
 import { MessageError, sendToTab } from '@/shared/messaging'
-import { patchHistoryInPage } from '@/shared/spaPatch'
 
 const STATUS_TIMEOUT_MS = 1_000
 
@@ -25,13 +24,11 @@ export async function isOverlayActive(tabId: number): Promise<boolean> {
 }
 
 /**
- * Injects the content script once per document, together with the main-world history patch
- * (guarded by a flag, so a re-injection after an extension reload is still a no-op for it).
- * A race between the hotkey and the popup is resolved by the script itself: it replaces a host
- * it finds, so there is never a second overlay.
+ * Injects the content script once per document, into the isolated world only — nothing of ours
+ * ever runs in the page's own realm. A race between the hotkey and the popup is resolved by the
+ * script itself: it replaces a host it finds, so there is never a second overlay.
  */
 export async function injectOverlay(tabId: number): Promise<void> {
   if (await isOverlayActive(tabId)) return
   await executeScriptFile(tabId, CONTENT_SCRIPT_FILE)
-  await executeScriptFunction(tabId, patchHistoryInPage, 'MAIN')
 }

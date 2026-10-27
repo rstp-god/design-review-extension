@@ -1,9 +1,10 @@
 import type { i18n as I18n } from 'i18next'
 import { useEffect } from 'react'
 import { I18nextProvider } from 'react-i18next'
+import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
-import { watchLocation } from '@/content/spaNavigation'
+import { locationWatchStrategy, watchLocation } from '@/content/spaNavigation'
 import { useOverlayStore } from '@/content/store/overlay'
 import { applyTheme } from '@/content/theme'
 import { normalizePath } from '@/shared/sessionKey'
@@ -28,9 +29,15 @@ export function App({ host, i18n, onExit }: AppProps) {
   useEffect(() => installHotkeys([{ key: 'Escape', handler: onExit }]), [onExit])
 
   useEffect(() => {
-    setPagePath(normalizePath(window.location.pathname))
-    return watchLocation(({ pathname }) => setPagePath(pathname))
-  }, [setPagePath])
+    const debug = createE2EDebug(host.host)
+    const update = (pathname: string) => {
+      setPagePath(pathname)
+      debug?.set('page-path', pathname)
+    }
+    debug?.set('nav', locationWatchStrategy())
+    update(normalizePath(window.location.pathname))
+    return watchLocation(({ pathname }) => update(pathname))
+  }, [host, setPagePath])
 
   return (
     <I18nextProvider i18n={i18n}>

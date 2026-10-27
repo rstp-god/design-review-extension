@@ -84,4 +84,16 @@ describe('contract: production bundle', () => {
     expect(contentScript).not.toContain('process.env.NODE_ENV')
     expect(contentScript).not.toMatch(/\.woff2?\b/)
   })
+
+  it('content script carries no E2E observation surface', () => {
+    expect(contentScript).not.toMatch(/dr-e2e/)
+  })
+
+  it('no file runs code in the main world of a page', () => {
+    const offenders = listFiles(distDir).filter((file) => {
+      if (!/\.(js|mjs)$/.test(file)) return false
+      return /world\s*:\s*["']MAIN["']/.test(readFileSync(file, 'utf8'))
+    })
+    expect(offenders).toEqual([])
+  })
 })
