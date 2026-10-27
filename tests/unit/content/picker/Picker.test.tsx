@@ -7,6 +7,7 @@ import { createOverlayHost, type OverlayHost } from '@/content/host'
 import { App } from '@/content/overlay/App'
 import { useOverlayStore } from '@/content/store/overlay'
 import { createI18n } from '@/i18n'
+import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 import { useSettingsStore } from '@/store/settings'
 
 const css = ':host{all:initial}'
@@ -282,6 +283,14 @@ describe('picker', () => {
     press('p', 'KeyP')
     fireEvent.click(button, { clientX: 0, clientY: 0, detail: 0 })
     expect(useOverlayStore.getState().pickerMode).toBe('picking')
+  })
+
+  it('ignores synthetic pointer moves from the page', async () => {
+    press('p', 'KeyP')
+    trustSyntheticEventsForTests(false)
+    moveTo(120, 210)
+    await nextFrame()
+    expect(q('picker-highlight')).toBeNull()
   })
 
   it('leaves arrow keys to the page while picking', () => {

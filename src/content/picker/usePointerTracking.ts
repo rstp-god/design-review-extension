@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { Rect } from '@/shared/model'
+import { isTrustedEvent } from '@/shared/trustedEvents'
 import { onLayoutChange } from './layoutChange'
 import type { BoxModel, NodeStyles, PathEntry, PickNode, PickSource } from './source'
 
@@ -77,7 +78,9 @@ export function usePointerTracking({
     const schedule = () => {
       if (frame === 0) frame = target.requestAnimationFrame(step)
     }
+    // Only the user's pointer steers the hover: a page dispatching synthetic moves cannot.
     const onMove = (event: PointerEvent) => {
+      if (!isTrustedEvent(event)) return
       last.current = { x: event.clientX, y: event.clientY }
       schedule()
     }
