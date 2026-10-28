@@ -31,9 +31,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e:local": "playwright test --project=chromium-mac",
-    "test:e2e:update-snapshots": "playwright test --project=chromium-mac --update-snapshots",
+    "test:e2e:update-snapshots": "playwright test --project=chromium-mac --update-snapshots all",
     "test:e2e:ci": "xvfb-run -a playwright test --project=chromium-ci",
-    "test:e2e:update-snapshots:ci": "xvfb-run -a playwright test --project=chromium-ci --update-snapshots",
+    "test:e2e:update-snapshots:ci": "xvfb-run -a playwright test --project=chromium-ci --update-snapshots all",
     "postinstall": "husky"
   },
   "dependencies": {
