@@ -17,7 +17,9 @@ import type { UiLanguage } from '@/i18n/resolveLanguage'
 import { normalizePath } from '@/shared/sessionKey'
 import { useSettingsStore } from '@/store/settings'
 import { FloatingRootProvider } from '@/ui'
+import { Countdown } from './Countdown'
 import { Hint } from './Hint'
+import { SnapshotBadge } from './SnapshotBadge'
 import { SnapshotLayer } from './SnapshotLayer'
 import { Toast } from './Toast'
 import { Toolbar } from './Toolbar'
@@ -78,6 +80,7 @@ export function App({ host, language, onExit }: AppProps) {
 function Review({ host, onExit }: Omit<AppProps, 'language'>) {
   const setPagePath = useOverlayStore((state) => state.setPagePath)
   const tool = useOverlayStore((state) => state.tool)
+  const phase = useOverlayStore((state) => state.snapshotPhase)
   const liveSource = useMemo(() => createLiveSource({ host: host.host }), [host])
   const snapshot = useSnapshotController(host)
   // The tools never know which page they read: live or frozen, the interface is the same.
@@ -111,9 +114,11 @@ function Review({ host, onExit }: Omit<AppProps, 'language'>) {
   return (
     <>
       {snapshot.snapshot && <SnapshotLayer snapshot={snapshot.snapshot} />}
-      <Toolbar onExit={onExit} />
+      <Toolbar onExit={onExit} snapshot={snapshot} />
       {tool === 'picker' && <Picker host={host} source={source} />}
       {tool === 'area' && <AreaSelect host={host} source={source} />}
+      {phase === 'countdown' && <Countdown />}
+      {phase === 'snapshot' && <SnapshotBadge />}
       <Hint />
       <Toast />
     </>

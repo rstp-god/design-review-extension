@@ -3,6 +3,7 @@ import { act, cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 import { Badge } from '@/ui/Badge'
 import { Button } from '@/ui/Button'
 import { Checkbox } from '@/ui/Checkbox'
@@ -227,6 +228,52 @@ describe('Menu', () => {
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
     expect(onOpen).not.toHaveBeenCalled()
+  })
+})
+
+describe('Menu with keys, separators and a footer', () => {
+  it('renders key caps, a divider and the footer, and ignores synthetic selections', async () => {
+    const user = userEvent.setup()
+    const onNow = vi.fn()
+    const onLater = vi.fn()
+    renderWithFloatingRoot(
+      <Menu
+        aria-label="Snapshot"
+        footer="Hover states stay put"
+        className="w-[236px]"
+        items={[
+          { id: 'now', label: 'Now', keys: ['F'], onSelect: onNow },
+          {
+            id: 'later',
+            label: 'In 5 s',
+            keys: ['Shift', 'F'],
+            separatorBefore: true,
+            onSelect: onLater,
+          },
+        ]}
+      >
+        <button type="button" aria-label="Snapshot" />
+      </Menu>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Snapshot' }))
+    const menu = await screen.findByRole('menu', { name: 'Snapshot' })
+    expect(menu.className).toContain('w-[236px]')
+    expect(menu.querySelectorAll('hr')).toHaveLength(1)
+    expect(menu).toHaveTextContent('Hover states stay put')
+    const later = screen.getByRole('menuitem', { name: /In 5 s/ })
+    expect(Array.from(later.querySelectorAll('kbd')).map((cap) => cap.textContent)).toEqual([
+      'Shift',
+      'F',
+    ])
+
+    trustSyntheticEventsForTests(false)
+    later.click()
+    expect(onLater).not.toHaveBeenCalled()
+    expect(screen.queryByRole('menu')).not.toBeNull()
+    trustSyntheticEventsForTests(true)
+    await user.click(later)
+    expect(onLater).toHaveBeenCalledTimes(1)
+    expect(onNow).not.toHaveBeenCalled()
   })
 })
 

@@ -65,14 +65,14 @@ test.describe('toolbar', () => {
 
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveCount(1)
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('Esc')
-    for (const id of [TestId.ToolbarFreeze, TestId.ToolbarIssues, TestId.ToolbarExport]) {
+    for (const id of [TestId.ToolbarIssues, TestId.ToolbarExport]) {
       await expect(page.getByTestId(id)).toHaveAttribute('aria-disabled', 'true')
     }
-    for (const id of [TestId.ToolbarPicker, TestId.ToolbarArea]) {
+    for (const id of [TestId.ToolbarPicker, TestId.ToolbarArea, TestId.ToolbarFreeze]) {
       await expect(page.getByTestId(id)).not.toHaveAttribute('aria-disabled')
     }
     await page.getByTestId(TestId.ToolbarFreeze).hover()
-    await expect(page.getByTestId(TestId.Tooltip)).toContainText(/Snapshot · Coming soon/)
+    await expect(page.getByTestId(TestId.Tooltip)).toHaveText(/^SnapshotF$/)
     await page.getByTestId(TestId.ToolbarArea).hover()
     await expect(page.getByTestId(TestId.Tooltip)).toHaveText(/^AreaA$/)
     await page.getByTestId(TestId.ToolbarPicker).hover()

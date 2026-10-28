@@ -18,19 +18,26 @@ import { TestId, testIds } from '@tests/constants/testIds'
 import {
   Children,
   cloneElement,
+  Fragment,
   type ReactElement,
   type ReactNode,
   type Ref,
   useRef,
   useState,
 } from 'react'
+import { isTrustedEvent } from '@/shared/trustedEvents'
 import { cn } from './cn'
 import { useFloatingRoot } from './FloatingRoot'
+import { KeyCombo } from './Kbd'
 
 export interface MenuItem {
   id: string
   label: ReactNode
   icon?: ReactNode
+  /** Key caps shown at the right edge: the shortcut that does the same. */
+  keys?: readonly string[]
+  /** A divider above this item. */
+  separatorBefore?: boolean
   onSelect: () => void
   danger?: boolean
   disabled?: boolean
@@ -41,14 +48,25 @@ export interface MenuProps {
   /** The trigger button; receives `ref`, `aria-*` and the click handler. */
   children: ReactElement<{ ref?: Ref<HTMLElement> }>
   placement?: Placement
+  /** Muted explanatory text under the items. */
+  footer?: ReactNode
+  className?: string
   'aria-label'?: string
 }
 
 /**
  * Dropdown menu on a trigger. Arrow keys move, Enter / Space select, Escape and outside press
- * close; focus returns to the trigger. Items render into the floating root.
+ * close; focus returns to the trigger. Items render into the floating root. Only the user's own
+ * events select an item: the page can `.click()` into our open shadow root.
  */
-export function Menu({ items, children, placement = 'bottom-end', ...aria }: MenuProps) {
+export function Menu({
+  items,
+  children,
+  placement = 'bottom-end',
+  footer,
+  className,
+  ...aria
+}: MenuProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState<number | null>(null)
   const listRef = useRef<Array<HTMLElement | null>>([])
@@ -79,8 +97,8 @@ export function Menu({ items, children, placement = 'bottom-end', ...aria }: Men
     delete floatingProps['aria-labelledby']
   }
 
-  const select = (item: MenuItem) => {
-    if (item.disabled) return
+  const select = (item: MenuItem, event: { isTrusted: boolean }) => {
+    if (item.disabled || !isTrustedEvent(event)) return
     setOpen(false)
     item.onSelect()
   }
@@ -102,47 +120,58 @@ export function Menu({ items, children, placement = 'bottom-end', ...aria }: Men
               className={cn(
                 'z-30 flex min-w-[180px] flex-col gap-1 rounded-xl border border-border bg-bg p-2',
                 'font-sans text-base text-fg shadow-popover',
+                className,
               )}
             >
               {items.map((item, index) => (
-                <button
-                  key={item.id}
-                  ref={(element) => {
-                    listRef.current[index] = element
-                  }}
-                  type="button"
-                  role="menuitem"
-                  tabIndex={activeIndex === index ? 0 : -1}
-                  disabled={item.disabled}
-                  data-testid={testIds.menuItem(item.id)}
-                  {...getItemProps({
-                    onClick: () => select(item),
-                    onKeyDown: (event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        select(item)
-                      }
-                    },
-                  })}
-                  className={cn(
-                    'flex h-16 cursor-pointer items-center gap-4 rounded-md px-4 text-left',
-                    'transition-colors duration-(--dr-duration) ease-out',
-                    'hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none',
-                    'disabled:cursor-default disabled:text-fg-disabled disabled:hover:bg-transparent',
-                    item.danger ? 'text-danger' : 'text-fg',
+                <Fragment key={item.id}>
+                  {item.separatorBefore && index > 0 && (
+                    <hr className="mx-3 my-1 h-px border-0 bg-border" />
                   )}
-                >
-                  {item.icon && (
-                    <span
-                      aria-hidden="true"
-                      className="inline-flex size-8 items-center justify-center"
-                    >
-                      {item.icon}
-                    </span>
-                  )}
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                </button>
+                  <button
+                    ref={(element) => {
+                      listRef.current[index] = element
+                    }}
+                    type="button"
+                    role="menuitem"
+                    tabIndex={activeIndex === index ? 0 : -1}
+                    disabled={item.disabled}
+                    data-testid={testIds.menuItem(item.id)}
+                    {...getItemProps({
+                      onClick: (event) => select(item, event),
+                      onKeyDown: (event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          select(item, event)
+                        }
+                      },
+                    })}
+                    className={cn(
+                      'flex h-18 cursor-pointer items-center gap-4 rounded-md px-5 text-left',
+                      'transition-colors duration-(--dr-duration) ease-out',
+                      'hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none',
+                      'disabled:cursor-default disabled:text-fg-disabled disabled:hover:bg-transparent',
+                      item.danger ? 'text-danger' : 'text-fg',
+                    )}
+                  >
+                    {item.icon && (
+                      <span
+                        aria-hidden="true"
+                        className="inline-flex size-8 items-center justify-center"
+                      >
+                        {item.icon}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    {item.keys && item.keys.length > 0 && <KeyCombo keys={item.keys} />}
+                  </button>
+                </Fragment>
               ))}
+              {footer && (
+                <p className="m-0 px-5 pt-3 pb-2 font-sans text-fg-muted text-label leading-4">
+                  {footer}
+                </p>
+              )}
             </div>
           </FloatingFocusManager>
         </FloatingPortal>

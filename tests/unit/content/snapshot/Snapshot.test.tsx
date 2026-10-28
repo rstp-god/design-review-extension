@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { type ChromeMock, installChromeMock } from '@tests/mocks/chrome'
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
 import { createOverlayHost, type OverlayHost } from '@/content/host'
 import { App } from '@/content/overlay/App'
+import { countdownCorner, secondsLeft } from '@/content/overlay/Countdown'
+import { formatSnapshotTime } from '@/content/overlay/SnapshotBadge'
 import { CAPTURING_ATTRIBUTE } from '@/content/snapshot/capture'
 import { useOverlayStore } from '@/content/store/overlay'
 import type { Rect } from '@/shared/model'
@@ -343,6 +346,62 @@ describe('page snapshot', () => {
     expect(state().snapshotPhase).toBe('live')
   })
 
+  it('the toolbar menu offers Now and the delays live, the way back and a retake on a snapshot', async () => {
+    const user = userEvent.setup()
+    const freeze = q('toolbar-freeze') as HTMLElement
+    expect(freeze).toHaveAttribute('aria-pressed', 'false')
+    await user.click(freeze)
+    let menu = await waitFor(() => host.shadowRoot.querySelector('[role="menu"]') as HTMLElement)
+    expect(menu).toHaveTextContent('Now')
+    expect(menu).toHaveTextContent('In 3 s')
+    expect(menu).toHaveTextContent('In 5 s')
+    expect(menu).toHaveTextContent('In 10 s')
+    expect(menu).toHaveTextContent('hover states, dropdowns and animations stay put')
+    const five = q('ui-menu-item-freeze-5') as HTMLElement
+    expect(Array.from(five.querySelectorAll('kbd')).map((k) => k.textContent)).toEqual([
+      'Shift',
+      'F',
+    ])
+    expect(q('ui-menu-item-freeze-3')?.querySelector('kbd')).toBeNull()
+
+    await user.click(q('ui-menu-item-freeze-3') as HTMLElement)
+    expect(state().snapshotPhase).toBe('countdown')
+    expect(state().countdown?.total).toBe(3)
+    press('Escape')
+
+    await user.click(freeze)
+    await waitFor(() => expect(q('ui-menu-item-freeze-now')).not.toBeNull())
+    await user.click(q('ui-menu-item-freeze-now') as HTMLElement)
+    await waitFor(() => expect(state().snapshotPhase).toBe('snapshot'))
+    await tick()
+    expect(freeze).toHaveAttribute('aria-pressed', 'true')
+    expect(freeze).toHaveAttribute('data-active', 'true')
+    const badge = q('snapshot-badge') as HTMLElement
+    expect(badge).toHaveAttribute('role', 'status')
+    expect(badge).toHaveTextContent(/^Snapshot \d{2}:\d{2}:\d{2}\s*·\s*F\s*live page$/)
+    expect(q('overlay-hint')).toHaveTextContent(
+      /^P\s*picker\s*·\s*A\s*area\s*·\s*F\s*live page\s*·\s*Esc\s*live page$/,
+    )
+
+    await user.click(freeze)
+    menu = await waitFor(() => host.shadowRoot.querySelector('[role="menu"]') as HTMLElement)
+    expect(menu).toHaveTextContent('Live page')
+    expect(menu).toHaveTextContent('New snapshot in 5 s')
+    expect(menu).not.toHaveTextContent('stay put')
+    await user.click(q('ui-menu-item-freeze-live') as HTMLElement)
+    await tick()
+    expect(state().snapshotPhase).toBe('live')
+    expect(q('snapshot-badge')).toBeNull()
+    expect(freeze).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('formats the badge time as a 24-hour clock with seconds', () => {
+    const noon = new Date(2026, 0, 15, 14, 20, 31).getTime()
+    expect(formatSnapshotTime(noon, 'en-US')).toBe('14:20:31')
+    expect(formatSnapshotTime(noon, 'ru-RU')).toBe('14:20:31')
+    expect(formatSnapshotTime(new Date(2026, 0, 15, 0, 5, 9).getTime(), 'en-US')).toBe('00:05:09')
+  })
+
   it('ignores a second F while the capture is in flight', async () => {
     let release: (() => void) | undefined
     const gate = new Promise<void>((resolve) => {
@@ -363,5 +422,99 @@ describe('page snapshot', () => {
     release?.()
     await waitFor(() => expect(state().snapshotPhase).toBe('snapshot'))
     expect(captureRequests).toBe(1)
+  })
+})
+
+describe('countdown pill', () => {
+  let host: OverlayHost
+
+  const q = (id: string) => host.shadowRoot.querySelector<HTMLElement>(`[data-testid="${id}"]`)
+  const state = () => useOverlayStore.getState()
+  const ring = () =>
+    (q('countdown') as HTMLElement).querySelector('circle.stroke-accent') as SVGCircleElement
+  const offset = () => Number.parseFloat(ring().getAttribute('stroke-dashoffset') ?? '')
+
+  beforeEach(() => {
+    installChromeMock()
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+      setTimeout(() => callback(performance.now()), 0),
+    )
+    window.innerWidth = 1280
+    window.innerHeight = 720
+    useOverlayStore.setState({
+      tool: 'none',
+      position: null,
+      snapshotPhase: 'live',
+      countdown: null,
+      snapshotMeta: null,
+      toast: null,
+    })
+    useSettingsStore.setState({ freezeDelay: 5 })
+    host = createOverlayHost(css)
+    render(<App host={host} language="en" onExit={vi.fn()} />, { container: host.app })
+  })
+
+  afterEach(() => {
+    cleanup()
+    host.destroy()
+  })
+
+  it('shows the seconds, a full ring, the texts and Cancel without taking the focus', () => {
+    const focused = document.activeElement
+    act(() => {
+      state().startCountdown(5)
+    })
+    const pill = q('countdown') as HTMLElement
+    expect(pill).toHaveAttribute('role', 'status')
+    expect(pill).toHaveAttribute('data-corner', 'bottom-right')
+    expect(q('countdown-seconds')).toHaveTextContent('5')
+    expect(pill).toHaveTextContent('Snapshot in 5 s')
+    expect(pill).toHaveTextContent('Hover the state you need')
+    expect(q('countdown-cancel')).toHaveTextContent('Cancel')
+    expect(document.activeElement).toBe(focused)
+    expect(offset()).toBeCloseTo(0, 5)
+    // Only the button takes the pointer.
+    expect((pill.parentElement as HTMLElement).className).toContain('pointer-events-none')
+    expect((q('countdown-cancel') as HTMLElement).className).toContain('pointer-events-auto')
+  })
+
+  it('moves to the opposite corner when the toolbar sits bottom-right', () => {
+    act(() => {
+      useOverlayStore.setState({ position: { x: 900, y: 600 } })
+      state().startCountdown(3)
+    })
+    expect(q('countdown')).toHaveAttribute('data-corner', 'top-left')
+    expect(countdownCorner(null, { w: 1280, h: 720 })).toBe('bottom-right')
+    expect(countdownCorner({ x: 16, y: 600 }, { w: 1280, h: 720 })).toBe('bottom-right')
+    expect(countdownCorner({ x: 900, y: 100 }, { w: 1280, h: 720 })).toBe('bottom-right')
+    expect(countdownCorner({ x: 900, y: 600 }, { w: 1280, h: 720 })).toBe('top-left')
+  })
+
+  it('counts down by the second and empties the ring; Cancel ends it', async () => {
+    vi.useFakeTimers()
+    try {
+      act(() => {
+        state().startCountdown(3)
+      })
+      expect(q('countdown-seconds')).toHaveTextContent('3')
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_050)
+      })
+      expect(q('countdown-seconds')).toHaveTextContent('2')
+      expect(offset()).toBeGreaterThan(0)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000)
+      })
+      expect(q('countdown-seconds')).toHaveTextContent('1')
+      expect(secondsLeft(10_000, 9_001)).toBe(1)
+      expect(secondsLeft(10_000, 10_000)).toBe(0)
+      expect(secondsLeft(10_000, 12_000)).toBe(0)
+
+      fireEvent.click(q('countdown-cancel') as HTMLElement)
+      expect(state().snapshotPhase).toBe('live')
+      expect(q('countdown')).toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
