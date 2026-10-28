@@ -36,6 +36,10 @@ describe('lockScroll', () => {
     expect(dispatch(layer, wheel())).toBe(true)
     // A long panel of ours keeps scrolling.
     expect(dispatch(inPanel, wheel())).toBe(false)
+    // The page setting the same attribute on itself buys nothing.
+    document.body.setAttribute(SCROLLABLE_ATTRIBUTE, '')
+    expect(dispatch(document.body, wheel())).toBe(true)
+    document.body.removeAttribute(SCROLLABLE_ATTRIBUTE)
 
     unlock()
     unlock = undefined

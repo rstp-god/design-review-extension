@@ -11,6 +11,7 @@ import {
 } from '@tests/helpers/extension'
 import { FIXTURE_SITE_URL } from '@tests/helpers/fixtureSite'
 import { installEventCounter, withFrozenPointer } from '@tests/helpers/pageEvents'
+import { screenPixel } from '@tests/helpers/pixels'
 import { OVERLAY_HOST_TAG } from '@/shared/constants'
 
 /** Spec 4.2: walk + ranking of ~3000 nodes in under 300 ms. Asserted locally, reported on CI. */
@@ -50,29 +51,6 @@ async function boxOf(locator: Locator): Promise<Box> {
 /** Center of a box, for `page.mouse` — locators cannot act on a page under the snapshot layer. */
 function center(box: Box) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
-}
-
-/** One pixel of the snapshot canvas, in CSS px, as `[r, g, b, a]`. */
-function canvasPixel(page: Page, x: number, y: number) {
-  return page.evaluate(
-    ([px, py, hostTag]) => {
-      const root = document.querySelector(hostTag as string)?.shadowRoot
-      const canvas = root?.querySelector(
-        '[data-testid="snapshot-layer"] canvas',
-      ) as HTMLCanvasElement | null
-      const context = canvas?.getContext('2d')
-      if (!canvas || !context) throw new Error('no snapshot canvas')
-      const scale = canvas.width / canvas.getBoundingClientRect().width
-      const data = context.getImageData(
-        Math.round((px as number) * scale),
-        Math.round((py as number) * scale),
-        1,
-        1,
-      ).data
-      return [data[0], data[1], data[2], data[3]]
-    },
-    [x, y, OVERLAY_HOST_TAG] as const,
-  )
 }
 
 async function readStats(page: Page): Promise<SnapshotStats> {
@@ -291,7 +269,23 @@ test.describe('page snapshot', () => {
     await page.mouse.move(640, 500)
     await expect(dropdown).toBeHidden()
     // The dropdown is white; the header under it is #1e3a5f. The picture kept the dropdown.
-    expect(await canvasPixel(page, probe.x, probe.y)).toEqual([255, 255, 255, 255])
+    expect(await screenPixel(page, probe.x, probe.y)).toEqual([255, 255, 255])
+    // The picture is not the page's to read: the canvas sits in a closed shadow root.
+    expect(
+      await page.evaluate(
+        (hostTag) =>
+          document
+            .querySelector(hostTag)
+            ?.shadowRoot?.querySelector('[data-testid="snapshot-layer"]')?.shadowRoot ?? null,
+        OVERLAY_HOST_TAG,
+      ),
+    ).toBeNull()
+    expect(
+      await page.evaluate(
+        (hostTag) => document.querySelector(hostTag)?.shadowRoot?.querySelectorAll('canvas').length,
+        OVERLAY_HOST_TAG,
+      ),
+    ).toBe(0)
     await expect(badge()).toHaveText(/^Snapshot \d{2}:\d{2}:\d{2}\s*·\s*F\s*live page$/)
     await expect(badge()).toHaveScreenshot('snapshot-badge.png', {
       mask: [page.getByTestId(TestId.SnapshotBadgeTime)],

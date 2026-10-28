@@ -145,19 +145,33 @@ describe('page snapshot', () => {
     setHidden(false)
   })
 
-  it('F asks the background for the capture and puts the picture over the page', async () => {
+  it('F asks the background for the capture and puts the picture over the page, out of its reach', async () => {
+    const attachShadow = vi.spyOn(Element.prototype, 'attachShadow')
     await freeze()
 
     expect(captureRequests).toBe(1)
     expect(host.host.hasAttribute(CAPTURING_ATTRIBUTE)).toBe(false)
     const layer = q('snapshot-layer') as HTMLElement
     expect(layer).not.toBeNull()
-    const canvas = layer.querySelector('canvas') as HTMLCanvasElement
+    // The page shares our DOM: a canvas in the open root could be read with getImageData from
+    // the page's world. It is inside a closed root instead, and nothing but the root created
+    // here can reach it.
+    expect(layer.shadowRoot).toBeNull()
+    expect(layer.querySelector('canvas')).toBeNull()
+    const closed = attachShadow.mock.results.find(
+      (_result, index) => attachShadow.mock.calls[index]?.[0]?.mode === 'closed',
+    )?.value as ShadowRoot
+    expect(closed.host).toBe(layer)
+    const canvas = closed.querySelector('canvas') as HTMLCanvasElement
     expect(canvas.width).toBe(2560)
     expect(canvas.height).toBe(1440)
     expect(canvas.style.width).toBe('1280px')
     expect(canvas.style.height).toBe('720px')
     expect(state().snapshotMeta?.takenAt).toBeGreaterThan(0)
+
+    press('f', 'KeyF')
+    await tick()
+    expect(closed.querySelector('canvas')).toBeNull()
   })
 
   it('keeps the tool, drops a locked node, and the picker reads the snapshot', async () => {

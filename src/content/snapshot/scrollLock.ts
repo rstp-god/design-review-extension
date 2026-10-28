@@ -16,9 +16,13 @@ const SCROLL_KEYS = new Set([
 /** A scrollable region of our own UI (a long panel) opts out of the wheel and touch lock. */
 export const SCROLLABLE_ATTRIBUTE = 'data-dr-scrollable'
 
-function insideScrollableUi(event: Event): boolean {
-  return event
-    .composedPath()
+/** Only an attribute inside our shadow root counts: the page may write any attribute it likes. */
+function insideScrollableUi(event: Event, host: Element): boolean {
+  const path = event.composedPath()
+  const hostIndex = path.indexOf(host)
+  if (hostIndex === -1) return false
+  return path
+    .slice(0, hostIndex)
     .some((node) => node instanceof Element && node.hasAttribute(SCROLLABLE_ATTRIBUTE))
 }
 
@@ -33,7 +37,7 @@ function insideScrollableUi(event: Event): boolean {
  */
 export function lockScroll(host: Element, target: Window = window): () => void {
   const cancel = (event: Event) => {
-    if (insideScrollableUi(event)) return
+    if (insideScrollableUi(event, host)) return
     event.preventDefault()
   }
   const onKeyDown = (event: KeyboardEvent) => {
