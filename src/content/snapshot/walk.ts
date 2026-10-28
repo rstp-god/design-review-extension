@@ -1,4 +1,10 @@
-import { type Edges, type StyleProp, stylePropsFor } from '@/content/picker/source'
+import {
+  type Edges,
+  LEAF_TAGS,
+  NON_RENDERED_TAGS,
+  type StyleProp,
+  stylePropsFor,
+} from '@/content/picker/source'
 import type { Rect, TooltipField } from '@/shared/model'
 import { describeElement, type NodeDescriptor } from './descriptor'
 import {
@@ -22,25 +28,6 @@ import {
   VISIBILITY_STYLE_PROPS,
   type VisibilityStyle,
 } from './visibility'
-
-/** Elements that never render: skipped with their subtree, as the live source skips them. */
-const NON_RENDERED_TAGS = new Set([
-  'head',
-  'title',
-  'base',
-  'meta',
-  'link',
-  'style',
-  'script',
-  'template',
-  'noscript',
-])
-
-/**
- * Leaves of the snapshot: their contents are another document (frames, plugins) or vector
- * drawing commands (`svg`) — the picker lands on the element as a whole in both sources.
- */
-export const LEAF_TAGS = new Set(['iframe', 'frame', 'object', 'embed', 'svg'])
 
 const DEFAULT_ROOT_FONT_SIZE = 16
 

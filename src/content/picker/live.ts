@@ -4,6 +4,9 @@ import { finderSelector, type SelectorGenerator, selectorFor } from './selector'
 import {
   type BoxModel,
   type Edges,
+  LEAF_TAGS,
+  NON_RENDERED_TAGS,
+  type NodeSelector,
   type NodeStyles,
   type PathEntry,
   type PickNode,
@@ -12,18 +15,7 @@ import {
   type StyleProp,
 } from './source'
 
-/** Elements that never render: the arrow keys skip them the way they skip text nodes. */
-const NON_RENDERED_TAGS = new Set([
-  'head',
-  'title',
-  'base',
-  'meta',
-  'link',
-  'style',
-  'script',
-  'template',
-  'noscript',
-])
+const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /** Guard against pathological nesting; real pages are a few levels deep at most. */
 const MAX_SHADOW_DEPTH = 32
@@ -70,12 +62,26 @@ function shadowHostOf(element: Element): Element | null {
   return root instanceof ShadowRoot ? root.host : null
 }
 
+/** A `path` or `g` inside an `svg` resolves to the outermost `svg`: the drawing is one node. */
+function svgRootOf(element: Element): Element {
+  let current = element
+  while (
+    current.namespaceURI === SVG_NS &&
+    current.parentElement &&
+    current.parentElement.namespaceURI === SVG_NS
+  ) {
+    current = current.parentElement
+  }
+  return current
+}
+
 /**
  * `PickSource` over the live DOM. Hit testing goes through `elementsFromPoint`, which honours
  * stacking and `pointer-events` — so our highlight and tooltip (`pointer-events: none`) are never
  * hit, and our host is dropped from the stack explicitly. Open shadow roots are entered with
  * `shadowRoot.elementFromPoint` (slotted light-DOM children come back retargeted to themselves);
- * a closed host has no `shadowRoot` and an iframe has no accessible children, so both are leaves.
+ * a closed host has no `shadowRoot` and an iframe has no accessible children, so both are leaves;
+ * so is an `svg`, whose inner `path`s resolve to the drawing as a whole.
  */
 export function createLiveSource({
   host,
@@ -155,7 +161,7 @@ export function createLiveSource({
         if (!inner || inner === element) break
         element = inner
       }
-      return nodeFor(element)
+      return nodeFor(svgRootOf(element))
     },
 
     rectOf,
@@ -183,7 +189,7 @@ export function createLiveSource({
 
     firstChildOf(node) {
       const element = elementOf(node)
-      if (element.localName === 'iframe') return null
+      if (LEAF_TAGS.has(element.localName)) return null
       const scope: ParentNode = element.shadowRoot ?? element
       return firstPickable(scope.firstElementChild, 'nextElementSibling')
     },
@@ -196,8 +202,8 @@ export function createLiveSource({
       return firstPickable(elementOf(node).nextElementSibling, 'nextElementSibling')
     },
 
-    selectorOf(node) {
-      return selectorFor(elementOf(node), selector)
+    selectorOf(node): NodeSelector {
+      return { selector: selectorFor(elementOf(node), selector), source: 'live' }
     },
 
     pathOf(node) {

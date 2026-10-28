@@ -20,6 +20,8 @@ export interface PickerDom {
   closedHost: HTMLElement
   closedButton: HTMLElement
   iframe: HTMLIFrameElement
+  svg: SVGSVGElement
+  path: SVGPathElement
   /** Replaces `document.elementsFromPoint` for the next hit test. */
   stackAt: (stack: Element[]) => void
   cleanup: () => void
@@ -39,6 +41,7 @@ export function buildPickerDom(): PickerDom {
         <fx-closed-card></fx-closed-card>
       </section>
       <iframe class="frame" title="frame"></iframe>
+      <svg class="icon" viewBox="0 0 24 24"><g><path d="M0 0h24v24H0z"></path></g></svg>
     </main>`
 
   const host = document.createElement('dr-overlay')
@@ -70,6 +73,8 @@ export function buildPickerDom(): PickerDom {
     closedHost,
     closedButton: closedShadow.querySelector('button') as HTMLElement,
     iframe: q('iframe'),
+    svg: q('svg'),
+    path: q('path'),
     stackAt: (stack) => {
       elementsFromPoint.mockReturnValue(stack)
     },

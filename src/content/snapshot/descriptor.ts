@@ -54,7 +54,7 @@ export function descriptorPart(descriptor: NodeDescriptor): string {
 export function selectorFromDescriptors(chain: readonly NodeDescriptor[]): string {
   if (chain.length === 0) return ''
   const last = chain[chain.length - 1] as NodeDescriptor
-  if (chain.length === 1 || last.tag === 'body' || last.tag === 'html') return last.tag
+  if (last.tag === 'body' || last.tag === 'html') return last.tag
   let start = 0
   for (let index = chain.length - 1; index >= 0; index -= 1) {
     if ((chain[index] as NodeDescriptor).id) {

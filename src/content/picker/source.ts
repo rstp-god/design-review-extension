@@ -26,6 +26,35 @@ export interface BoxModel {
   padding: Edges
 }
 
+/** Elements that never render: both sources skip them with their subtree, like text nodes. */
+export const NON_RENDERED_TAGS = new Set([
+  'head',
+  'title',
+  'base',
+  'meta',
+  'link',
+  'style',
+  'script',
+  'template',
+  'noscript',
+])
+
+/**
+ * Leaves of both sources: their contents are another document (frames, plugins) or drawing
+ * commands (`svg`). The picker lands on the element as a whole; `↓` has nowhere to go.
+ */
+export const LEAF_TAGS = new Set(['iframe', 'frame', 'object', 'embed', 'svg'])
+
+/**
+ * The selector of a node and where it came from: `live` — computed from the element in the
+ * document (finder); `snapshot` — built from what the snapshot remembered about the element and
+ * its ancestors, because the element is gone from the document.
+ */
+export interface NodeSelector {
+  selector: string
+  source: 'live' | 'snapshot'
+}
+
 /** One breadcrumb: `tag#id.class.class` with hashed classes already filtered out. */
 export interface PathEntry {
   node: PickNode
@@ -128,13 +157,14 @@ export interface PickSource {
   previousSiblingOf(node: PickNode): PickNode | null
   nextSiblingOf(node: PickNode): PickNode | null
   /** Short unique selector for the report; `host >>> inner` through open shadow roots. */
-  selectorOf(node: PickNode): string
+  selectorOf(node: PickNode): NodeSelector
   /** Breadcrumbs from `<body>` down to the node. */
   pathOf(node: PickNode): PathEntry[]
   /**
    * Viewport regions where the page would swallow pointer events (iframes, plugins): the picker
    * covers them with transparent shields while active so the frame can be hovered and locked as
-   * a whole (spec F3.7). Empty for a snapshot — an image swallows nothing.
+   * a whole (spec F3.7). A snapshot returns the whole viewport: every click and drag lands on
+   * our layer and reaches the tools through the same shields, nothing reaches the page.
    */
   shieldRects(): Rect[]
   dispose(): void
