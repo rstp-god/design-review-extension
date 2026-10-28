@@ -1,4 +1,5 @@
 import { createMessageListener, type MessageHandlers } from '@/shared/messaging'
+import { captureSenderTab } from './capture'
 import {
   deleteAllSessions,
   deleteSession,
@@ -29,6 +30,7 @@ export const handlers: MessageHandlers = {
     return { ok: true }
   },
   'storage/usage': () => getStorageUsage(),
+  'capture/visible': async (_payload, sender) => ({ dataUrl: await captureSenderTab(sender) }),
 }
 
 export const messageListener = createMessageListener(handlers)

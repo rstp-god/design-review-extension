@@ -15,6 +15,7 @@ import {
  *
  * Direction:
  * - popup / command → background: `review/start`, `review/stop`, `session/*`, `storage/usage`
+ * - content → background: `capture/visible`
  * - background → content (via `tabs.sendMessage`): `review/open`, `review/status`, `review/close`
  */
 export const MESSAGE_TIMEOUT_MS = 5_000
@@ -44,6 +45,11 @@ export const messages = {
   'session/delete': define(z.object({ id: nonEmptyString() }), okSchema),
   'session/deleteAll': define(emptySchema, okSchema),
   'storage/usage': define(emptySchema, storageUsageSchema),
+  /** Screenshot of the sender's tab (spec F5.4); the sender must be the active tab of its window. */
+  'capture/visible': define(
+    emptySchema,
+    z.object({ dataUrl: z.string().check(z.startsWith('data:image/')) }),
+  ),
 } as const
 
 export type MessageType = keyof typeof messages
