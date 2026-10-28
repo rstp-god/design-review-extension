@@ -1,7 +1,13 @@
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { sendRuntimeMessage } from '@/services/chrome/runtime'
 import { sendTabMessage } from '@/services/chrome/tabs'
-import { sessionScopeSchema, sessionSummarySchema, storageUsageSchema } from './schemas'
+import {
+  nonEmptyString,
+  nonNegativeInt,
+  sessionScopeSchema,
+  sessionSummarySchema,
+  storageUsageSchema,
+} from './schemas'
 
 /**
  * The only wire contract between popup, background and content script. Every message is a
@@ -13,11 +19,11 @@ import { sessionScopeSchema, sessionSummarySchema, storageUsageSchema } from './
  */
 export const MESSAGE_TIMEOUT_MS = 5_000
 
-const tabIdSchema = z.number().int().nonnegative()
+const tabIdSchema = nonNegativeInt()
 const okSchema = z.object({ ok: z.literal(true) })
 const emptySchema = z.object({})
 
-function define<Request extends z.ZodType, Response extends z.ZodType>(
+function define<Request extends z.ZodMiniType, Response extends z.ZodMiniType>(
   request: Request,
   response: Response,
 ) {
@@ -27,15 +33,15 @@ function define<Request extends z.ZodType, Response extends z.ZodType>(
 export const messages = {
   'review/start': define(z.object({ tabId: tabIdSchema }), okSchema),
   'review/stop': define(z.object({ tabId: tabIdSchema }), okSchema),
-  'review/open': define(z.object({ session: sessionSummarySchema.nullable() }), okSchema),
+  'review/open': define(z.object({ session: z.nullable(sessionSummarySchema) }), okSchema),
   'review/status': define(emptySchema, z.object({ active: z.boolean() })),
   'review/close': define(emptySchema, okSchema),
   'session/get': define(
-    z.object({ scope: sessionScopeSchema, key: z.string().min(1) }),
-    sessionSummarySchema.nullable(),
+    z.object({ scope: sessionScopeSchema, key: nonEmptyString() }),
+    z.nullable(sessionSummarySchema),
   ),
   'session/list': define(emptySchema, z.array(sessionSummarySchema)),
-  'session/delete': define(z.object({ id: z.string().min(1) }), okSchema),
+  'session/delete': define(z.object({ id: nonEmptyString() }), okSchema),
   'session/deleteAll': define(emptySchema, okSchema),
   'storage/usage': define(emptySchema, storageUsageSchema),
 } as const

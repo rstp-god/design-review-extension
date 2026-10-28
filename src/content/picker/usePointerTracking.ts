@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { rectContains } from '@/content/overlay/surfaces'
 import type { Rect } from '@/shared/model'
 import { isTrustedEvent } from '@/shared/trustedEvents'
 import { onLayoutChange } from './layoutChange'
@@ -22,6 +23,12 @@ export interface PointerTrackingOptions {
   onSample?: (ms: number) => void
   /** E2E build only: while `true`, pointer events are ignored so a screenshot cannot disturb the hover. */
   frozen?: () => boolean
+  /**
+   * Our own UI under the point (overlay/surfaces.ts): nothing is highlighted there. The rect is
+   * kept as a dead zone until the pointer leaves it, so hiding the tooltip under the pointer
+   * does not immediately bring it back for the node that is now under the pointer.
+   */
+  isOverUi?: (x: number, y: number) => Rect | null
   target?: Window
 }
 
@@ -37,10 +44,12 @@ export function usePointerTracking({
   onHover,
   onSample,
   frozen,
+  isOverUi,
   target = window,
 }: PointerTrackingOptions): void {
   const last = useRef<{ x: number; y: number } | null>(null)
   const current = useRef<{ node: PickNode; styles: NodeStyles; path: PathEntry[] } | null>(null)
+  const deadZone = useRef<Rect | null>(null)
 
   useEffect(() => {
     if (!active) {
@@ -52,16 +61,30 @@ export function usePointerTracking({
     const doc = target.document
     let frame = 0
 
+    const clear = () => {
+      current.current = null
+      onHover(null)
+    }
+
     const step = () => {
       frame = 0
       const point = last.current
       if (!point) return
       const started = onSample ? performance.now() : 0
 
+      if (deadZone.current && rectContains(deadZone.current, point.x, point.y)) {
+        clear()
+        return
+      }
+      deadZone.current = isOverUi?.(point.x, point.y) ?? null
+      if (deadZone.current) {
+        clear()
+        return
+      }
+
       const node = source.hitTest(point.x, point.y)
       if (!node) {
-        current.current = null
-        onHover(null)
+        clear()
       } else {
         if (current.current?.node !== node) {
           current.current = { node, styles: source.stylesOf(node), path: source.pathOf(node) }
@@ -90,8 +113,8 @@ export function usePointerTracking({
     const onLeave = () => {
       if (frozen?.()) return
       last.current = null
-      current.current = null
-      onHover(null)
+      deadZone.current = null
+      clear()
     }
 
     target.addEventListener('pointermove', onMove, { capture: true, passive: true })
@@ -101,9 +124,10 @@ export function usePointerTracking({
 
     return () => {
       if (frame !== 0) target.cancelAnimationFrame(frame)
+      deadZone.current = null
       target.removeEventListener('pointermove', onMove, { capture: true })
       doc.documentElement.removeEventListener('pointerleave', onLeave)
       unsubscribe()
     }
-  }, [active, source, onHover, onSample, frozen, target])
+  }, [active, source, onHover, onSample, frozen, isOverUi, target])
 }

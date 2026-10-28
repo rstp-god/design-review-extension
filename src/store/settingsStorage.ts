@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { resolveLanguage } from '@/i18n/resolveLanguage'
 import { getArea } from '@/services/chrome/storage'
 import { SETTINGS_KEY } from '@/shared/constants'
@@ -15,7 +15,7 @@ export const envelopeMetaSchema = z.object({
   ts: z.number(),
 })
 
-export function makeEnvelopeSchema<State extends z.ZodType>(state: State) {
+export function makeEnvelopeSchema<State extends z.ZodMiniType>(state: State) {
   return z.object({ meta: envelopeMetaSchema, state })
 }
 

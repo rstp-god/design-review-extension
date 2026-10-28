@@ -1,10 +1,36 @@
 import { describe, expect, it } from 'vitest'
-import { convertLengths, formatBoxSize, formatLength, shorthand } from '@/shared/cssUnits'
+import {
+  convertLengths,
+  formatBoxSize,
+  formatLength,
+  formatNumber,
+  shorthand,
+} from '@/shared/cssUnits'
+
+describe('formatNumber', () => {
+  it('keeps at most one decimal by default, without trailing zeros or a minus zero', () => {
+    expect(formatNumber(108.6)).toBe('108.6')
+    expect(formatNumber(45)).toBe('45')
+    expect(formatNumber(45.04)).toBe('45')
+    expect(formatNumber(68.57)).toBe('68.6')
+    expect(formatNumber(0.04)).toBe('0')
+    expect(formatNumber(-0.04)).toBe('0')
+    expect(formatNumber(-12.26)).toBe('-12.3')
+  })
+
+  it('takes the number of decimals', () => {
+    expect(formatNumber(0.8125, 3)).toBe('0.813')
+    expect(formatNumber(0.8, 3)).toBe('0.8')
+    expect(formatNumber(1.5, 0)).toBe('2')
+  })
+})
 
 describe('formatLength', () => {
-  it('keeps px tidy', () => {
+  it('keeps px tidy with one decimal at most', () => {
     expect(formatLength(16, 'px', 16)).toBe('16px')
     expect(formatLength(10.5, 'px', 16)).toBe('10.5px')
+    expect(formatLength(68.57, 'px', 16)).toBe('68.6px')
+    expect(formatLength(45.04, 'px', 16)).toBe('45px')
     expect(formatLength(0.004, 'px', 16)).toBe('0px')
     expect(formatLength(0, 'px', 16)).toBe('0')
     expect(formatLength(-0.001, 'px', 16)).toBe('0px')
@@ -43,5 +69,6 @@ describe('formatBoxSize', () => {
   it('shows whole pixels, one decimal otherwise', () => {
     expect(formatBoxSize(246, 40)).toBe('246 × 40')
     expect(formatBoxSize(246.4, 40.04)).toBe('246.4 × 40')
+    expect(formatBoxSize(108.57, 45)).toBe('108.6 × 45')
   })
 })

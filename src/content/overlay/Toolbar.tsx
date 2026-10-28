@@ -17,13 +17,19 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react'
-import { useTranslation } from 'react-i18next'
-import { clampToViewport, defaultToolbarPosition, type Point } from '@/content/position'
+import { useT } from '@/content/i18n'
+import {
+  clampToViewport,
+  defaultToolbarPosition,
+  type Point,
+  viewportSize,
+} from '@/content/position'
 import { useOverlayStore } from '@/content/store/overlay'
 import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
 import { TOOLBAR_DEFAULT_INSET } from '@/shared/constants'
-import { isTrustedEvent } from '@/shared/trustedEvents'
+import { isTrustedEvent, onlyTrusted } from '@/shared/trustedEvents'
 import { Badge, Button, cn, Logo, Tooltip } from '@/ui'
+import { surfaceProps } from './surfaces'
 import { useDrag } from './useDrag'
 
 const ICON_SIZE = 20
@@ -33,25 +39,23 @@ export interface ToolbarProps {
   onExit: () => void
 }
 
-function viewportSize() {
-  return { w: window.innerWidth, h: window.innerHeight }
-}
-
 /**
- * Floating toolbar (spec 3.2, screens.md §03). The picker is live; area, snapshot, issues and
- * export are visible but `softDisabled` with a "coming soon" tooltip until their features land.
- * Position and collapsed state persist per device through toolbarState.ts.
+ * Floating toolbar (spec 3.2, screens.md §03). The picker and the area are live; snapshot,
+ * issues and export are visible but `softDisabled` with a "coming soon" tooltip until their
+ * features land. Position and collapsed state persist per device through toolbarState.ts.
  */
 export function Toolbar({ onExit }: ToolbarProps) {
-  const { t } = useTranslation('overlay')
-  const { t: tCommon } = useTranslation('common')
+  const t = useT('overlay')
+  const tCommon = useT('common')
   const collapsed = useOverlayStore((state) => state.collapsed)
   const position = useOverlayStore((state) => state.position)
   const setCollapsed = useOverlayStore((state) => state.setCollapsed)
   const setPosition = useOverlayStore((state) => state.setPosition)
   const issueCount = useOverlayStore((state) => state.session?.issueCount ?? 0)
   const pickerActive = useOverlayStore((state) => state.tool === 'picker')
+  const areaActive = useOverlayStore((state) => state.tool === 'area')
   const togglePicker = useOverlayStore((state) => state.togglePicker)
+  const toggleArea = useOverlayStore((state) => state.toggleArea)
   const box = useRef<HTMLDivElement>(null)
   const restored = useRef(false)
   /** Set by the user toggling collapse; consumed once the new box is laid out. */
@@ -109,11 +113,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
   })
 
   /** Only the user may change review state: the page can call `.click()` on our buttons. */
-  const trusted =
-    <E extends { isTrusted: boolean }>(handler: (event: E) => void) =>
-    (event: E) => {
-      if (isTrustedEvent(event)) handler(event)
-    }
+  const trusted = onlyTrusted
 
   const nudge = (event: KeyboardEvent<HTMLElement>) => {
     if (!isTrustedEvent(event)) return
@@ -166,6 +166,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
       <div
         ref={box}
         style={style}
+        {...surfaceProps('toolbar')}
         className={cn('pointer-events-auto fixed z-10', dragging && 'select-none')}
       >
         <button
@@ -205,6 +206,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
       role="toolbar"
       aria-label={t('toolbar.label')}
       data-testid={TestId.Toolbar}
+      {...surfaceProps('toolbar')}
       style={style}
       className={cn(
         'pointer-events-auto fixed z-10 flex items-center gap-1 rounded-2xl border border-border',
@@ -241,13 +243,20 @@ export function Toolbar({ onExit }: ToolbarProps) {
           <MousePointer2 size={ICON_SIZE} aria-hidden="true" />
         </Button>
       </Tooltip>
-      <Tool
-        testId={TestId.ToolbarArea}
-        tooltip={soon(t('toolbar.area'), ['A'])}
-        label={t('toolbar.area')}
-      >
-        <SquareDashed size={ICON_SIZE} aria-hidden="true" />
-      </Tool>
+      <Tooltip content={{ label: t('toolbar.area'), keys: ['A'] }}>
+        <Button
+          variant="tool"
+          size="lg"
+          iconOnly
+          active={areaActive}
+          aria-pressed={areaActive}
+          aria-label={t('toolbar.area')}
+          data-testid={TestId.ToolbarArea}
+          onClick={trusted(toggleArea)}
+        >
+          <SquareDashed size={ICON_SIZE} aria-hidden="true" />
+        </Button>
+      </Tooltip>
       <Tool
         testId={TestId.ToolbarFreeze}
         tooltip={soon(t('toolbar.freeze'), ['F'])}

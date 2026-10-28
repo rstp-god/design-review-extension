@@ -1,5 +1,5 @@
 import { TestId, testIds } from '@tests/constants/testIds'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
 import { HintDot, HintKeys, HintPill } from '@/content/overlay/HintPill'
 import { isTrustedEvent } from '@/shared/trustedEvents'
 import { cn, Kbd } from '@/ui'
@@ -21,8 +21,8 @@ export interface LockedBarProps {
  * coming issue form (feature `issue-capture`) but does nothing yet.
  */
 export function LockedBar({ path, active, onPick }: LockedBarProps) {
-  const { t } = useTranslation('overlay')
-  const { t: tCommon } = useTranslation('common')
+  const t = useT('overlay')
+  const tCommon = useT('common')
   // The last entries, shifted so the active one is always on screen.
   const activeIndex = Math.max(
     0,
@@ -90,8 +90,7 @@ export function LockedBar({ path, active, onPick }: LockedBarProps) {
         >
           <Kbd className="text-fg-disabled">Enter</Kbd>
           <span>
-            {t('hint.issue')}
-            <HintDot /> {tCommon('soon')}
+            {t('hint.issue')} <HintDot /> {tCommon('soon')}
           </span>
         </span>
         <HintKeys keys={['Esc']} label={t('hint.back')} />

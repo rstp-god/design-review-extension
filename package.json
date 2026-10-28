@@ -22,6 +22,7 @@
     "dev:content": "vite build -c vite.content.config.ts --watch",
     "build": "tsc -b && vite build && vite build -c vite.content.config.ts",
     "build:e2e": "tsc -b && VITE_E2E=1 vite build && VITE_E2E=1 vite build -c vite.content.config.ts",
+    "bundle:report": "node scripts/bundle-report.mjs",
     "lint": "biome lint .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -30,9 +31,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e:local": "playwright test --project=chromium-mac",
-    "test:e2e:update-snapshots": "playwright test --project=chromium-mac --update-snapshots",
+    "test:e2e:update-snapshots": "playwright test --project=chromium-mac --update-snapshots all",
     "test:e2e:ci": "xvfb-run -a playwright test --project=chromium-ci",
-    "test:e2e:update-snapshots:ci": "xvfb-run -a playwright test --project=chromium-ci --update-snapshots",
+    "test:e2e:update-snapshots:ci": "xvfb-run -a playwright test --project=chromium-ci --update-snapshots all",
     "postinstall": "husky"
   },
   "dependencies": {
@@ -52,6 +53,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.6.3",
     "@crxjs/vite-plugin": "^2.4.11",
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@playwright/test": "1.64.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/dom": "^10.4.2",

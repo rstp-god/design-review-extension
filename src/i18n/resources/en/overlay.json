@@ -15,10 +15,30 @@
     "exit": "exit",
     "picker": "picker",
     "pick": "Click to pick",
+    "pickerOff": "turn off picker",
+    "area": "area",
+    "drag": "Drag to select",
+    "square": "square",
+    "fromCenter": "from center",
+    "corners": "corners to adjust",
+    "areaOff": "turn off area",
+    "cancel": "cancel",
     "parentChild": "parent / child",
     "siblings": "siblings",
     "issue": "issue",
     "back": "back"
+  },
+  "area": {
+    "chip": "Selected area",
+    "issue": "Issue",
+    "reselect": "Reselect",
+    "shield": "Draw over the frame",
+    "handle": {
+      "nw": "Adjust the top-left corner",
+      "ne": "Adjust the top-right corner",
+      "sw": "Adjust the bottom-left corner",
+      "se": "Adjust the bottom-right corner"
+    }
   },
   "picker": {
     "row": {
@@ -29,7 +49,7 @@
       "border": "Border",
       "padding": "Padding",
       "margin": "Margin",
-      "size": "Size",
+      "content": "Content",
       "display": "Display",
       "radius": "Radius",
       "shadow": "Shadow"

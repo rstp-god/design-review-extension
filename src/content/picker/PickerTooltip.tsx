@@ -9,7 +9,9 @@ import {
 } from '@floating-ui/react'
 import { TestId, testIds } from '@tests/constants/testIds'
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
+import { rectReference } from '@/content/overlay/rectReference'
+import { surfaceProps } from '@/content/overlay/surfaces'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
 import { useSettingsStore } from '@/store/settings'
@@ -35,7 +37,7 @@ export interface PickerTooltipProps {
  * assistive tech — it changes on every frame, and the Locked chip is the state worth announcing.
  */
 export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
-  const { t } = useTranslation('overlay')
+  const t = useT('overlay')
   const root = useFloatingRoot()
   const fields = useSettingsStore((state) => state.tooltipFields)
   const colorFormat = useSettingsStore((state) => state.colorFormat)
@@ -43,18 +45,7 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
   const arrowRef = useRef<SVGSVGElement>(null)
 
   const reference = useMemo(
-    () => ({
-      getBoundingClientRect: () => ({
-        x: rect.x,
-        y: rect.y,
-        width: rect.w,
-        height: rect.h,
-        top: rect.y,
-        left: rect.x,
-        right: rect.x + rect.w,
-        bottom: rect.y + rect.h,
-      }),
-    }),
+    () => rectReference({ x: rect.x, y: rect.y, w: rect.w, h: rect.h }),
     [rect.x, rect.y, rect.w, rect.h],
   )
 
@@ -87,6 +78,7 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
         style={{ ...floatingStyles, width: TOOLTIP_WIDTH }}
         aria-hidden="true"
         data-testid={TestId.PickerTooltip}
+        {...surfaceProps('tooltip')}
         className="pointer-events-none z-20 flex flex-col gap-3 rounded-lg bg-bg px-6 py-5 text-fg shadow-popover"
       >
         <FloatingArrow

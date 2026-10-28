@@ -30,6 +30,7 @@ Build / dev:
 - `yarn build:e2e` — E2E build (`VITE_E2E=1`) → `dist-e2e/` (see **E2E build**)
 - `yarn check` — Biome lint + format check (run before every commit; husky runs it)
 - `yarn lint:fix` / `yarn format` — Biome autofix / format
+- `yarn bundle:report` — composition of `content.js` by package and module (in-memory build with a sourcemap); the budget itself is in `tests/contracts/bundle.test.ts`
 
 Tests:
 

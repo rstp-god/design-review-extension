@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vite
 import { createOverlayHost, type OverlayHost } from '@/content/host'
 import { App } from '@/content/overlay/App'
 import { useOverlayStore } from '@/content/store/overlay'
-import { createI18n } from '@/i18n'
 import { trustSyntheticEventsForTests } from '@/shared/trustedEvents'
 import { useSettingsStore } from '@/store/settings'
 
@@ -59,7 +58,7 @@ describe('picker', () => {
 
     host = createOverlayHost(css)
     onExit = vi.fn<() => void>()
-    render(<App host={host} i18n={createI18n('en')} onExit={onExit} />, { container: host.app })
+    render(<App host={host} language="en" onExit={onExit} />, { container: host.app })
   })
 
   afterEach(() => {
@@ -74,11 +73,11 @@ describe('picker', () => {
     expect(useOverlayStore.getState().tool).toBe('picker')
     expect(q('toolbar-picker')).toHaveAttribute('aria-pressed', 'true')
     expect(q('toolbar-picker')).toHaveAttribute('data-active', 'true')
-    expect(q('overlay-hint')).toHaveTextContent(/^Click to pick\s*·\s*Esc\s*exit$/)
+    expect(q('overlay-hint')).toHaveTextContent(/^Click to pick\s*·\s*Esc\s*turn off picker$/)
 
     fireEvent.click(q('toolbar-picker') as HTMLElement)
     expect(useOverlayStore.getState().tool).toBe('none')
-    expect(q('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*Esc\s*exit$/)
+    expect(q('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*A\s*area\s*·\s*Esc\s*exit$/)
   })
 
   it('Escape steps back: picker off first, then exit', () => {
@@ -121,6 +120,49 @@ describe('picker', () => {
     await nextFrame()
     expect(q('picker-highlight')).toBeNull()
     expect(q('picker-tooltip')).toBeNull()
+  })
+
+  it('highlights nothing while the pointer is over our own UI', async () => {
+    press('p', 'KeyP')
+    const toolbar = q('toolbar') as HTMLElement
+    toolbar.getBoundingClientRect = () =>
+      ({ left: 100, top: 190, width: 400, height: 56, right: 500, bottom: 246 }) as DOMRect
+
+    // The toolbar sits over the button: the page element under the pointer is not highlighted.
+    moveTo(120, 210)
+    await nextFrame()
+    expect(q('picker-highlight')).toBeNull()
+    expect(q('picker-tooltip')).toBeNull()
+
+    moveTo(120, 300)
+    await nextFrame()
+    expect(q('picker-highlight')).not.toBeNull()
+    expect(q('picker-tooltip')).not.toBeNull()
+  })
+
+  it('hides the tooltip under the pointer and keeps it hidden until the pointer leaves that spot', async () => {
+    press('p', 'KeyP')
+    moveTo(120, 210)
+    await nextFrame()
+    const tooltip = q('picker-tooltip') as HTMLElement
+    expect(tooltip).not.toBeNull()
+    tooltip.getBoundingClientRect = () =>
+      ({ left: 100, top: 250, width: 290, height: 200, right: 390, bottom: 450 }) as DOMRect
+
+    moveTo(130, 300)
+    await nextFrame()
+    expect(q('picker-tooltip')).toBeNull()
+    expect(q('picker-highlight')).toBeNull()
+
+    // Still inside the spot the tooltip occupied, although it is gone: no flicker.
+    moveTo(140, 400)
+    await nextFrame()
+    expect(q('picker-highlight')).toBeNull()
+
+    moveTo(120, 210)
+    await nextFrame()
+    expect(q('picker-highlight')).not.toBeNull()
+    expect(q('picker-tooltip')).not.toBeNull()
   })
 
   it('re-renders the tooltip when the settings change, without a new hover', async () => {
@@ -180,7 +222,8 @@ describe('picker', () => {
       expect(crumbs.textContent).toContain('body')
       expect(crumbs.textContent).toContain('button.card__cta')
       expect(q('picker-breadcrumb-3')).toHaveAttribute('aria-current', 'true')
-      expect(q('picker-hint-enter')).toHaveTextContent(/Enter.*issue.*soon/)
+      // The key cap and the label are separated by a flex gap, the words by real spaces.
+      expect(q('picker-hint-enter')).toHaveTextContent(/^Enter\s*issue · Coming soon$/)
 
       press('Escape')
       expect(useOverlayStore.getState().pickerMode).toBe('picking')

@@ -12,8 +12,11 @@ const repoRoot = process.cwd()
  * Upper bound for `content.js`, uncompressed, in Vite's kB (1000 bytes). The overlay is injected
  * into a live page on every start; a heavier bundle means a slower start and more to parse on the
  * host page. Raise it deliberately, with a reason, not because a dependency crept in.
+ *
+ * Measured 370 190 bytes after the diet of feature 3 (zod/mini, lite t(); `yarn bundle:report`
+ * shows the composition), budget = measured + 40 kB.
  */
-const CONTENT_SCRIPT_BUDGET_BYTES = 520_000
+const CONTENT_SCRIPT_BUDGET_BYTES = 410_000
 const distDir = path.join(repoRoot, 'dist')
 
 function hasProductionBuild(): boolean {
@@ -98,6 +101,13 @@ describe('contract: production bundle', () => {
   it('content script is a production React build without bundled fonts', () => {
     expect(contentScript).not.toContain('process.env.NODE_ENV')
     expect(contentScript).not.toMatch(/\.woff2?\b/)
+  })
+
+  it('content script carries neither i18next nor the classic zod build', () => {
+    // The overlay translates with i18n/lite.ts and validates with zod/mini; both libraries
+    // would come back silently through one `import { useTranslation }` or `import { z }`.
+    expect(contentScript).not.toContain('i18next')
+    expect(contentScript).not.toMatch(/toJSONSchema|json-schema/i)
   })
 
   it('content script carries no E2E observation surface', () => {

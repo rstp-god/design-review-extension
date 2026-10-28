@@ -16,3 +16,12 @@ export function isTrustedEvent(event: { isTrusted: boolean }): boolean {
 export function trustSyntheticEventsForTests(enabled: boolean): void {
   trustSynthetic = enabled
 }
+
+/** Wraps a handler so the page's synthetic events (`.click()`, `dispatchEvent`) never reach it. */
+export function onlyTrusted<E extends { isTrusted: boolean }>(
+  handler?: (event: E) => void,
+): (event: E) => void {
+  return (event) => {
+    if (handler && isTrustedEvent(event)) handler(event)
+  }
+}

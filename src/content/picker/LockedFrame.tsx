@@ -1,13 +1,12 @@
 import { TestId } from '@tests/constants/testIds'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/content/i18n'
+import { Chip, chipTop } from '@/content/overlay/Chip'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
 import type { NodeStyles } from './source'
 
 /** The frame sits outside the node, like the mockup's `inset: -3px` with a 2 px border. */
 const FRAME_INSET = 3
-const CHIP_HEIGHT = 22
-const CHIP_GAP = 8
 
 export interface LockedFrameProps {
   rect: Rect
@@ -30,10 +29,9 @@ function cornerRadius(styles: NodeStyles, corner: string, rect: Rect): number {
  * node touches the top of the viewport.
  */
 export function LockedFrame({ rect, styles, selector }: LockedFrameProps) {
-  const { t } = useTranslation('overlay')
+  const t = useT('overlay')
   const left = rect.x - FRAME_INSET
   const top = rect.y - FRAME_INSET
-  const chipAbove = top - CHIP_GAP - CHIP_HEIGHT >= 0
   const radii = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
     .map((corner) => `${cornerRadius(styles, corner, rect)}px`)
     .join(' ')
@@ -52,20 +50,14 @@ export function LockedFrame({ rect, styles, selector }: LockedFrameProps) {
           borderRadius: radii,
         }}
       />
-      <div
-        role="status"
-        aria-label={t('picker.chip')}
-        data-testid={TestId.PickerLockedChip}
-        className="absolute inline-flex h-11 max-w-[60vw] items-center rounded-sm bg-accent px-4 font-medium font-mono text-accent-fg text-label"
-        style={{
-          left: Math.max(FRAME_INSET, left),
-          top: chipAbove ? top - CHIP_GAP - CHIP_HEIGHT : top + FRAME_INSET + CHIP_GAP,
-        }}
+      <Chip
+        left={Math.max(FRAME_INSET, left)}
+        top={chipTop(top, FRAME_INSET)}
+        label={t('picker.chip')}
+        testId={TestId.PickerLockedChip}
       >
-        <span className="truncate">
-          {selector} · {formatBoxSize(rect.w, rect.h)}
-        </span>
-      </div>
+        {selector} · {formatBoxSize(rect.w, rect.h)}
+      </Chip>
     </div>
   )
 }

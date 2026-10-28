@@ -10,6 +10,11 @@ export interface Size {
   h: number
 }
 
+/** The viewport in CSS px — the coordinate space of everything the overlay draws. */
+export function viewportSize(win: Window = window): Size {
+  return { w: win.innerWidth, h: win.innerHeight }
+}
+
 /** Keeps a box of `size` fully inside the viewport, `margin` px away from the edges. */
 export function clampToViewport(point: Point, size: Size, viewport: Size, margin = 0): Point {
   const maxX = Math.max(margin, viewport.w - size.w - margin)
