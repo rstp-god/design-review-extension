@@ -66,7 +66,9 @@ function isSet(value: string): boolean {
 
 /** Whether `z-index` applies at all: it is ignored on static, non-flex/grid boxes. */
 export function zIndexApplies(style: PaintStyle, parentIsFlexOrGrid: boolean): boolean {
-  return style['z-index'] !== 'auto' && (style.position !== 'static' || parentIsFlexOrGrid)
+  const z = style['z-index']
+  if (z === 'auto' || z === '') return false
+  return style.position !== 'static' || parentIsFlexOrGrid
 }
 
 export function zIndexOf(style: PaintStyle, parentIsFlexOrGrid: boolean): number {
