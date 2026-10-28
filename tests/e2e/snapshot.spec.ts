@@ -248,12 +248,14 @@ test.describe('page snapshot', () => {
     // sender is no longer the active tab of its window — the same outcome from the second guard.
     const other = await context.newPage()
     await other.goto(`${FIXTURE_SITE_URL}/catalog/`)
-    await other.waitForTimeout(6_000)
-    await page.bringToFront()
-    await expect(countdown()).toHaveCount(0)
+    // The countdown ends without a picture; the toast lives four seconds, so it is read the
+    // moment the pill is gone, while the other tab is still in front (a fixed wait overshoots
+    // the toast on a slow runner).
+    await expect(countdown()).toHaveCount(0, { timeout: 8_000 })
+    await expect(toast()).toHaveText(/Could not take the snapshot|The tab was not visible/)
     await expect(layer()).toHaveCount(0)
     await expect(page.locator(OVERLAY_HOST_TAG)).not.toHaveAttribute('data-dr-e2e-snapshot')
-    await expect(toast()).toHaveText(/Could not take the snapshot|The tab was not visible/)
+    await page.bringToFront()
     await other.close()
   })
 
