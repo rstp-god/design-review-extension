@@ -1,19 +1,22 @@
 import type { Page } from '@playwright/test'
+import { OVERLAY_HOST_TAG } from '@/shared/constants'
 
 /**
  * Counts page-level pointer events that got past the overlay. Installed from the page's world,
- * the way a site's own analytics would be.
+ * the way a site's own analytics would be. Events on our own UI bubble to the document as well
+ * (composed, retargeted to the host element) and are left out: they never reached the page.
  */
 export async function installEventCounter(page: Page) {
-  await page.evaluate(() => {
+  await page.evaluate((hostTag) => {
     const counts: Record<string, number> = { click: 0, contextmenu: 0, mousedown: 0 }
     for (const type of Object.keys(counts)) {
-      document.addEventListener(type, () => {
+      document.addEventListener(type, (event) => {
+        if ((event.target as Element | null)?.localName === hostTag) return
         counts[type] = (counts[type] ?? 0) + 1
       })
     }
     ;(window as unknown as { __fixtureCounts: typeof counts }).__fixtureCounts = counts
-  })
+  }, OVERLAY_HOST_TAG)
   return () =>
     page.evaluate(
       () => (window as unknown as { __fixtureCounts: Record<string, number> }).__fixtureCounts,

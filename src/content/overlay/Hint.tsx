@@ -4,15 +4,18 @@ import { useOverlayStore } from '@/content/store/overlay'
 import { HintDot, HintKeys, HintPill } from './HintPill'
 
 /**
- * Bottom hint with the keys of the current mode (spec F2.4, screens.md §03, §08). Locked has
- * its own bar with the breadcrumbs (picker/LockedBar.tsx), so nothing is rendered here then.
+ * Bottom hint with the keys of the current mode (spec F2.4, screens.md §03, §04, §08). Locked
+ * has its own bar with the breadcrumbs (picker/LockedBar.tsx), so nothing is rendered here then.
+ * `F` reads "freeze" on the live page and "live page" on a snapshot; the area hint is full.
  */
 export function Hint() {
   const t = useT('overlay')
   const tool = useOverlayStore((state) => state.tool)
   const pickerMode = useOverlayStore((state) => state.pickerMode)
   const areaMode = useOverlayStore((state) => state.areaMode)
+  const frozen = useOverlayStore((state) => state.snapshotPhase === 'snapshot')
   if (tool === 'picker' && pickerMode === 'locked') return null
+  const freezeLabel = t(frozen ? 'hint.livePage' : 'hint.freeze')
 
   if (tool === 'area') {
     return (
@@ -39,6 +42,8 @@ export function Hint() {
         <>
           <span>{t('hint.pick')}</span>
           <HintDot />
+          <HintKeys keys={['F']} label={freezeLabel} />
+          <HintDot />
           <HintKeys keys={['Esc']} label={t('hint.pickerOff')} />
         </>
       ) : (
@@ -47,7 +52,9 @@ export function Hint() {
           <HintDot />
           <HintKeys keys={['A']} label={t('hint.area')} />
           <HintDot />
-          <HintKeys keys={['Esc']} label={t('hint.exit')} />
+          <HintKeys keys={['F']} label={freezeLabel} />
+          <HintDot />
+          <HintKeys keys={['Esc']} label={t(frozen ? 'hint.livePage' : 'hint.exit')} />
         </>
       )}
     </HintPill>

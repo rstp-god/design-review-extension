@@ -59,6 +59,13 @@ describe('LiveSource', () => {
       dom.stackAt([dom.iframe, dom.main])
       expect(source.hitTest(40, 40)).toBe(source.nodeFor(dom.iframe))
     })
+
+    it('resolves a path inside an svg to the svg itself', () => {
+      dom.stackAt([dom.path, dom.path.parentElement as Element, dom.svg, dom.main])
+      expect(source.hitTest(50, 50)).toBe(source.nodeFor(dom.svg))
+      dom.stackAt([dom.svg, dom.main])
+      expect(source.hitTest(50, 50)).toBe(source.nodeFor(dom.svg))
+    })
   })
 
   describe('tree', () => {
@@ -101,6 +108,7 @@ describe('LiveSource', () => {
       expect(source.parentOf(source.nodeFor(dom.openButton))).toBe(inner)
       expect(source.firstChildOf(source.nodeFor(dom.closedHost))).toBeNull()
       expect(source.firstChildOf(source.nodeFor(dom.iframe))).toBeNull()
+      expect(source.firstChildOf(source.nodeFor(dom.svg))).toBeNull()
     })
   })
 
@@ -161,10 +169,17 @@ describe('LiveSource', () => {
     expect(source.stylesOf(source.nodeFor(dom.button)).rootFontSize).toBe(16)
   })
 
-  it('produces short selectors, joined with >>> through shadow roots', () => {
-    expect(source.selectorOf(source.nodeFor(dom.button))).toBe('.card__cta')
-    expect(source.selectorOf(source.nodeFor(dom.openButton))).toBe('fx-open-card >>> button')
+  it('produces short live selectors, joined with >>> through shadow roots', () => {
+    expect(source.selectorOf(source.nodeFor(dom.button))).toEqual({
+      selector: '.card__cta',
+      source: 'live',
+    })
+    expect(source.selectorOf(source.nodeFor(dom.openButton)).selector).toBe(
+      'fx-open-card >>> button',
+    )
     const custom = createLiveSource({ host: dom.host, selector: (element) => element.localName })
-    expect(custom.selectorOf(custom.nodeFor(dom.openButton))).toBe('fx-open-card >>> button')
+    expect(custom.selectorOf(custom.nodeFor(dom.openButton)).selector).toBe(
+      'fx-open-card >>> button',
+    )
   })
 })

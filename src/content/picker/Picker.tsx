@@ -14,7 +14,7 @@ import { ARROW_KEYS, navigateFrom } from './navigation'
 import { PickerTooltip } from './PickerTooltip'
 import { createSampler } from './perf'
 import { Shields, useShieldRects } from './Shields'
-import type { NodeStyles, PathEntry, PickNode, PickSource } from './source'
+import type { NodeSelector, NodeStyles, PathEntry, PickNode, PickSource } from './source'
 import { type HoverState, usePointerTracking } from './usePointerTracking'
 
 const PERF_REPORT_EVERY = 10
@@ -29,7 +29,7 @@ interface LockedState {
   rect: Rect
   styles: NodeStyles
   path: PathEntry[]
-  selector: string
+  selector: NodeSelector
 }
 
 /**
@@ -158,7 +158,11 @@ export function Picker({ host, source }: PickerProps) {
     return (
       <>
         <Shields rects={shields} onClick={pickFromShield} />
-        <LockedFrame rect={locked.rect} styles={locked.styles} selector={locked.selector} />
+        <LockedFrame
+          rect={locked.rect}
+          styles={locked.styles}
+          selector={locked.selector.selector}
+        />
         <LockedBar path={locked.path} active={locked.node} onPick={lock} />
       </>
     )

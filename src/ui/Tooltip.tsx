@@ -17,6 +17,7 @@ import { TestId } from '@tests/constants/testIds'
 import {
   Children,
   cloneElement,
+  type HTMLAttributes,
   type ReactElement,
   type ReactNode,
   type Ref,
@@ -26,13 +27,15 @@ import { cn } from './cn'
 import { useFloatingRoot } from './FloatingRoot'
 import { KeyCombo } from './Kbd'
 
-export interface TooltipProps {
+export interface TooltipProps extends Omit<HTMLAttributes<HTMLElement>, 'content' | 'children'> {
   /** Text, or a label with key caps: `{ label, keys }`. */
   content: ReactNode | { label: ReactNode; keys?: readonly string[] }
   children: ReactElement<{ ref?: Ref<HTMLElement> }>
   placement?: Placement
   openDelay?: number
   className?: string
+  /** A parent (a `Menu` trigger) may hand a ref down: it reaches the child too. */
+  ref?: Ref<HTMLElement>
 }
 
 function isLabelWithKeys(
@@ -44,6 +47,8 @@ function isLabelWithKeys(
 /**
  * Hover / focus tooltip. Renders into the floating root (inside our shadow root in the overlay),
  * flips and shifts to stay in the viewport. The child must forward `ref` and props to a DOM node.
+ * Anything else given to the tooltip (a `Menu` wrapping it injects a ref, `aria-*` and handlers)
+ * is passed on to the child, so a button can have both a tooltip and a menu.
  */
 export function Tooltip({
   content,
@@ -51,6 +56,8 @@ export function Tooltip({
   placement = 'bottom',
   openDelay = 250,
   className,
+  ref: outerRef,
+  ...passthrough
 }: TooltipProps) {
   const [open, setOpen] = useState(false)
   const root = useFloatingRoot()
@@ -66,16 +73,17 @@ export function Tooltip({
   const { getReferenceProps, getFloatingProps } = useInteractions([
     useHover(context, { move: false, delay: { open: openDelay, close: 0 } }),
     useFocus(context),
-    useDismiss(context),
+    // A press on the button closes the tooltip: a menu or an action takes its place.
+    useDismiss(context, { referencePress: true }),
     useRole(context, { role: 'tooltip' }),
   ])
 
   const child = Children.only(children)
-  const ref = useMergeRefs([refs.setReference, child.props.ref ?? null])
+  const ref = useMergeRefs([refs.setReference, child.props.ref ?? null, outerRef ?? null])
 
   return (
     <>
-      {cloneElement(child, getReferenceProps({ ref, ...child.props }))}
+      {cloneElement(child, getReferenceProps({ ...passthrough, ref, ...child.props }))}
       {open && (
         <FloatingPortal root={root}>
           <div

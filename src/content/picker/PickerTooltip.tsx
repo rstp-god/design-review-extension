@@ -15,7 +15,7 @@ import { surfaceProps } from '@/content/overlay/surfaces'
 import { formatBoxSize } from '@/shared/cssUnits'
 import type { Rect } from '@/shared/model'
 import { useSettingsStore } from '@/store/settings'
-import { useFloatingRoot } from '@/ui'
+import { cn, useFloatingRoot } from '@/ui'
 import { entrySuffix } from './label'
 import type { NodeStyles, PathEntry } from './source'
 import { tooltipRows } from './styles'
@@ -70,6 +70,7 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
     () => tooltipRows(styles, { fields, colorFormat, units }, { w: rect.w, h: rect.h }),
     [styles, fields, colorFormat, units, rect.w, rect.h],
   )
+  const incomplete = rows.some((row) => row.missing)
 
   return (
     <FloatingPortal root={root}>
@@ -110,11 +111,21 @@ export function PickerTooltip({ rect, entry, styles }: PickerTooltipProps) {
                       style={{ background: row.swatch }}
                     />
                   )}
-                  <span className="truncate">{row.value}</span>
+                  <span className={cn('truncate', row.missing && 'text-fg-muted')}>
+                    {row.value}
+                  </span>
                 </dd>
               </div>
             ))}
           </dl>
+        )}
+        {incomplete && (
+          <p
+            data-testid={TestId.PickerTooltipRetake}
+            className="m-0 border-border border-t pt-3 font-sans text-fg-muted text-sm"
+          >
+            {t('picker.retake')}
+          </p>
         )}
       </div>
     </FloatingPortal>

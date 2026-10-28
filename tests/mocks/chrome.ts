@@ -145,6 +145,10 @@ export function createChromeMock() {
       }),
       sendMessage: vi.fn(async (_tabId: number, _message: unknown): Promise<unknown> => undefined),
       create: vi.fn(async (props: chrome.tabs.CreateProperties) => ({ id: 1, ...props })),
+      captureVisibleTab: vi.fn(
+        async (_windowId: number, _options: chrome.extensionTypes.ImageDetails) =>
+          'data:image/png;base64,iVBORw0KGgo=',
+      ),
     },
     scripting: {
       executeScript: vi.fn(

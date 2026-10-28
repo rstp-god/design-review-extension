@@ -1,14 +1,5 @@
 import { TestId } from '@tests/constants/testIds'
-import {
-  Download,
-  GripVertical,
-  List,
-  Minus,
-  MousePointer2,
-  Snowflake,
-  SquareDashed,
-  X,
-} from 'lucide-react'
+import { Download, GripVertical, List, Minus, MousePointer2, SquareDashed, X } from 'lucide-react'
 import {
   type KeyboardEvent,
   type ReactNode,
@@ -24,11 +15,13 @@ import {
   type Point,
   viewportSize,
 } from '@/content/position'
+import type { SnapshotController } from '@/content/snapshot/useSnapshotController'
 import { useOverlayStore } from '@/content/store/overlay'
 import { loadToolbarState, saveToolbarState } from '@/content/toolbarState'
 import { TOOLBAR_DEFAULT_INSET } from '@/shared/constants'
 import { isTrustedEvent, onlyTrusted } from '@/shared/trustedEvents'
 import { Badge, Button, cn, Logo, Tooltip } from '@/ui'
+import { FreezeMenu } from './FreezeMenu'
 import { surfaceProps } from './surfaces'
 import { useDrag } from './useDrag'
 
@@ -37,14 +30,16 @@ const KEYBOARD_STEP_PX = 8
 
 export interface ToolbarProps {
   onExit: () => void
+  snapshot: SnapshotController
 }
 
 /**
- * Floating toolbar (spec 3.2, screens.md §03). The picker and the area are live; snapshot,
- * issues and export are visible but `softDisabled` with a "coming soon" tooltip until their
- * features land. Position and collapsed state persist per device through toolbarState.ts.
+ * Floating toolbar (spec 3.2, screens.md §03). The picker, the area and the snapshot (with its
+ * menu) are live; issues and export are visible but `softDisabled` with a "coming soon" tooltip
+ * until their features land. Position and collapsed state persist per device through
+ * toolbarState.ts.
  */
-export function Toolbar({ onExit }: ToolbarProps) {
+export function Toolbar({ onExit, snapshot }: ToolbarProps) {
   const t = useT('overlay')
   const tCommon = useT('common')
   const collapsed = useOverlayStore((state) => state.collapsed)
@@ -257,13 +252,7 @@ export function Toolbar({ onExit }: ToolbarProps) {
           <SquareDashed size={ICON_SIZE} aria-hidden="true" />
         </Button>
       </Tooltip>
-      <Tool
-        testId={TestId.ToolbarFreeze}
-        tooltip={soon(t('toolbar.freeze'), ['F'])}
-        label={t('toolbar.freeze')}
-      >
-        <Snowflake size={ICON_SIZE} aria-hidden="true" />
-      </Tool>
+      <FreezeMenu snapshot={snapshot} />
 
       <Separator />
 

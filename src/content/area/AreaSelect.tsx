@@ -252,7 +252,12 @@ export function AreaSelect({ host, source }: AreaSelectProps) {
 
   return (
     <>
-      <Shields rects={shields} label={t('area.shield')} onPointerDown={onShieldDown} />
+      <Shields
+        rects={shields}
+        label={t('area.shield')}
+        cursor="crosshair"
+        onPointerDown={onShieldDown}
+      />
       <div
         aria-hidden="true"
         data-testid={TestId.AreaLayer}

@@ -57,6 +57,15 @@ export const TestId = {
   ToolbarCollapsed: 'toolbar-collapsed',
   ToolbarCollapsedBadge: 'toolbar-collapsed-badge',
   OverlayHint: 'overlay-hint',
+  OverlayToast: 'overlay-toast',
+
+  // Snapshot
+  SnapshotLayer: 'snapshot-layer',
+  SnapshotBadge: 'snapshot-badge',
+  SnapshotBadgeTime: 'snapshot-badge-time',
+  Countdown: 'countdown',
+  CountdownSeconds: 'countdown-seconds',
+  CountdownCancel: 'countdown-cancel',
 
   // Picker
   PickerHighlight: 'picker-highlight',
@@ -67,6 +76,7 @@ export const TestId = {
   PickerTooltip: 'picker-tooltip',
   PickerTooltipTag: 'picker-tooltip-tag',
   PickerTooltipSize: 'picker-tooltip-size',
+  PickerTooltipRetake: 'picker-tooltip-retake',
   PickerLockedFrame: 'picker-locked-frame',
   PickerLockedChip: 'picker-locked-chip',
   PickerLockedBar: 'picker-locked-bar',

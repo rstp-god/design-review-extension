@@ -33,6 +33,14 @@ export async function sendTabMessage(tabId: number, message: unknown): Promise<u
   return requireChrome('tabs').tabs.sendMessage(tabId, message)
 }
 
+/**
+ * PNG data URL of the visible area of the window's active tab. Covered by `activeTab` once the
+ * user started a review there; no host permission is involved (E2E builds carry `<all_urls>`).
+ */
+export async function captureVisibleTab(windowId: number): Promise<string> {
+  return requireChrome('tabs').tabs.captureVisibleTab(windowId, { format: 'png' })
+}
+
 /** Opens a page in a new tab. Needed for `chrome://` URLs, which a plain link may not open. */
 export async function createTab(url: string): Promise<void> {
   await requireChrome('tabs').tabs.create({ url })

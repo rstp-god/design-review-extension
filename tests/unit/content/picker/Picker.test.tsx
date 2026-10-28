@@ -73,11 +73,15 @@ describe('picker', () => {
     expect(useOverlayStore.getState().tool).toBe('picker')
     expect(q('toolbar-picker')).toHaveAttribute('aria-pressed', 'true')
     expect(q('toolbar-picker')).toHaveAttribute('data-active', 'true')
-    expect(q('overlay-hint')).toHaveTextContent(/^Click to pick\s*·\s*Esc\s*turn off picker$/)
+    expect(q('overlay-hint')).toHaveTextContent(
+      /^Click to pick\s*·\s*F\s*freeze\s*·\s*Esc\s*turn off picker$/,
+    )
 
     fireEvent.click(q('toolbar-picker') as HTMLElement)
     expect(useOverlayStore.getState().tool).toBe('none')
-    expect(q('overlay-hint')).toHaveTextContent(/^P\s*picker\s*·\s*A\s*area\s*·\s*Esc\s*exit$/)
+    expect(q('overlay-hint')).toHaveTextContent(
+      /^P\s*picker\s*·\s*A\s*area\s*·\s*F\s*freeze\s*·\s*Esc\s*exit$/,
+    )
   })
 
   it('Escape steps back: picker off first, then exit', () => {

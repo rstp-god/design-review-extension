@@ -26,7 +26,9 @@
     "parentChild": "parent / child",
     "siblings": "siblings",
     "issue": "issue",
-    "back": "back"
+    "back": "back",
+    "freeze": "freeze",
+    "livePage": "live page"
   },
   "area": {
     "chip": "Selected area",
@@ -56,6 +58,26 @@
     },
     "path": "Path to the element",
     "chip": "Selected element",
-    "shield": "Pick the frame"
+    "shield": "Pick the frame",
+    "retake": "Take the snapshot again for the new fields"
+  },
+  "snapshot": {
+    "failed": "Could not take the snapshot",
+    "hidden": "The tab was not visible — snapshot cancelled",
+    "resized": "Window size changed — snapshot closed",
+    "slow": "The snapshot took {{seconds}} s — this page is large",
+    "badge": "Snapshot",
+    "live": "live page"
+  },
+  "countdown": {
+    "title": "Snapshot in {{count}} s",
+    "hint": "Hover the state you need"
+  },
+  "freeze": {
+    "now": "Now",
+    "after": "In {{count}} s",
+    "live": "Live page",
+    "retake": "New snapshot in {{count}} s",
+    "note": "After the snapshot, hover states, dropdowns and animations stay put"
   }
 }

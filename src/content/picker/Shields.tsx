@@ -8,6 +8,7 @@ import {
 import { useT } from '@/content/i18n'
 import type { Rect } from '@/shared/model'
 import { onlyTrusted } from '@/shared/trustedEvents'
+import { cn } from '@/ui'
 import { onLayoutChange } from './layoutChange'
 import type { PickSource } from './source'
 
@@ -59,6 +60,8 @@ export interface ShieldsProps {
   rects: Rect[]
   /** Accessible name of a shield; the picker's "pick the frame" by default. */
   label?: string
+  /** The area tool draws: a crosshair over its shields, over the whole snapshot included. */
+  cursor?: 'default' | 'crosshair'
   onClick?: (event: ReactMouseEvent<HTMLButtonElement>) => void
   onPointerDown?: (event: ReactPointerEvent<HTMLButtonElement>) => void
 }
@@ -68,7 +71,13 @@ export interface ShieldsProps {
  * reach the top document, so without them a frame could be neither hovered, locked nor drawn
  * over as a whole (spec F3.7). Only trusted events reach the callbacks.
  */
-export function Shields({ rects, label, onClick, onPointerDown }: ShieldsProps) {
+export function Shields({
+  rects,
+  label,
+  cursor = 'default',
+  onClick,
+  onPointerDown,
+}: ShieldsProps) {
   const t = useT('overlay')
   if (rects.length === 0) return null
 
@@ -81,7 +90,10 @@ export function Shields({ rects, label, onClick, onPointerDown }: ShieldsProps) 
           tabIndex={-1}
           aria-label={label ?? t('picker.shield')}
           data-testid={testIds.pickerShield(index)}
-          className="pointer-events-auto absolute m-0 cursor-default border-0 bg-transparent p-0"
+          className={cn(
+            'pointer-events-auto absolute m-0 border-0 bg-transparent p-0',
+            cursor === 'crosshair' ? 'cursor-crosshair' : 'cursor-default',
+          )}
           style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
           onClick={onlyTrusted(onClick)}
           onPointerDown={onlyTrusted(onPointerDown)}

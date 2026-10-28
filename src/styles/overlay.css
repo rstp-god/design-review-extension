@@ -27,6 +27,11 @@
   color-scheme: light;
 }
 
+/* The shutter moment: nothing of ours may be in the screenshot (snapshot/capture.ts). */
+:host([data-dr-capturing]) {
+  visibility: hidden;
+}
+
 /* Typography lives on the root container: `all: initial` on the host resets inherited props. */
 .dr-root {
   font: 400 13px / 19px var(--font-sans);

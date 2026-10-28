@@ -172,3 +172,162 @@ a {
   font-size: 1.1rem;
   color: #6b7280;
 }
+
+/*
+ * Stacking traps (/stacking/) for the snapshot hit test. Sizes in rem on a 10px root; every box
+ * is 30rem × 6rem = 300 × 60 px, overlaps are 3rem = 30 px deep, and the whole section plus the
+ * counter button fits above 720 px so the tests can point the mouse at everything.
+ */
+.traps {
+  margin-top: 1.6rem;
+  width: 50rem;
+}
+
+.trap {
+  box-sizing: border-box;
+  width: 30rem;
+  height: 6rem;
+  padding: 0.8rem 1rem;
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.trap-high {
+  position: relative;
+  z-index: 5;
+  background: #7c3aed;
+}
+
+/* Overlaps the lower half of .trap-high; later in the DOM but static: .trap-high stays on top. */
+.trap-later {
+  margin: -3rem 0 0 10rem;
+  background: #0ea5e9;
+}
+
+.trap-transform {
+  width: 30rem;
+  height: 6rem;
+  margin-top: 1.5rem;
+  background: #d4d4d8;
+  transform: translateZ(0);
+}
+
+.trap-inner {
+  position: relative;
+  z-index: 9999;
+  box-sizing: border-box;
+  height: 4.5rem;
+  padding: 0.8rem 1rem;
+  background: #f59e0b;
+  color: #1a1206;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+/* Overlaps .trap-inner: its z-index 1 beats a 9999 trapped inside the transform. */
+.trap-sibling {
+  position: relative;
+  z-index: 1;
+  margin: -3rem 0 0 10rem;
+  background: #10b981;
+}
+
+.trap-root {
+  position: relative;
+  z-index: 0;
+  box-sizing: border-box;
+  width: 30rem;
+  height: 6rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #d9cfc0;
+}
+
+.trap-negative {
+  position: absolute;
+  inset: 1rem;
+  z-index: -1;
+  background: #ef4444;
+}
+
+.trap-content {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 2.4rem;
+}
+
+.trap-scroller {
+  width: 20rem;
+  height: 5rem;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.trap-scroller p {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.trap-inside {
+  height: 5rem;
+}
+
+.trap-outside {
+  height: 4rem;
+  background: #fca5a5;
+}
+
+.trap-ghost {
+  width: 30rem;
+  height: 4rem;
+  margin-top: 1.5rem;
+  padding: 0.5rem 1rem;
+  background: #111827;
+  visibility: hidden;
+}
+
+.trap-ghost-child {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #fde68a;
+  color: #1a1206;
+  font-size: 1.4rem;
+  line-height: 2rem;
+  visibility: visible;
+}
+
+.trap-veiled {
+  position: relative;
+  width: 30rem;
+  height: 5rem;
+  margin-top: 1.5rem;
+  background: #f3f4f6;
+}
+
+.trap-under {
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.6rem;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 1.4rem;
+}
+
+.trap-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.3);
+  pointer-events: none;
+}
+
+.traps__counter {
+  margin: 1.6rem 0 0;
+}
