@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { NodeStyles, StyleProp } from '@/content/picker/source'
-import { STYLE_PROPS } from '@/content/picker/source'
-import { contentBox, type TooltipFormat, tooltipRows } from '@/content/picker/styles'
+import {
+  REQUIRED_STYLE_PROPS,
+  STYLE_PROPS,
+  STYLE_PROPS_BY_FIELD,
+  stylePropsFor,
+} from '@/content/picker/source'
+import { contentBox, MISSING_VALUE, type TooltipFormat, tooltipRows } from '@/content/picker/styles'
 import { TOOLTIP_FIELDS } from '@/shared/model'
 
 /** The fixture button from screens.md §04 as Chrome would report it. */
@@ -151,5 +156,44 @@ describe('tooltipRows', () => {
     expect(rows.border).toBe('1px solid #E5E7EB')
     expect(rows.shadow).toBe('rgba(0, 0, 0, 0.22) 0 8px 24px 0')
     expect(rows.radius).toBe('12px 12px 0 0')
+  })
+})
+
+describe('tooltipRows with a partial capture (snapshot)', () => {
+  /** A snapshot that captured only the required properties and the colors group. */
+  function partial(): NodeStyles {
+    const full = buttonStyles()
+    const keep = new Set<string>(stylePropsFor(['colors']))
+    const values = Object.fromEntries(
+      Object.entries(full.values).filter(([property]) => keep.has(property)),
+    ) as NodeStyles['values']
+    return { rootFontSize: 16, values }
+  }
+
+  it('collapses a field that was not captured to one “—” row and keeps the others', () => {
+    const rows = tooltipRows(partial(), all, box)
+    expect(rows.map((row) => [row.key, row.value, row.missing ?? false])).toEqual([
+      ['font', MISSING_VALUE, true],
+      ['radius', MISSING_VALUE, true],
+      ['color', '#FFFFFF', false],
+      ['background', '#2563EB', false],
+      ['padding', '10px 16px', false],
+      ['margin', '16px 0 0', false],
+      ['content', '214px × 20px', false],
+      ['display', 'flex', false],
+    ])
+  })
+
+  it('needs nothing beyond the required set for spacing and size', () => {
+    const rows = tooltipRows(partial(), { ...all, fields: ['spacing', 'size'] }, box)
+    expect(rows.every((row) => !row.missing)).toBe(true)
+  })
+
+  it('lists the required properties first and each field group once', () => {
+    expect(stylePropsFor([])).toEqual([...REQUIRED_STYLE_PROPS])
+    expect(stylePropsFor(['colors', 'colors'])).toHaveLength(
+      REQUIRED_STYLE_PROPS.length + STYLE_PROPS_BY_FIELD.colors.length,
+    )
+    expect(new Set(stylePropsFor(TOOLTIP_FIELDS))).toEqual(new Set(STYLE_PROPS))
   })
 })

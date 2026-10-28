@@ -67,6 +67,7 @@ export const TestId = {
   PickerTooltip: 'picker-tooltip',
   PickerTooltipTag: 'picker-tooltip-tag',
   PickerTooltipSize: 'picker-tooltip-size',
+  PickerTooltipRetake: 'picker-tooltip-retake',
   PickerLockedFrame: 'picker-locked-frame',
   PickerLockedChip: 'picker-locked-chip',
   PickerLockedBar: 'picker-locked-bar',

@@ -56,6 +56,7 @@
     },
     "path": "Path to the element",
     "chip": "Selected element",
-    "shield": "Pick the frame"
+    "shield": "Pick the frame",
+    "retake": "Take the snapshot again for the new fields"
   }
 }

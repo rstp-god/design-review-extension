@@ -1,7 +1,10 @@
 import { formatCssColor, isTransparent } from '@/shared/colorFormat'
 import { convertLengths, formatLength, shorthand } from '@/shared/cssUnits'
 import type { ColorFormat, TooltipField, Units } from '@/shared/model'
-import type { NodeStyles, StyleProp } from './source'
+import { type NodeStyles, STYLE_PROPS_BY_FIELD, type StyleProp } from './source'
+
+/** Shown for a field whose properties the source did not capture (a snapshot taken earlier). */
+export const MISSING_VALUE = '—'
 
 export type TooltipRowKey =
   | 'font'
@@ -22,6 +25,17 @@ export interface TooltipRow {
   value: string
   /** CSS color for a swatch next to the value. */
   swatch?: string
+  /** The source has no values for this field: `value` is `MISSING_VALUE`. */
+  missing?: boolean
+}
+
+/** The one row a field collapses to when its properties were not captured. */
+const MISSING_ROW_KEY: Record<TooltipField, TooltipRowKey> = {
+  typography: 'font',
+  colors: 'color',
+  spacing: 'padding',
+  size: 'content',
+  radius: 'radius',
 }
 
 export interface TooltipFormat {
@@ -47,7 +61,7 @@ function firstFontFamily(value: string): string {
  * `height` would not do — under `box-sizing: border-box` they are the border box, and for
  * inline elements they are `auto`.
  */
-export function contentBox(values: Record<StyleProp, string>, box: BoxSize): BoxSize {
+export function contentBox(values: Partial<Record<StyleProp, string>>, box: BoxSize): BoxSize {
   const px = (property: StyleProp) => Number.parseFloat(values[property] ?? '') || 0
   const horizontal =
     px('padding-left') + px('padding-right') + px('border-left-width') + px('border-right-width')
@@ -60,15 +74,23 @@ export function contentBox(values: Record<StyleProp, string>, box: BoxSize): Box
  * Turns captured computed values into the rows of the picker tooltip (screens.md §04), by the
  * fields enabled in the settings. Pure: the source captured raw values once, the user's color
  * format and units are applied here on every render, so a settings change needs no re-capture.
+ * A field whose properties are absent from `values` (enabled after a snapshot was taken) becomes
+ * one `—` row flagged `missing`.
  */
 export function tooltipRows(styles: NodeStyles, format: TooltipFormat, box: BoxSize): TooltipRow[] {
   const { values, rootFontSize } = styles
   const { colorFormat, units } = format
-  const enabled = new Set(format.fields)
   const rows: TooltipRow[] = []
   const get = (property: StyleProp) => values[property] ?? ''
   const length = (property: StyleProp) => convertLengths(get(property), units, rootFontSize)
   const px = (property: StyleProp) => Number.parseFloat(get(property)) || 0
+
+  const enabled = new Set<TooltipField>()
+  for (const field of format.fields) {
+    const captured = STYLE_PROPS_BY_FIELD[field].every((property) => values[property] !== undefined)
+    if (captured) enabled.add(field)
+    else rows.push({ key: MISSING_ROW_KEY[field], field, value: MISSING_VALUE, missing: true })
+  }
 
   if (enabled.has('typography')) {
     const lineHeight = get('line-height')
