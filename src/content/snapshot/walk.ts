@@ -125,14 +125,36 @@ function rectOf(element: Element): Rect {
   return { x: rect.left, y: rect.top, w: rect.width, h: rect.height }
 }
 
-/** The children the browser renders: the shadow tree of an open host, the assigned nodes of a slot. */
+/** The children the browser renders: the shadow tree of an open host, else the light children. */
 function renderedChildren(element: Element): ArrayLike<Element> {
-  if (element.shadowRoot) return element.shadowRoot.children
-  if (element.localName === 'slot') {
-    const assigned = (element as HTMLSlotElement).assignedElements({ flatten: true })
-    return assigned.length > 0 ? assigned : element.children
+  return element.shadowRoot ? element.shadowRoot.children : element.children
+}
+
+/** Light-DOM elements a slot shows; its own children only as the fallback content. */
+function assignedTo(slot: Element): { assigned: Element[]; fallback: ArrayLike<Element> } {
+  const assigned = (slot as HTMLSlotElement).assignedElements({ flatten: true })
+  return { assigned, fallback: assigned.length > 0 ? [] : slot.children }
+}
+
+/** `:nth-of-type` of an element among its real DOM siblings, and whether it has any. */
+function nthOfTypeOf(element: Element): { nth: number; hasSameTagSiblings: boolean } {
+  let nth = 1
+  for (
+    let sibling = element.previousElementSibling;
+    sibling;
+    sibling = sibling.previousElementSibling
+  ) {
+    if (sibling.localName === element.localName) nth += 1
   }
-  return element.children
+  let later = false
+  for (
+    let sibling = element.nextElementSibling;
+    sibling && !later;
+    sibling = sibling.nextElementSibling
+  ) {
+    later = sibling.localName === element.localName
+  }
+  return { nth, hasSameTagSiblings: nth > 1 || later }
 }
 
 /**
@@ -238,7 +260,36 @@ export function walkSnapshot({
     if (!LEAF_TAGS.has(element.localName) && !skipsChildren(extracted)) {
       const childClip = childClipContext(extracted, rect, borderWidth, clip, ownClip)
       const childShadowHost = element.shadowRoot ? node : shadowHost
-      visitChildren(renderedChildren(element), node, childShadowHost, placement.children, childClip)
+      if (element.localName === 'slot' && shadowHost) {
+        // Slotted elements paint where the slot is but live in the host's light tree: they hang
+        // off the host, in its tree, with their real sibling positions — like `parentOf` on the
+        // live page, which goes to the host too.
+        const { assigned, fallback } = assignedTo(element)
+        for (const child of assigned) {
+          const { nth, hasSameTagSiblings } = nthOfTypeOf(child)
+          const slotted = visit(
+            child,
+            shadowHost,
+            shadowHost.shadowHost,
+            placement.children,
+            childClip,
+            nth,
+            hasSameTagSiblings,
+          )
+          if (slotted) shadowHost.children.push(slotted)
+        }
+        visitChildren(fallback, node, childShadowHost, placement.children, childClip)
+      } else {
+        visitChildren(
+          renderedChildren(element),
+          node,
+          childShadowHost,
+          placement.children,
+          childClip,
+        )
+      }
+      // Slotted elements were attached to the host from inside its shadow tree: keep walk order.
+      if (element.shadowRoot) node.children.sort((a, b) => a.order - b.order)
     }
 
     // A box kept for the tree alone earns its place only through what is under it.

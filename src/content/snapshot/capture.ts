@@ -1,6 +1,7 @@
+import { svgRootOf } from '@/content/picker/live'
 import { topNodeAt } from '@/content/picker/snapshot'
 import { sendToBackground } from '@/shared/messaging'
-import type { Rect, TooltipField } from '@/shared/model'
+import type { TooltipField } from '@/shared/model'
 import { descriptorPart } from './descriptor'
 import { type SnapshotNode, type WalkTimings, walkSnapshot } from './walk'
 
@@ -9,8 +10,10 @@ export const CAPTURING_ATTRIBUTE = 'data-dr-capturing'
 
 /** Frames to wait after hiding our UI so the compositor has painted the page without it. */
 const FRAMES_BEFORE_CAPTURE = 2
-/** `requestAnimationFrame` stops in a hidden tab: a frame that takes longer than this is one. */
+/** `requestAnimationFrame` stops in a hidden tab: a frame that takes longer than this is checked. */
 const FRAME_TIMEOUT_MS = 250
+/** A visible tab that produces no frame for this long is not going to: the shutter gives up. */
+const FRAME_GIVE_UP_MS = 2_000
 
 /** One pass longer than this earns a toast: the page is unusually large. */
 export const SLOW_WALK_MS = 1_000
@@ -75,17 +78,33 @@ export interface TakeSnapshotOptions {
   now?: () => number
 }
 
-function nextFrame(win: Window): Promise<void> {
+type FrameOutcome = 'frame' | 'timeout'
+
+function raceFrame(win: Window): Promise<FrameOutcome> {
   return new Promise((resolve) => {
     let done = false
-    const finish = () => {
+    const finish = (outcome: FrameOutcome) => {
       if (done) return
       done = true
-      resolve()
+      resolve(outcome)
     }
-    win.requestAnimationFrame(() => finish())
-    win.setTimeout(finish, FRAME_TIMEOUT_MS)
+    win.requestAnimationFrame(() => finish('frame'))
+    win.setTimeout(() => finish('timeout'), FRAME_TIMEOUT_MS)
   })
+}
+
+/**
+ * Waits for one painted frame. A timeout means either a hidden tab (rAF is paused there — the
+ * snapshot would be of another tab) or a page too busy to paint; only a real frame guarantees
+ * that our hidden UI is out of the picture, so a visible tab keeps waiting, up to a limit.
+ */
+async function nextFrame(win: Window, doc: Document, now: () => number): Promise<void> {
+  const started = now()
+  for (;;) {
+    if ((await raceFrame(win)) === 'frame') return
+    if (doc.hidden) throw new SnapshotError('hidden')
+    if (now() - started >= FRAME_GIVE_UP_MS) throw new SnapshotError('capture', 'no frame')
+  }
 }
 
 /** `data:image/png;base64,…` → `Blob`, by hand: `fetch` of a data URL is subject to the page's CSP. */
@@ -140,16 +159,6 @@ export function sampleAccuracy(
   viewport: { w: number; h: number },
 ): AccuracySample {
   const sample: AccuracySample = { points: 0, mismatches: 0, unanswered: 0, examples: [] }
-  const svgRoot = (element: Element): Element => {
-    let current = element
-    while (
-      current.parentElement &&
-      current.parentElement.namespaceURI === 'http://www.w3.org/2000/svg'
-    ) {
-      current = current.parentElement
-    }
-    return current
-  }
   for (let row = 0; row < GRID_ROWS; row += 1) {
     for (let column = 0; column < GRID_COLUMNS; column += 1) {
       const x = Math.floor(((column + 0.5) * viewport.w) / GRID_COLUMNS)
@@ -160,7 +169,7 @@ export function sampleAccuracy(
         sample.unanswered += 1
         continue
       }
-      const expected = svgRoot(live)
+      const expected = svgRootOf(live)
       const node = topNodeAt(hittable, x, y)
       const element = node?.element.deref()
       const actual = element ? retargeted(element) : null
@@ -201,7 +210,7 @@ export async function takeSnapshot({
 
   host.setAttribute(CAPTURING_ATTRIBUTE, '')
   try {
-    for (let frame = 0; frame < FRAMES_BEFORE_CAPTURE; frame += 1) await nextFrame(win)
+    for (let frame = 0; frame < FRAMES_BEFORE_CAPTURE; frame += 1) await nextFrame(win, doc, now)
     if (doc.hidden) throw new SnapshotError('hidden')
 
     const viewport = { w: win.innerWidth, h: win.innerHeight }
@@ -248,9 +257,4 @@ export async function takeSnapshot({
   } finally {
     host.removeAttribute(CAPTURING_ATTRIBUTE)
   }
-}
-
-/** The viewport the snapshot was taken in, as a rect at the origin. */
-export function snapshotViewportRect(snapshot: Pick<Snapshot, 'viewport'>): Rect {
-  return { x: 0, y: 0, w: snapshot.viewport.w, h: snapshot.viewport.h }
 }

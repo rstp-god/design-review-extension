@@ -33,6 +33,14 @@ export function useSnapshotController(host: OverlayHost): SnapshotController {
   const debug = useMemo(() => createE2EDebug(host.host), [host])
   /** Guards against a second shutter while one is in flight (double `F`). */
   const inFlight = useRef(false)
+  /** The review may end while a capture is in flight: its result then has no owner. */
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   const source = useMemo(
     () =>
@@ -47,7 +55,8 @@ export function useSnapshotController(host: OverlayHost): SnapshotController {
     [snapshot],
   )
 
-  // A replaced or dropped picture releases its bitmap; the source with it.
+  // A replaced or dropped picture releases its bitmap (the one place it is closed); the source
+  // with it.
   useEffect(() => {
     if (!snapshot) return
     return () => {
@@ -73,10 +82,11 @@ export function useSnapshotController(host: OverlayHost): SnapshotController {
       sampleAccuracy: debug !== null,
     })
       .then((taken) => {
-        setSnapshotData((previous) => {
-          previous?.bitmap.close()
-          return taken
-        })
+        if (!mounted.current) {
+          taken.bitmap.close()
+          return
+        }
+        setSnapshotData(taken)
         useOverlayStore.getState().setSnapshot({ takenAt: taken.takenAt })
         if (taken.timings.walkMs > SLOW_WALK_MS) {
           useOverlayStore
@@ -99,6 +109,7 @@ export function useSnapshotController(host: OverlayHost): SnapshotController {
       .catch((error: unknown) => {
         const reason = error instanceof SnapshotError ? error.reason : 'capture'
         if (reason !== 'hidden') console.warn('[snapshot] failed:', error)
+        if (!mounted.current) return
         const current = useOverlayStore.getState()
         current.exitSnapshot()
         current.showToast(reason === 'hidden' ? 'snapshot.hidden' : 'snapshot.failed')
@@ -108,12 +119,17 @@ export function useSnapshotController(host: OverlayHost): SnapshotController {
       })
   }, [host, debug])
 
-  const startCountdown = useCallback((seconds?: number) => {
-    const store = useOverlayStore.getState()
-    if (store.snapshotPhase === 'capturing') return
-    if (store.snapshotPhase === 'snapshot') setSnapshotData(null)
-    store.startCountdown(seconds ?? useSettingsStore.getState().freezeDelay)
-  }, [])
+  const startCountdown = useCallback(
+    (seconds?: number) => {
+      const store = useOverlayStore.getState()
+      if (store.snapshotPhase === 'capturing') return
+      // Leaving a snapshot through exit(): the tools must forget their snapshot nodes before the
+      // source turns live again.
+      if (store.snapshotPhase === 'snapshot') exit()
+      useOverlayStore.getState().startCountdown(seconds ?? useSettingsStore.getState().freezeDelay)
+    },
+    [exit],
+  )
 
   const cancelCountdown = useCallback(() => {
     useOverlayStore.getState().cancelCountdown()
@@ -187,5 +203,9 @@ export function useSnapshotController(host: OverlayHost): SnapshotController {
     }
   }, [snapshot, host, exit])
 
-  return { snapshot, source, toggle, takeNow, startCountdown, cancelCountdown, exit }
+  // One identity per state: the hotkeys and the toolbar depend on it.
+  return useMemo(
+    () => ({ snapshot, source, toggle, takeNow, startCountdown, cancelCountdown, exit }),
+    [snapshot, source, toggle, takeNow, startCountdown, cancelCountdown, exit],
+  )
 }

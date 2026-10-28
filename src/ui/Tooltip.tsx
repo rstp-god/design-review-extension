@@ -73,7 +73,8 @@ export function Tooltip({
   const { getReferenceProps, getFloatingProps } = useInteractions([
     useHover(context, { move: false, delay: { open: openDelay, close: 0 } }),
     useFocus(context),
-    useDismiss(context),
+    // A press on the button closes the tooltip: a menu or an action takes its place.
+    useDismiss(context, { referencePress: true }),
     useRole(context, { role: 'tooltip' }),
   ])
 

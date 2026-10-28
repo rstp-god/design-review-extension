@@ -1,3 +1,4 @@
+import { rectContains } from '@/content/overlay/surfaces'
 import type { Edges } from '@/content/picker/source'
 import type { Rect } from '@/shared/model'
 import { willChangeTokens } from './rank'
@@ -35,10 +36,6 @@ export function intersectRects(a: Rect, b: Rect): Rect | null {
   const bottom = Math.min(a.y + a.h, b.y + b.h)
   if (right <= x || bottom <= y) return null
   return { x, y, w: right - x, h: bottom - y }
-}
-
-export function rectContainsPoint(rect: Rect, x: number, y: number): boolean {
-  return x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h
 }
 
 /** Horizontal and vertical radius of one corner, px. */
@@ -85,7 +82,7 @@ export function roundedRectContainsPoint(
   x: number,
   y: number,
 ): boolean {
-  if (!rectContainsPoint(rect, x, y)) return false
+  if (!rectContains(rect, x, y)) return false
   const [tl, tr, br, bl] = radii
   const scale = Math.min(
     1,

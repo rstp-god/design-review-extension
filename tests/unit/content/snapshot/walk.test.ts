@@ -211,14 +211,20 @@ describe('walkSnapshot', () => {
     const openHost = node('fx-open-card')
     const inner = byElement(dom.openShadow.querySelector('.inner') as Element) as SnapshotNode
     const innerButton = byElement(dom.openShadow.querySelector('button') as Element) as SnapshotNode
-    expect(openHost.children).toEqual([inner])
+    expect(openHost.children[0]).toBe(inner)
     expect(inner.shadowHost).toBe(openHost)
     expect(innerButton.shadowHost).toBe(openHost)
     expect(openHost.shadowHost).toBeNull()
+    // A slotted element paints inside the shadow tree but belongs to the host's light tree.
     const slotted = node('.slotted')
     expect(slotted.hittable).toBe(true)
-    expect(slotted.parent?.descriptor.tag).toBe('slot')
-    expect(slotted.parent?.parent).toBe(inner)
+    expect(slotted.parent).toBe(openHost)
+    expect(slotted.shadowHost).toBeNull()
+    expect(openHost.children).toContain(slotted)
+    expect(selectorFromDescriptors(descriptorChain(slotted))).toBe(
+      'main > section.grid > fx-open-card > span.slotted',
+    )
+    expect(byElement(dom.openShadow.querySelector('slot') as Element)).toBeUndefined()
 
     expect(node('fx-closed-card').children).toEqual([])
     expect(node('fx-closed-card').hittable).toBe(true)

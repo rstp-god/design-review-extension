@@ -347,6 +347,9 @@ test.describe('page snapshot', () => {
     )
     await page.emulateMedia({ colorScheme: 'light' })
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveAttribute('data-theme', 'light')
+    // A screenshot re-dispatches a mouse move from the real cursor once the freeze is lifted:
+    // hover the spot again before the next capture (report 02, p. 14).
+    await expect(await hoverAt(overlapHigh)).toHaveText('div.trap.trap-high')
     await withFrozenPointer(page, OVERLAY_HOST_TAG, () =>
       expect(page).toHaveScreenshot('snapshot-picker-hover-light.png', {
         clip: { x: trapHigh.x - 16, y: trapHigh.y - 16, width: 460, height: 360 },

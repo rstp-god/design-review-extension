@@ -1,5 +1,6 @@
+import { rectContains } from '@/content/overlay/surfaces'
 import { MAX_LABEL_CLASSES, selectorFromDescriptors } from '@/content/snapshot/descriptor'
-import { rectContainsPoint, roundedRectContainsPoint } from '@/content/snapshot/visibility'
+import { roundedRectContainsPoint } from '@/content/snapshot/visibility'
 import { descriptorChain, type SnapshotNode } from '@/content/snapshot/walk'
 import type { Rect } from '@/shared/model'
 import { finderSelector, type SelectorGenerator, selectorFor } from './selector'
@@ -33,7 +34,7 @@ export function topNodeAt(
 ): SnapshotNode | null {
   for (let index = hittable.length - 1; index >= 0; index -= 1) {
     const node = hittable[index] as SnapshotNode
-    if (!node.visibleRect || !rectContainsPoint(node.visibleRect, x, y)) continue
+    if (!node.visibleRect || !rectContains(node.visibleRect, x, y)) continue
     if (node.radii && !roundedRectContainsPoint(node.rect, node.radii, x, y)) continue
     return node
   }

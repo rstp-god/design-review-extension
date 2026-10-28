@@ -346,6 +346,47 @@ describe('page snapshot', () => {
     expect(state().snapshotPhase).toBe('live')
   })
 
+  it('Shift+F from a locked snapshot drops the lock before the live source is back', async () => {
+    press('p', 'KeyP')
+    await freeze()
+    fireEvent.click(q('picker-shield-0') as HTMLElement, { clientX: 300, clientY: 210, detail: 1 })
+    expect(state().pickerMode).toBe('locked')
+
+    press('F', 'KeyF', { shiftKey: true })
+    await tick()
+    expect(state().snapshotPhase).toBe('countdown')
+    expect(state().tool).toBe('picker')
+    expect(state().pickerMode).toBe('picking')
+    expect(q('picker-locked-chip')).toBeNull()
+    // The live source answers the arrows and the hover again without a snapshot node in hand.
+    press('ArrowUp')
+    moveTo(120, 210)
+    await tick()
+    expect(q('picker-tooltip-tag')).toHaveTextContent('button.card__cta')
+    press('Escape')
+    expect(state().snapshotPhase).toBe('live')
+  })
+
+  it('a capture that finishes after the review ended releases its bitmap', async () => {
+    let release: (() => void) | undefined
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    mock.runtime.onMessage.listeners.clear()
+    mock.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if ((message as { type: string }).type !== 'capture/visible') return false
+      void gate.then(() => sendResponse({ ok: true, data: { dataUrl: PNG } }))
+      return true
+    })
+    press('f', 'KeyF')
+    await waitFor(() => expect(state().snapshotPhase).toBe('capturing'))
+    cleanup()
+    release?.()
+    await waitFor(() => expect(bitmapClose).toHaveBeenCalledTimes(1))
+    expect(q('snapshot-layer')).toBeNull()
+    expect(state().snapshotMeta).toBeNull()
+  })
+
   it('the toolbar menu offers Now and the delays live, the way back and a retake on a snapshot', async () => {
     const user = userEvent.setup()
     const freeze = q('toolbar-freeze') as HTMLElement

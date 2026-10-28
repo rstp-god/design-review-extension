@@ -9,7 +9,6 @@ import {
   initialClipContext,
   intersectRects,
   paddingBox,
-  rectContainsPoint,
   renderability,
   resolveCornerRadius,
   roundedRectContainsPoint,
@@ -50,14 +49,6 @@ describe('geometry', () => {
       intersectRects({ x: 0, y: 0, w: 100, h: 100 }, { x: 100, y: 0, w: 10, h: 10 }),
     ).toBeNull()
     expect(intersectRects({ x: 0, y: 0, w: 0, h: 100 }, viewport)).toBeNull()
-  })
-
-  it('contains points on the top-left edge but not on the bottom-right one', () => {
-    const rect = { x: 10, y: 10, w: 20, h: 20 }
-    expect(rectContainsPoint(rect, 10, 10)).toBe(true)
-    expect(rectContainsPoint(rect, 29.9, 29.9)).toBe(true)
-    expect(rectContainsPoint(rect, 30, 10)).toBe(false)
-    expect(rectContainsPoint(rect, 9, 10)).toBe(false)
   })
 
   it('shrinks the border box to the padding box, never below zero', () => {

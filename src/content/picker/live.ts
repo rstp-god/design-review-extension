@@ -63,7 +63,7 @@ function shadowHostOf(element: Element): Element | null {
 }
 
 /** A `path` or `g` inside an `svg` resolves to the outermost `svg`: the drawing is one node. */
-function svgRootOf(element: Element): Element {
+export function svgRootOf(element: Element): Element {
   let current = element
   while (
     current.namespaceURI === SVG_NS &&
