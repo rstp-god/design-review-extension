@@ -13,14 +13,14 @@ const repoRoot = process.cwd()
  * into a live page on every start; a heavier bundle means a slower start and more to parse on the
  * host page. Raise it deliberately, with a reason, not because a dependency crept in.
  *
- * Measured 429 374 bytes after feature 4 (page snapshot), budget = measured + 30 kB. The feature
- * added 49.8 kB: 19.3 kB of @floating-ui/react that the toolbar menu brings in (list navigation,
- * focus management, click / role hooks), 12.6 kB of snapshot code (walk, rank, visibility,
- * capture, controller), 5.6 kB of overlay UI (countdown, badge, layer, toast, menu wiring),
- * 4 kB of Tailwind classes, the rest in the picker source and messaging. Before the feature:
- * 379 623 bytes (`yarn bundle:report` shows the composition).
+ * Measured 431 305 bytes after feature 4 (page snapshot), budget = measured + 30 kB, rounded up.
+ * The feature added 51.7 kB: 19.4 kB of @floating-ui/react that the toolbar menu brings in (list
+ * navigation, focus management, click / role hooks), 14.5 kB of snapshot code (walk, rank,
+ * visibility, capture, controller), 5.7 kB of overlay UI (countdown, badge, layer, toast, menu
+ * wiring), 3.8 kB of Tailwind classes, the rest in the picker source and messaging. Before the
+ * feature: 379 623 bytes (`yarn bundle:report` shows the composition).
  */
-const CONTENT_SCRIPT_BUDGET_BYTES = 460_000
+const CONTENT_SCRIPT_BUDGET_BYTES = 462_000
 const distDir = path.join(repoRoot, 'dist')
 
 function hasProductionBuild(): boolean {
