@@ -41,6 +41,83 @@ export function rectContainsPoint(rect: Rect, x: number, y: number): boolean {
   return x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h
 }
 
+/** Horizontal and vertical radius of one corner, px. */
+export interface CornerRadius {
+  rx: number
+  ry: number
+}
+
+/** Top-left, top-right, bottom-right, bottom-left. */
+export type CornerRadii = [CornerRadius, CornerRadius, CornerRadius, CornerRadius]
+
+const NO_RADIUS: CornerRadius = { rx: 0, ry: 0 }
+
+/**
+ * A computed `border-*-radius` resolved against the box: `8px`, `50%` (horizontal against the
+ * width, vertical against the height, like CSS) or the elliptical `8px 4px`.
+ */
+export function resolveCornerRadius(value: string | undefined, box: Rect): CornerRadius {
+  if (!value) return NO_RADIUS
+  const parts = value.trim().split(/\s+/)
+  const resolve = (part: string | undefined, length: number): number => {
+    if (!part) return 0
+    const number = Number.parseFloat(part)
+    if (!Number.isFinite(number) || number <= 0) return 0
+    return part.endsWith('%') ? (length * number) / 100 : number
+  }
+  const rx = resolve(parts[0], box.w)
+  const ry = resolve(parts[1] ?? parts[0], box.h)
+  return rx > 0 && ry > 0 ? { rx, ry } : NO_RADIUS
+}
+
+export function hasRoundedCorners(radii: CornerRadii): boolean {
+  return radii.some((corner) => corner.rx > 0 && corner.ry > 0)
+}
+
+/**
+ * Whether a point of the border box lies inside its rounded shape: the browser hit-tests the
+ * shape, so the corner cut off by a radius belongs to whatever is behind. Adjacent radii that
+ * would overlap are scaled down together, as CSS does.
+ */
+export function roundedRectContainsPoint(
+  rect: Rect,
+  radii: CornerRadii,
+  x: number,
+  y: number,
+): boolean {
+  if (!rectContainsPoint(rect, x, y)) return false
+  const [tl, tr, br, bl] = radii
+  const scale = Math.min(
+    1,
+    rect.w / Math.max(1, tl.rx + tr.rx),
+    rect.w / Math.max(1, bl.rx + br.rx),
+    rect.h / Math.max(1, tl.ry + bl.ry),
+    rect.h / Math.max(1, tr.ry + br.ry),
+  )
+  const corners: Array<[CornerRadius, number, number]> = [
+    [tl, rect.x + tl.rx * scale, rect.y + tl.ry * scale],
+    [tr, rect.x + rect.w - tr.rx * scale, rect.y + tr.ry * scale],
+    [br, rect.x + rect.w - br.rx * scale, rect.y + rect.h - br.ry * scale],
+    [bl, rect.x + bl.rx * scale, rect.y + rect.h - bl.ry * scale],
+  ]
+  for (const [corner, cx, cy] of corners) {
+    const rx = corner.rx * scale
+    const ry = corner.ry * scale
+    if (rx <= 0 || ry <= 0) continue
+    // Only the quadrant of the corner itself is curved.
+    const inCornerBox =
+      (corner === tl && x < cx && y < cy) ||
+      (corner === tr && x >= cx && y < cy) ||
+      (corner === br && x >= cx && y >= cy) ||
+      (corner === bl && x < cx && y >= cy)
+    if (!inCornerBox) continue
+    const dx = (x + 0.5 - cx) / rx
+    const dy = (y + 0.5 - cy) / ry
+    return dx * dx + dy * dy <= 1
+  }
+  return true
+}
+
 /** The padding box: the border box without its borders. What an overflow box clips to. */
 export function paddingBox(rect: Rect, borders: Edges): Rect {
   const left = Math.max(0, borders.left)

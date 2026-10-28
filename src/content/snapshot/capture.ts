@@ -209,6 +209,8 @@ export async function takeSnapshot({
     const capture = requestCapture().catch((error: unknown) => {
       throw new SnapshotError('capture', error)
     })
+    // Should the walk below throw, the rejection of the capture must not go unhandled.
+    capture.catch(() => {})
     // Synchronous from here until the walk returns: the page cannot change under the camera.
     const walk = walkSnapshot({ root: doc, host, viewport, fields, now })
     const accuracy = sampling ? sampleAccuracy(doc, host, walk.hittable, viewport) : undefined

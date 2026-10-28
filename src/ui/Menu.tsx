@@ -168,9 +168,7 @@ export function Menu({
                 </Fragment>
               ))}
               {footer && (
-                <p className="m-0 px-5 pt-3 pb-2 font-sans text-fg-muted text-label leading-4">
-                  {footer}
-                </p>
+                <p className="m-0 px-5 pt-3 pb-2 font-sans text-fg-muted text-label">{footer}</p>
               )}
             </div>
           </FloatingFocusManager>

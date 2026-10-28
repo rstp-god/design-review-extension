@@ -1,5 +1,5 @@
 import { MAX_LABEL_CLASSES, selectorFromDescriptors } from '@/content/snapshot/descriptor'
-import { rectContainsPoint } from '@/content/snapshot/visibility'
+import { rectContainsPoint, roundedRectContainsPoint } from '@/content/snapshot/visibility'
 import { descriptorChain, type SnapshotNode } from '@/content/snapshot/walk'
 import type { Rect } from '@/shared/model'
 import { finderSelector, type SelectorGenerator, selectorFor } from './selector'
@@ -21,7 +21,11 @@ export interface SnapshotSource extends PickSource {
   nodeOf(node: PickNode): SnapshotNode
 }
 
-/** The top-most hit target at a viewport point: the highest rank whose visible rect holds it. */
+/**
+ * The top-most hit target at a viewport point: the highest rank whose visible rect holds it —
+ * and, for a box with rounded corners, whose shape holds it: the cut-off corner belongs to
+ * whatever is behind, as in the browser.
+ */
 export function topNodeAt(
   hittable: readonly SnapshotNode[],
   x: number,
@@ -29,7 +33,9 @@ export function topNodeAt(
 ): SnapshotNode | null {
   for (let index = hittable.length - 1; index >= 0; index -= 1) {
     const node = hittable[index] as SnapshotNode
-    if (node.visibleRect && rectContainsPoint(node.visibleRect, x, y)) return node
+    if (!node.visibleRect || !rectContainsPoint(node.visibleRect, x, y)) continue
+    if (node.radii && !roundedRectContainsPoint(node.rect, node.radii, x, y)) continue
+    return node
   }
   return null
 }

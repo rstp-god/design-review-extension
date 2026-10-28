@@ -18,12 +18,15 @@ import {
 } from './rank'
 import {
   type ClipContext,
+  type CornerRadii,
   childClipContext,
   clipFor,
   clipsOverflow,
+  hasRoundedCorners,
   initialClipContext,
   intersectRects,
   renderability,
+  resolveCornerRadius,
   skipsChildren,
   VISIBILITY_STYLE_PROPS,
   type VisibilityStyle,
@@ -46,6 +49,8 @@ export interface SnapshotNode {
   visibleRect: Rect | null
   /** A hit target; `false` for boxes kept for the arrow keys and breadcrumbs only. */
   hittable: boolean
+  /** Resolved corner radii of a hit target with rounded corners; `null` for square ones. */
+  radii: CornerRadii | null
   /** Paint order among the hittable boxes, higher paints later; `-1` for tree-only boxes. */
   rank: number
   box: { margin: Edges; borderWidth: Edges; padding: Edges }
@@ -205,6 +210,12 @@ export function walkSnapshot({
       isHittable || clipsOverflow(extracted) ? edgesOf(styles, 'border', '-width') : ZERO_EDGES
 
     const placement = placeInPaintOrder(extracted, extracted.display, order, paint)
+    const radii: CornerRadii = [
+      resolveCornerRadius(styles['border-top-left-radius'], rect),
+      resolveCornerRadius(styles['border-top-right-radius'], rect),
+      resolveCornerRadius(styles['border-bottom-right-radius'], rect),
+      resolveCornerRadius(styles['border-bottom-left-radius'], rect),
+    ]
     const node: SnapshotNode = {
       key: `s${order}`,
       order,
@@ -214,6 +225,7 @@ export function walkSnapshot({
       rect,
       visibleRect,
       hittable: isHittable,
+      radii: isHittable && hasRoundedCorners(radii) ? radii : null,
       rank: -1,
       box: isHittable
         ? { margin: edgesOf(styles, 'margin'), borderWidth, padding: edgesOf(styles, 'padding') }

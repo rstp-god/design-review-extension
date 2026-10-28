@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
-import { lockScroll } from '@/content/snapshot/scrollLock'
+import { lockScroll, SCROLLABLE_ATTRIBUTE } from '@/content/snapshot/scrollLock'
 
 function dispatch(target: EventTarget, event: Event): boolean {
   target.dispatchEvent(event)
@@ -15,17 +15,27 @@ describe('lockScroll', () => {
     document.body.innerHTML = ''
   })
 
-  it('cancels wheel and touch panning on the page, and releases them on unlock', () => {
+  it('cancels wheel and touch panning everywhere but a scrollable region of ours; unlock releases', () => {
     const host = document.createElement('dr-overlay')
+    const shadow = host.attachShadow({ mode: 'open' })
+    const layer = document.createElement('div')
+    const panel = document.createElement('div')
+    panel.setAttribute(SCROLLABLE_ATTRIBUTE, '')
+    const inPanel = document.createElement('p')
+    panel.append(inPanel)
+    shadow.append(layer, panel)
     document.documentElement.append(host)
     unlock = lockScroll(host)
 
-    const wheel = () => new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 100 })
-    const touch = () => new Event('touchmove', { bubbles: true, cancelable: true })
+    const wheel = () =>
+      new WheelEvent('wheel', { bubbles: true, cancelable: true, composed: true, deltaY: 100 })
+    const touch = () => new Event('touchmove', { bubbles: true, cancelable: true, composed: true })
     expect(dispatch(document.body, wheel())).toBe(true)
     expect(dispatch(document.body, touch())).toBe(true)
-    // Our own UI keeps scrolling (a long panel, a menu).
-    expect(dispatch(host, wheel())).toBe(false)
+    // The snapshot layer is ours too: a wheel over it would scroll the page under the picture.
+    expect(dispatch(layer, wheel())).toBe(true)
+    // A long panel of ours keeps scrolling.
+    expect(dispatch(inPanel, wheel())).toBe(false)
 
     unlock()
     unlock = undefined

@@ -81,8 +81,11 @@ function setup() {
   q<HTMLElement>('.menu__dropdown').style.position = 'absolute'
   q<HTMLElement>('.ghost').style.visibility = 'hidden'
   q<HTMLElement>('.visible-child').style.visibility = 'visible'
+  // jsdom does not expand the `border-radius` shorthand: the longhands the walk reads are set.
   q<HTMLElement>('#card-1 button').style.cssText =
-    'color: rgb(255, 255, 255); padding: 10px 16px; margin: 16px 0 0; border: 2px solid red'
+    'color: rgb(255, 255, 255); padding: 10px 16px; margin: 16px 0 0; border: 2px solid red; ' +
+    'border-top-left-radius: 50%; border-top-right-radius: 50%; ' +
+    'border-bottom-right-radius: 50%; border-bottom-left-radius: 50%'
   document.documentElement.style.fontSize = '10px'
 
   const walk = walkSnapshot({ root: document, host, viewport: VIEWPORT, fields: ['colors'] })
@@ -125,6 +128,14 @@ describe('SnapshotSource', () => {
     expect(source.hitTest(300, 320)).toBe(node('#card-1'))
     // Open shadow content is a target of its own.
     expect(source.hitTest(900, 60)).toBe(nodeOf(dom.openShadow.querySelector('button') as Element))
+  })
+
+  it('misses the cut-off corner of a rounded box and lands on what is behind', () => {
+    // The button (40,200 120×40) is an ellipse: its corner pixel belongs to the card.
+    expect(source.hitTest(100, 220)).toBe(node('#card-1 button'))
+    expect(source.hitTest(41, 201)).toBe(node('#card-1'))
+    expect(node('#card-1 button').radii?.[0]).toEqual({ rx: 60, ry: 20 })
+    expect(node('#card-1').radii).toBeNull()
   })
 
   it('never returns a tree-only box, and null outside the viewport', () => {

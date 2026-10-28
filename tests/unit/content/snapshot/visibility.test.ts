@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import {
+  type CornerRadii,
   childClipContext,
   clipFor,
   clipsOverflow,
   containsFixed,
+  hasRoundedCorners,
   initialClipContext,
   intersectRects,
   paddingBox,
   rectContainsPoint,
   renderability,
+  resolveCornerRadius,
+  roundedRectContainsPoint,
   skipsChildren,
   type VisibilityStyle,
 } from '@/content/snapshot/visibility'
@@ -187,5 +191,47 @@ describe('renderability', () => {
     expect(skipsChildren(style({ 'content-visibility': 'hidden' }))).toBe(true)
     expect(skipsChildren(style({ 'content-visibility': 'auto' }))).toBe(false)
     expect(renderability(style({ 'content-visibility': 'hidden' }), rect, rect)).toBe('hittable')
+  })
+})
+
+describe('rounded corners', () => {
+  const box = { x: 100, y: 100, w: 140, h: 60 }
+  const r = (value?: string) => resolveCornerRadius(value, box)
+
+  it('resolves px, percentages and elliptical radii against the box', () => {
+    expect(r('8px')).toEqual({ rx: 8, ry: 8 })
+    expect(r('50%')).toEqual({ rx: 70, ry: 30 })
+    expect(r('8px 4px')).toEqual({ rx: 8, ry: 4 })
+    expect(r('0px')).toEqual({ rx: 0, ry: 0 })
+    expect(r(undefined)).toEqual({ rx: 0, ry: 0 })
+    expect(hasRoundedCorners([r('0px'), r('0px'), r('0px'), r('0px')])).toBe(false)
+    expect(hasRoundedCorners([r('0px'), r('8px'), r('0px'), r('0px')])).toBe(true)
+  })
+
+  it('an ellipse (50%) misses its corners and hits its middle', () => {
+    const radii: CornerRadii = [r('50%'), r('50%'), r('50%'), r('50%')]
+    expect(roundedRectContainsPoint(box, radii, 170, 130)).toBe(true)
+    expect(roundedRectContainsPoint(box, radii, 102, 102)).toBe(false)
+    expect(roundedRectContainsPoint(box, radii, 237, 158)).toBe(false)
+    expect(roundedRectContainsPoint(box, radii, 170, 101)).toBe(true)
+    expect(roundedRectContainsPoint(box, radii, 101, 130)).toBe(true)
+    expect(roundedRectContainsPoint(box, radii, 300, 130)).toBe(false)
+  })
+
+  it('a small radius cuts only the corner pixels; a square box keeps them', () => {
+    const rounded: CornerRadii = [r('8px'), r('8px'), r('8px'), r('8px')]
+    expect(roundedRectContainsPoint(box, rounded, 100, 100)).toBe(false)
+    expect(roundedRectContainsPoint(box, rounded, 104, 104)).toBe(true)
+    expect(roundedRectContainsPoint(box, rounded, 107, 107)).toBe(true)
+    const oneCorner: CornerRadii = [r('0px'), r('0px'), r('20px'), r('0px')]
+    expect(roundedRectContainsPoint(box, oneCorner, 100, 100)).toBe(true)
+    expect(roundedRectContainsPoint(box, oneCorner, 238, 158)).toBe(false)
+  })
+
+  it('scales radii that would overlap, like CSS', () => {
+    const huge: CornerRadii = [r('200px'), r('200px'), r('200px'), r('200px')]
+    // Scaled to 70 × 30: the box becomes an ellipse again.
+    expect(roundedRectContainsPoint(box, huge, 170, 130)).toBe(true)
+    expect(roundedRectContainsPoint(box, huge, 102, 102)).toBe(false)
   })
 })
