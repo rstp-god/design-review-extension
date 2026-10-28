@@ -21,6 +21,19 @@ export interface SnapshotSource extends PickSource {
   nodeOf(node: PickNode): SnapshotNode
 }
 
+/** The top-most hit target at a viewport point: the highest rank whose visible rect holds it. */
+export function topNodeAt(
+  hittable: readonly SnapshotNode[],
+  x: number,
+  y: number,
+): SnapshotNode | null {
+  for (let index = hittable.length - 1; index >= 0; index -= 1) {
+    const node = hittable[index] as SnapshotNode
+    if (node.visibleRect && rectContainsPoint(node.visibleRect, x, y)) return node
+  }
+  return null
+}
+
 /**
  * `PickSource` over a frozen walk (spec F5.5): hit testing by paint rank over the visible rects,
  * geometry and styles as captured, navigation along the frozen tree. Nothing here reads the
@@ -76,11 +89,7 @@ export function createSnapshotSource({
     nodeOf,
 
     hitTest(x, y) {
-      for (let index = hittable.length - 1; index >= 0; index -= 1) {
-        const node = hittable[index] as SnapshotNode
-        if (node.visibleRect && rectContainsPoint(node.visibleRect, x, y)) return node
-      }
-      return null
+      return topNodeAt(hittable, x, y)
     },
 
     rectOf(node) {

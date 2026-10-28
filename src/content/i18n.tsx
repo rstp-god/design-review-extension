@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, useContext, useMemo } from 'react'
-import { createTranslator, type Resources, type Translate } from '@/i18n/lite'
+import { createTranslator, type KeyOf, type Resources, type Translate } from '@/i18n/lite'
 import type { UiLanguage } from '@/i18n/resolveLanguage'
 import enCommon from '@/i18n/resources/en/common.json'
 import enOverlay from '@/i18n/resources/en/overlay.json'
@@ -17,6 +17,8 @@ export const overlayResources = {
 
 export type OverlayNamespace = keyof typeof overlayResources
 type KeysOf<NS extends OverlayNamespace> = (typeof overlayResources)[NS]['en']
+/** A key of the `overlay` namespace, for state that names a message (toasts). */
+export type OverlayKey = KeyOf<typeof enOverlay>
 
 const LanguageContext = createContext<UiLanguage>('en')
 

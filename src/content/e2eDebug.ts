@@ -9,7 +9,7 @@
  */
 const E2E = import.meta.env.VITE_E2E === '1'
 
-export type E2EDebugKey = 'page-path' | 'nav' | 'pointermove'
+export type E2EDebugKey = 'page-path' | 'nav' | 'pointermove' | 'snapshot'
 
 export interface E2EDebug {
   set: (key: E2EDebugKey, value: string) => void

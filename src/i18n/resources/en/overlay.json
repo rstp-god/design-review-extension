@@ -58,5 +58,11 @@
     "chip": "Selected element",
     "shield": "Pick the frame",
     "retake": "Take the snapshot again for the new fields"
+  },
+  "snapshot": {
+    "failed": "Could not take the snapshot",
+    "hidden": "The tab was not visible — snapshot cancelled",
+    "resized": "Window size changed — snapshot closed",
+    "slow": "The snapshot took {{seconds}} s — this page is large"
   }
 }
