@@ -58,6 +58,13 @@ export const TestId = {
   ToolbarCollapsedBadge: 'toolbar-collapsed-badge',
   OverlayHint: 'overlay-hint',
   OverlayToast: 'overlay-toast',
+  IssueForm: 'issue-form',
+  IssueText: 'issue-text',
+  IssueSeverity: 'issue-severity',
+  IssueSave: 'issue-save',
+  IssueCancel: 'issue-cancel',
+  IssueStyles: 'issue-styles',
+  IssueMarker: 'issue-marker',
 
   // Snapshot
   SnapshotLayer: 'snapshot-layer',

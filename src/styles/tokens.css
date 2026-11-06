@@ -107,7 +107,8 @@
  * (tokens.md §3) with severity colors taken from the report. Temporary until a dedicated design.
  * `data-theme` always holds the resolved value: `system` is mapped to light/dark in JS.
  */
-:host([data-theme="light"]) {
+:host([data-theme="light"]),
+:root[data-theme="light"] {
   --dr-bg: #ffffff;
   --dr-surface: #f3f4f6;
   --dr-surface-raised: #f9fafb;

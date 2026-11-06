@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
 import { installHotkeys } from '@/content/hotkeys'
+import type { IssueSelection } from '@/content/issue/selection'
 import { overlaySurfaceAt } from '@/content/overlay/surfaces'
 import { useOverlayStore } from '@/content/store/overlay'
 import type { Rect } from '@/shared/model'
@@ -9,7 +10,9 @@ import { blockPageEvents } from './blockPageEvents'
 import { Highlight } from './Highlight'
 import { LockedBar } from './LockedBar'
 import { LockedFrame } from './LockedFrame'
+import { entryLabel } from './label'
 import { onLayoutChange } from './layoutChange'
+import type { LiveSource } from './live'
 import { ARROW_KEYS, navigateFrom } from './navigation'
 import { PickerTooltip } from './PickerTooltip'
 import { createSampler } from './perf'
@@ -22,6 +25,7 @@ const PERF_REPORT_EVERY = 10
 export interface PickerProps {
   host: OverlayHost
   source: PickSource
+  onIssue?: (selection: IssueSelection) => void
 }
 
 interface LockedState {
@@ -38,7 +42,7 @@ interface LockedState {
  * hovered node; a click locks the node (frame, chip, breadcrumbs, arrow keys) until `Esc` or
  * another click. Everything it knows about the page comes from `source`.
  */
-export function Picker({ host, source }: PickerProps) {
+export function Picker({ host, source, onIssue }: PickerProps) {
   const mode = useOverlayStore((state) => state.pickerMode)
   const setMode = useOverlayStore((state) => state.setPickerMode)
   const [hover, setHover] = useState<HoverState | null>(null)
@@ -47,6 +51,34 @@ export function Picker({ host, source }: PickerProps) {
   // locked either.
   const shields = useShieldRects(source)
   const lockedNode = locked?.node ?? null
+
+  useEffect(() => {
+    if (mode !== 'locked' || !locked || !onIssue) return
+    return installHotkeys([
+      {
+        key: 'Enter',
+        ignoreInEditable: true,
+        handler: () => {
+          const element =
+            source.kind === 'live' ? (source as LiveSource).elementOf(locked.node) : undefined
+          onIssue({
+            target: {
+              kind: 'element',
+              rect: locked.rect,
+              selector: locked.selector.selector,
+              path: locked.path.map(entryLabel),
+            },
+            styles: Object.fromEntries(
+              Object.entries(locked.styles.values).filter(
+                (entry): entry is [string, string] => entry[1] !== undefined,
+              ),
+            ),
+            element,
+          })
+        },
+      },
+    ])
+  }, [mode, locked, onIssue, source])
 
   const debug = useMemo(() => createE2EDebug(host.host), [host])
   const sampler = useMemo(() => createSampler(), [])

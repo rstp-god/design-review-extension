@@ -32,6 +32,7 @@ export function buildManifest(e2e: boolean) {
       type: 'module' as const,
     },
     permissions: ['activeTab', 'scripting', 'storage', 'unlimitedStorage'],
+    web_accessible_resources: [{ resources: ['src/issue/index.html'], matches: ['<all_urls>'] }],
     commands: {
       [TOGGLE_REVIEW_COMMAND]: {
         suggested_key: { default: 'Alt+Shift+R' },

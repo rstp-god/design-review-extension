@@ -30,6 +30,20 @@
     "freeze": "freeze",
     "livePage": "live page"
   },
+  "issue": {
+    "title": "New issue",
+    "severity": "Severity",
+    "text": "What is wrong?",
+    "blocker": "Blocker",
+    "major": "Major",
+    "minor": "Minor",
+    "styles": "Element styles",
+    "missing": "The element disappeared. Its last position will be used.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "failed": "Could not save the issue. Try again.",
+    "navigated": "The page changed; select the target again."
+  },
   "area": {
     "chip": "Selected area",
     "issue": "Issue",

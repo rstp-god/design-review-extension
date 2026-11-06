@@ -227,7 +227,7 @@ describe('picker', () => {
       expect(crumbs.textContent).toContain('button.card__cta')
       expect(q('picker-breadcrumb-3')).toHaveAttribute('aria-current', 'true')
       // The key cap and the label are separated by a flex gap, the words by real spaces.
-      expect(q('picker-hint-enter')).toHaveTextContent(/^Enter\s*issue · Coming soon$/)
+      expect(q('picker-hint-enter')).toHaveTextContent(/^Enter\s*issue$/)
 
       press('Escape')
       expect(useOverlayStore.getState().pickerMode).toBe('picking')
