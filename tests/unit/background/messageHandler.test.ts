@@ -4,7 +4,7 @@ import { type ChromeMock, installChromeMock, mockTab } from '@tests/mocks/chrome
 import { IDBFactory } from 'fake-indexeddb'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { closeDb, countSessions, putIssue, putSession } from '@/background/db'
-import { messageListener } from '@/background/messageHandler'
+import { handlers, messageListener } from '@/background/messageHandler'
 import { sendToBackground } from '@/shared/messaging'
 
 describe('background message handler', () => {
@@ -49,6 +49,31 @@ describe('background message handler', () => {
 
     await expect(sendToBackground('session/deleteAll', {})).resolves.toEqual({ ok: true })
     expect(await countSessions()).toBe(0)
+  })
+
+  it('restricts panel operations to the top frame and the matching session', async () => {
+    const session = makeSession()
+    const issue = makeIssue()
+    await putSession(session)
+    await putIssue(issue)
+    const sender = {
+      tab: { id: 3 },
+      frameId: 0,
+      url: 'https://shop.example.ru/catalog',
+    } as chrome.runtime.MessageSender
+    const list = handlers['issue/list']
+    const remove = handlers['issue/delete']
+    const crop = handlers['issue/crop']
+    if (!list || !remove || !crop) throw new Error('Panel handlers missing')
+    await expect(list({ sessionId: session.id }, sender)).resolves.toEqual([issue])
+    await expect(
+      list({ sessionId: session.id }, { ...sender, url: 'https://other.example/' }),
+    ).rejects.toThrow()
+    await expect(
+      remove({ sessionId: session.id, issueId: issue.id }, { ...sender, frameId: 2 }),
+    ).rejects.toThrow()
+    await expect(crop({ sessionId: session.id, issueId: 'other' }, sender)).rejects.toThrow()
+    await expect(list({ sessionId: session.id }, sender)).resolves.toEqual([issue])
   })
 
   it('starts a review on the requested tab', async () => {

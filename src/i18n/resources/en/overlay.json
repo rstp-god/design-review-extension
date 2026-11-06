@@ -93,5 +93,26 @@
     "live": "Live page",
     "retake": "New snapshot in {{count}} s",
     "note": "After the snapshot, hover states, dropdowns and animations stay put"
+  },
+  "panel": {
+    "title": "Issues",
+    "close": "Close",
+    "scope": "Scope",
+    "page": "This page",
+    "site": "Entire site",
+    "filter": "Severity filter",
+    "all": "All",
+    "failed": "Could not load or change issues.",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "empty": "No issues yet. Use P to pick an element or A to select an area.",
+    "noResults": "No issues match these filters.",
+    "current": "Current",
+    "area": "Area",
+    "edit": "Edit",
+    "delete": "Delete",
+    "preview": "Crop preview",
+    "deleteTitle": "Delete issue?",
+    "deleteConfirm": "The issue and its screenshots will be permanently deleted."
   }
 }

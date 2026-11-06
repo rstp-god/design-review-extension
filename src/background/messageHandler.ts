@@ -1,12 +1,18 @@
 import { createMessageListener, type MessageHandlers } from '@/shared/messaging'
-import { normalizePath } from '@/shared/sessionKey'
+import { normalizePath, sessionKey } from '@/shared/sessionKey'
 import { captureSenderTab } from './capture'
 import {
   createIssue,
   deleteAllSessions,
+  deleteIssue,
   deleteSession,
+  getBlob,
+  getSession,
+  getSessionSummary,
   getSessionSummaryByKey,
+  listIssues,
   listSessionSummaries,
+  updateIssue,
 } from './db'
 import { startReview, stopReview } from './review'
 import { getStorageUsage } from './storageUsage'
@@ -22,6 +28,23 @@ function decodeWebp(dataUrl: string): Blob {
     throw new Error('Invalid WebP image')
   }
   return new Blob([bytes], { type: 'image/webp' })
+}
+
+async function permittedSession(sessionId: string, sender: chrome.runtime.MessageSender) {
+  if (sender.tab?.id === undefined || sender.frameId !== 0 || !sender.url)
+    throw new Error('Invalid sender')
+  const session = await getSession(sessionId)
+  if (!session || sessionKey(sender.url, session.scope) !== session.key)
+    throw new Error('Invalid session')
+  return session
+}
+
+async function cropDataUrl(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 8192)
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192))
+  return `data:image/webp;base64,${btoa(binary)}`
 }
 
 /** Background side of the wire contract. Payloads arrive validated; results are validated too. */
@@ -60,6 +83,27 @@ export const handlers: MessageHandlers = {
       throw new Error('Issue page does not match the sender')
     }
     return createIssue(payload, decodeWebp(payload.crop), decodeWebp(payload.viewport))
+  },
+  'issue/list': async ({ sessionId }, sender) => {
+    await permittedSession(sessionId, sender)
+    return listIssues(sessionId)
+  },
+  'issue/crop': async ({ sessionId, issueId }, sender) => {
+    await permittedSession(sessionId, sender)
+    const issue = (await listIssues(sessionId)).find((item) => item.id === issueId)
+    if (!issue) throw new Error('Issue not found')
+    const record = await getBlob(issue.shots.cropId)
+    return record ? cropDataUrl(record.blob) : null
+  },
+  'issue/update': async ({ sessionId, issueId, text, severity }, sender) => {
+    const session = await permittedSession(sessionId, sender)
+    await updateIssue(sessionId, issueId, text, severity)
+    return getSessionSummary(session)
+  },
+  'issue/delete': async ({ sessionId, issueId }, sender) => {
+    const session = await permittedSession(sessionId, sender)
+    await deleteIssue(sessionId, issueId)
+    return getSessionSummary(session)
   },
 }
 

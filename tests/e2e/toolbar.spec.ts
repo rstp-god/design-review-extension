@@ -65,10 +65,15 @@ test.describe('toolbar', () => {
 
     await expect(page.locator(OVERLAY_HOST_TAG)).toHaveCount(1)
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('Esc')
-    for (const id of [TestId.ToolbarIssues, TestId.ToolbarExport]) {
+    for (const id of [TestId.ToolbarExport]) {
       await expect(page.getByTestId(id)).toHaveAttribute('aria-disabled', 'true')
     }
-    for (const id of [TestId.ToolbarPicker, TestId.ToolbarArea, TestId.ToolbarFreeze]) {
+    for (const id of [
+      TestId.ToolbarPicker,
+      TestId.ToolbarArea,
+      TestId.ToolbarFreeze,
+      TestId.ToolbarIssues,
+    ]) {
       await expect(page.getByTestId(id)).not.toHaveAttribute('aria-disabled')
     }
     await page.getByTestId(TestId.ToolbarFreeze).hover()
