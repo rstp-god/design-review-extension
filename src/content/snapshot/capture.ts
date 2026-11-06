@@ -126,6 +126,22 @@ async function decodeDataUrl(dataUrl: string): Promise<ImageBitmap> {
   return createImageBitmap(dataUrlToBlob(dataUrl))
 }
 
+/** Capture the live page without the extension UI, using the same shutter as snapshots. */
+export async function captureCleanBitmap(host: HTMLElement): Promise<ImageBitmap> {
+  if (document.hidden) throw new SnapshotError('hidden')
+  host.setAttribute(CAPTURING_ATTRIBUTE, '')
+  try {
+    for (let frame = 0; frame < FRAMES_BEFORE_CAPTURE; frame += 1) {
+      await nextFrame(window, document, () => performance.now())
+    }
+    if (document.hidden) throw new SnapshotError('hidden')
+    const { dataUrl } = await sendToBackground('capture/visible', {})
+    return await decodeDataUrl(dataUrl)
+  } finally {
+    host.removeAttribute(CAPTURING_ATTRIBUTE)
+  }
+}
+
 const GRID_COLUMNS = 32
 const GRID_ROWS = 18
 const MAX_EXAMPLES = 10
