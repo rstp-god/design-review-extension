@@ -39,3 +39,17 @@ export function onRuntimeMessage(listener: RuntimeMessageListener): () => void {
 export function getExtensionVersion(): string {
   return getChrome()?.runtime?.getManifest?.().version ?? ''
 }
+
+export function connectRuntime(name: string): chrome.runtime.Port {
+  return requireChrome('runtime').runtime.connect({ name })
+}
+
+export function onRuntimeConnect(listener: (port: chrome.runtime.Port) => void): () => void {
+  const { runtime } = requireChrome('runtime')
+  runtime.onConnect.addListener(listener)
+  return () => runtime.onConnect.removeListener(listener)
+}
+
+export function extensionUrl(path: string): string {
+  return requireChrome('runtime').runtime.getURL(path)
+}

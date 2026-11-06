@@ -104,6 +104,22 @@ export const issueSchema = z.object({
   updatedAt: z.string(),
 })
 
+/** Content-provided issue data. IDs, numbering and timestamps belong to the background. */
+export const issueDraftSchema = z.object({
+  pageUrl: nonEmptyString(),
+  pagePath: nonEmptyString(),
+  pageTitle: z.string(),
+  env: envSchema,
+  severity: severitySchema,
+  text: z.string().check(z.trim(), z.minLength(1)),
+  target: issueTargetSchema,
+  source: z.enum(['live', 'snapshot']),
+  snapshotAt: z.optional(z.string()),
+  clipped: z.optional(z.boolean()),
+  scroll: z.object({ x: z.number(), y: z.number() }),
+  styles: z.optional(z.record(z.string(), z.string())),
+})
+
 /**
  * Settings live in `chrome.storage.sync`. Each field falls back to its default on its own, so a
  * single corrupt or outdated value never resets the rest. `reportLang` defaults to the UI
