@@ -21,6 +21,12 @@ describe('contract: manifest', () => {
     expect(production.host_permissions).toBeUndefined()
   })
 
+  it('exposes only the isolated form page to reviewed sites', () => {
+    expect(production.web_accessible_resources).toEqual([
+      { resources: ['src/issue/index.html'], matches: ['<all_urls>'] },
+    ])
+  })
+
   it('declares the global start / stop command with its default shortcut', () => {
     expect(production.commands?.[TOGGLE_REVIEW_COMMAND]).toEqual({
       suggested_key: { default: 'Alt+Shift+R' },

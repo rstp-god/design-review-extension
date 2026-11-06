@@ -1,6 +1,6 @@
 import { TestId, testIds } from '@tests/constants/testIds'
 import { useT } from '@/content/i18n'
-import { HintDot, HintKeys, HintPill } from '@/content/overlay/HintPill'
+import { HintKeys, HintPill } from '@/content/overlay/HintPill'
 import { isTrustedEvent } from '@/shared/trustedEvents'
 import { cn, Kbd } from '@/ui'
 import { entryLabel } from './label'
@@ -22,7 +22,6 @@ export interface LockedBarProps {
  */
 export function LockedBar({ path, active, onPick }: LockedBarProps) {
   const t = useT('overlay')
-  const tCommon = useT('common')
   // The last entries, shifted so the active one is always on screen.
   const activeIndex = Math.max(
     0,
@@ -86,12 +85,10 @@ export function LockedBar({ path, active, onPick }: LockedBarProps) {
         <HintKeys keys={['←', '→']} label={t('hint.siblings')} />
         <span
           data-testid={TestId.PickerHintEnter}
-          className="inline-flex items-center gap-2 whitespace-nowrap text-fg-disabled"
+          className="inline-flex items-center gap-2 whitespace-nowrap"
         >
-          <Kbd className="text-fg-disabled">Enter</Kbd>
-          <span>
-            {t('hint.issue')} <HintDot /> {tCommon('soon')}
-          </span>
+          <Kbd>Enter</Kbd>
+          <span>{t('hint.issue')}</span>
         </span>
         <HintKeys keys={['Esc']} label={t('hint.back')} />
       </span>

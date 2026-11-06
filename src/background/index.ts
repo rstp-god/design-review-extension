@@ -1,7 +1,8 @@
 import { onCommand } from '@/services/chrome/commands'
-import { onRuntimeMessage } from '@/services/chrome/runtime'
+import { onRuntimeConnect, onRuntimeMessage } from '@/services/chrome/runtime'
 import { handleCommand } from './commands'
 import { installE2EHooks } from './e2e'
+import { onIssueFormConnect } from './issueFormChannel'
 import { messageListener } from './messageHandler'
 
 /**
@@ -10,6 +11,7 @@ import { messageListener } from './messageHandler'
  * Logic is in messageHandler.ts, review.ts, inject.ts, commands.ts and db.ts.
  */
 onRuntimeMessage(messageListener)
+onRuntimeConnect(onIssueFormConnect)
 onCommand((command, tab) => {
   void handleCommand(command, tab)
 })

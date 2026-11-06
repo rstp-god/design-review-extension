@@ -33,7 +33,9 @@ function hasProductionBuild(): boolean {
 /** Same two Vite builds as `yarn build`, without the type check. */
 function buildProduction(): void {
   const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js')
-  const env = { ...process.env, VITE_E2E: '' }
+  // Vitest sets NODE_ENV=test. Vite and its plugins consult that variable independently of the
+  // build mode, so inheriting it produces a different artifact from `yarn build`.
+  const env = { ...process.env, NODE_ENV: 'production', VITE_E2E: '' }
   execFileSync(process.execPath, [vite, 'build'], { cwd: repoRoot, env, stdio: 'ignore' })
   execFileSync(process.execPath, [vite, 'build', '-c', 'vite.content.config.ts'], {
     cwd: repoRoot,

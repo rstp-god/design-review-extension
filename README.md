@@ -98,7 +98,9 @@ content ┘   (Zod)      (IDB, capture, inject)
 | `activeTab` | Доступ к текущей вкладке только после вашего клика или хоткея |
 | `scripting` | Показать панель ревью на этой вкладке |
 | `storage` | Настройки и позиция тулбара |
-| `unlimitedStorage` | Скриншоты в локальной базе без лимита |
+| `unlimitedStorage` | Кроп и уменьшенный снимок страницы в WebP сохраняются в локальной базе при создании замечания |
+
+Форма замечания загружается как локальная страница расширения в изолированный iframe. Для этого в манифесте указан доступный страницам ресурс формы; дополнительные разрешения и сетевые запросы не требуются.
 
 Никаких host permissions: расширение не видит сайты, пока вы сами не запустили ревью. Ничего не уходит в сеть. Подробнее — [privacy.html](privacy.html).
 
@@ -229,7 +231,9 @@ Rules worth not breaking:
 | `activeTab` | Access to the current tab only after your click or hotkey |
 | `scripting` | Show the review UI on that tab |
 | `storage` | Settings and toolbar position |
-| `unlimitedStorage` | Screenshots in the local database without a quota |
+| `unlimitedStorage` | A WebP crop and reduced viewport are stored locally when an issue is created |
+
+The issue form runs as a local extension page in an isolated iframe. Its page is declared as a web-accessible resource; this requires no additional permissions or network requests.
 
 No host permissions: the extension cannot see any site until you start a review there. Nothing is sent over the network. Details — [privacy.html](privacy.html).
 

@@ -31,6 +31,9 @@ export default defineConfig({
   build: {
     outDir: isE2E ? 'dist-e2e' : 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      input: { issueForm: path.resolve(import.meta.dirname, 'src/issue/index.html') },
+    },
   },
   server: {
     cors: {

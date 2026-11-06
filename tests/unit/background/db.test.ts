@@ -1,13 +1,15 @@
 import 'fake-indexeddb/auto'
 import { makeIssue, makeSession } from '@tests/fixtures/data'
 import { IDBFactory } from 'fake-indexeddb'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   closeDb,
   countSessions,
+  createIssue,
   deleteAllSessions,
   deleteSession,
   getBlob,
+  getDb,
   getSession,
   getSessionByKey,
   getSessionSummaryByKey,
@@ -148,5 +150,89 @@ describe('background db', () => {
     expect(await countSessions()).toBe(0)
     expect(await listIssues('session-shop')).toEqual([])
     expect(await getBlob('crop-1')).toBeUndefined()
+  })
+
+  it('creates the session, issue and images atomically and never reuses a number', async () => {
+    const sample = makeIssue()
+    const request = {
+      operationId: 'operation-1',
+      scope: 'domain' as const,
+      expectedNumber: 1,
+      draft: {
+        pageUrl: sample.pageUrl,
+        pagePath: sample.pagePath,
+        pageTitle: sample.pageTitle,
+        env: sample.env,
+        severity: sample.severity,
+        text: sample.text,
+        target: sample.target,
+        source: sample.source,
+        scroll: sample.scroll,
+      },
+      crop: 'data:image/webp;base64,',
+      viewport: 'data:image/webp;base64,',
+    }
+    const image = new Blob(['image'], { type: 'image/webp' })
+    const first = await createIssue(request, image, image)
+    expect(first.status).toBe('created')
+    if (first.status !== 'created') throw new Error('expected issue')
+    expect(first.issue.number).toBe(1)
+    expect(await getBlob(first.issue.shots.cropId)).toBeDefined()
+    expect(await getBlob(first.issue.shots.viewportId)).toBeDefined()
+    expect(await createIssue(request, image, image)).toEqual(first)
+    await (await getDb()).delete('issues', first.issue.id)
+    expect(await createIssue({ ...request, operationId: 'operation-2' }, image, image)).toEqual({
+      status: 'conflict',
+      nextNumber: 2,
+    })
+    const second = await createIssue(
+      { ...request, operationId: 'operation-2', expectedNumber: 2 },
+      image,
+      image,
+    )
+    expect(second.status === 'created' && second.issue.number).toBe(2)
+  })
+
+  it('serializes competing requests and rolls back all writes on a blob constraint error', async () => {
+    const sample = makeIssue()
+    const draft = {
+      pageUrl: sample.pageUrl,
+      pagePath: sample.pagePath,
+      pageTitle: sample.pageTitle,
+      env: sample.env,
+      severity: sample.severity,
+      text: sample.text,
+      target: sample.target,
+      source: sample.source,
+      scroll: sample.scroll,
+    }
+    const request = {
+      operationId: 'a',
+      scope: 'domain' as const,
+      expectedNumber: 1,
+      draft,
+      crop: 'data:image/webp;base64,',
+      viewport: 'data:image/webp;base64,',
+    }
+    const image = new Blob(['image'], { type: 'image/webp' })
+    const results = await Promise.all([
+      createIssue(request, image, image),
+      createIssue({ ...request, operationId: 'b' }, image, image),
+    ])
+    expect(results.map((result) => result.status).sort()).toEqual(['conflict', 'created'])
+    const session = await getSessionByKey('domain', 'https://shop.example.ru')
+    expect(session?.nextNumber).toBe(2)
+    const duplicate = '00000000-0000-4000-8000-000000000001'
+    await putBlob({ id: duplicate, blob: image })
+    const uuid = vi.spyOn(crypto, 'randomUUID').mockReturnValue(duplicate)
+    try {
+      await expect(
+        createIssue({ ...request, operationId: 'c', expectedNumber: 2 }, image, image),
+      ).rejects.toThrow()
+    } finally {
+      uuid.mockRestore()
+    }
+    expect((await getSessionByKey('domain', 'https://shop.example.ru'))?.nextNumber).toBe(2)
+    expect(await listIssues(session?.id ?? '')).toHaveLength(1)
   })
 })

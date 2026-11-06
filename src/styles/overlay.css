@@ -9,6 +9,7 @@
 @import "./tokens.css";
 @import "./theme.css";
 @source "../content";
+@source "../issue";
 @source "../ui";
 
 :host {

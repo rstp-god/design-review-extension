@@ -9,7 +9,9 @@ import {
 } from 'react'
 import { createE2EDebug } from '@/content/e2eDebug'
 import type { OverlayHost } from '@/content/host'
+import { installHotkeys } from '@/content/hotkeys'
 import { useT } from '@/content/i18n'
+import type { IssueSelection } from '@/content/issue/selection'
 import { Chip, chipTop } from '@/content/overlay/Chip'
 import { blockPageEvents } from '@/content/picker/blockPageEvents'
 import { Shields, useShieldRects } from '@/content/picker/Shields'
@@ -54,6 +56,7 @@ function modifiersOf(event: { shiftKey: boolean; altKey: boolean }): DragModifie
 export interface AreaSelectProps {
   host: OverlayHost
   source: PickSource
+  onIssue?: (selection: IssueSelection) => void
 }
 
 /**
@@ -68,13 +71,20 @@ export interface AreaSelectProps {
  * `shieldRects()` of its source — the rectangle itself needs no DOM, so a snapshot source works
  * unchanged.
  */
-export function AreaSelect({ host, source }: AreaSelectProps) {
+export function AreaSelect({ host, source, onIssue }: AreaSelectProps) {
   const t = useT('overlay')
   const mode = useOverlayStore((state) => state.areaMode)
   const setMode = useOverlayStore((state) => state.setAreaMode)
   const [rect, setRect] = useState<Rect | null>(null)
   const shields = useShieldRects(source)
   const debug = useMemo(() => createE2EDebug(host.host), [host])
+  const issue = useCallback(() => {
+    if (rect && onIssue) onIssue({ target: { kind: 'area', rect } })
+  }, [rect, onIssue])
+  useEffect(() => {
+    if (mode !== 'adjusting' || !rect || !onIssue) return
+    return installHotkeys([{ key: 'Enter', ignoreInEditable: true, handler: issue }])
+  }, [mode, rect, onIssue, issue])
 
   // The drag in progress and the latest input, read by the animation frame.
   const current = useRef<Rect | null>(null)
@@ -311,7 +321,11 @@ export function AreaSelect({ host, source }: AreaSelectProps) {
         </div>
       )}
       {rect && mode === 'adjusting' && (
-        <AreaActions rect={rect} onReselect={() => setMode('drawing')} />
+        <AreaActions
+          rect={rect}
+          onReselect={() => setMode('drawing')}
+          onIssue={onIssue ? issue : undefined}
+        />
       )}
     </>
   )

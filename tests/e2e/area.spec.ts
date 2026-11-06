@@ -83,8 +83,6 @@ test.describe('area', () => {
     await expect(dim()).toBeVisible()
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('Drag to select')
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('turn off area')
-    await expect(page.getByTestId(TestId.Toolbar)).toHaveScreenshot('toolbar-area-active.png')
-
     await drag({ x: 200, y: 300 }, { x: 520, y: 460 })
     await expectBox({ x: 200, y: 300, w: 320, h: 160 })
     await expect(chip()).toHaveText('320 × 160 · x 200 y 300')
@@ -100,9 +98,10 @@ test.describe('area', () => {
     const actionsBox = await actions.boundingBox()
     expect(actionsBox?.y ?? 0).toBeGreaterThanOrEqual(460 + 14)
     near((actionsBox?.x ?? 0) + (actionsBox?.width ?? 0), 520, 2)
-    await expect(page.getByTestId(TestId.AreaIssue)).toHaveAttribute('aria-disabled', 'true')
+    await expect(page.getByTestId(TestId.AreaIssue)).toBeEnabled()
     await expect(page.getByTestId(TestId.AreaReselect)).toBeVisible()
     await expect(page.getByTestId(TestId.OverlayHint)).toContainText('cancel')
+    await expect(page.getByTestId(TestId.Toolbar)).toHaveScreenshot('toolbar-area-active.png')
 
     // The pointer rests on the page after the drag; park it before the screenshots.
     await page.mouse.move(900, 150)
@@ -114,9 +113,6 @@ test.describe('area', () => {
     await expect(page).toHaveScreenshot('area-selected-light.png', {
       clip: { x: 150, y: 250, width: 430, height: 300 },
     })
-
-    await page.getByTestId(TestId.AreaIssue).hover()
-    await expect(page.getByTestId(TestId.Tooltip)).toHaveText('Coming soon')
   })
 
   test('a drag in progress shows the rectangle and the live chip, no handles yet', async () => {

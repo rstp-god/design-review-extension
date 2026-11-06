@@ -30,7 +30,9 @@ export function ensureExtensionBuildExists(): void {
  * Chromium with the extension loaded. Extensions need a persistent context and a headed
  * browser; CI wraps the run in `xvfb-run` (see the `*:ci` scripts).
  */
-export async function launchExtensionContext(): Promise<BrowserContext> {
+export async function launchExtensionContext(
+  options: { deviceScaleFactor?: number } = {},
+): Promise<BrowserContext> {
   ensureExtensionBuildExists()
   const distDir = getDistDir()
 
@@ -38,6 +40,7 @@ export async function launchExtensionContext(): Promise<BrowserContext> {
     channel: 'chromium',
     headless: false,
     viewport: EXTENSION_VIEWPORT,
+    ...options,
     locale: 'en-US',
     timezoneId: 'UTC',
     // The toolbar follows the OS scheme in its default "system" mode; the mockups are dark.

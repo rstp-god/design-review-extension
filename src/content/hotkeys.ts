@@ -11,6 +11,8 @@ export interface HotkeyBinding {
    * for single characters (`P` types a letter) and `false` for named keys (`Escape`).
    */
   ignoreInEditable?: boolean
+  /** Skip this binding entirely while another UI mode owns keyboard input. */
+  when?: () => boolean
   handler: (event: KeyboardEvent) => void
 }
 
@@ -47,7 +49,9 @@ export function installHotkeys(bindings: readonly HotkeyBinding[], target: Windo
     if (!isTrustedEvent(event)) return
     if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return
 
-    const binding = bindings.find((candidate) => matches(candidate, event))
+    const binding = bindings.find(
+      (candidate) => matches(candidate, event) && (candidate.when?.() ?? true),
+    )
     if (!binding) return
 
     const ignoreInEditable = binding.ignoreInEditable ?? binding.key.length === 1

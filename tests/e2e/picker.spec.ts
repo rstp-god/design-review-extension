@@ -228,7 +228,7 @@ test.describe('picker', () => {
     await expect(page.getByTestId(TestId.OverlayHint)).toHaveCount(0)
     await expect(page.getByTestId(TestId.PickerBreadcrumbs)).toContainText('body')
     await expect(activeCrumb(page)).toHaveText('button.card__cta')
-    await expect(page.getByTestId(TestId.PickerHintEnter)).toContainText('soon')
+    await expect(page.getByTestId(TestId.PickerHintEnter)).toContainText('issue')
     await expect(page).toHaveScreenshot('picker-locked.png', {
       clip: { x: expected.rect.x - 24, y: expected.rect.y - 48, width: 360, height: 130 },
     })

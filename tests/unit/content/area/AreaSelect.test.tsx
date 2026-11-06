@@ -127,7 +127,7 @@ describe('area select', () => {
     expect((q('area-handle-se') as HTMLElement).style.left).toBe('395px')
     expect((q('area-handle-se') as HTMLElement).style.top).toBe('345px')
     expect(q('area-actions')).not.toBeNull()
-    expect(q('area-issue')).toHaveAttribute('aria-disabled', 'true')
+    expect(q('area-issue')).toBeEnabled()
     expect(q('area-issue')).toHaveTextContent(/Issue\s*Enter/)
     expect(q('area-reselect')).toHaveTextContent('Reselect')
     expect(q('overlay-hint')).toHaveTextContent(/Esc\s*cancel$/)

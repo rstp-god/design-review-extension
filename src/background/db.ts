@@ -1,4 +1,5 @@
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb'
+import type { RequestOf, ResponseOf } from '@/shared/messaging'
 import type {
   Issue,
   ReviewSession,
@@ -6,6 +7,7 @@ import type {
   SessionSummary,
   SeverityCounts,
 } from '@/shared/model'
+import { normalizePath, sessionKey } from '@/shared/sessionKey'
 
 /**
  * IndexedDB owned by the service worker (spec 5.4). Nothing else opens it: popup, content script
@@ -171,6 +173,81 @@ export async function getSessionSummaryByKey(
 ): Promise<SessionSummary | null> {
   const session = await getSessionByKey(scope, key)
   return session ? getSessionSummary(session) : null
+}
+
+/** Allocate a number and persist the whole issue together, or write nothing. */
+export async function createIssue(
+  request: RequestOf<'issue/create'>,
+  crop: Blob,
+  viewport: Blob,
+): Promise<ResponseOf<'issue/create'>> {
+  const db = await getDb()
+  const tx = db.transaction(['sessions', 'issues', 'blobs'], 'readwrite')
+  const sessions = tx.objectStore('sessions')
+  const issues = tx.objectStore('issues')
+  const blobs = tx.objectStore('blobs')
+  const url = new URL(request.draft.pageUrl)
+  const key = sessionKey(url, request.scope)
+  const existing = await issues.get(request.operationId)
+  if (existing) {
+    const session = await sessions.get(existing.sessionId)
+    if (!session || session.scope !== request.scope || session.key !== key) {
+      tx.abort()
+      await tx.done.catch(() => {})
+      throw new Error('Operation ID belongs to another session')
+    }
+    const savedIssues = await issues.index('by-session').getAll(session.id)
+    await tx.done
+    return { status: 'created', issue: existing, summary: summarize(session, savedIssues) }
+  }
+  let session = await sessions.index('by-scope-key').get([request.scope, key])
+  const nextNumber = session?.nextNumber ?? 1
+  if (nextNumber !== request.expectedNumber) {
+    await tx.done
+    return { status: 'conflict', nextNumber }
+  }
+  const now = new Date().toISOString()
+  session ??= {
+    id: crypto.randomUUID(),
+    scope: request.scope,
+    key,
+    origin: url.origin,
+    ...(request.scope === 'page' ? { path: normalizePath(url.pathname) } : {}),
+    title: request.scope === 'domain' ? url.host : request.draft.pageTitle,
+    createdAt: now,
+    updatedAt: now,
+    nextNumber: 1,
+  }
+  const issue: Issue = {
+    ...request.draft,
+    id: request.operationId,
+    sessionId: session.id,
+    number: nextNumber,
+    shots: { cropId: crypto.randomUUID(), viewportId: crypto.randomUUID() },
+    status: 'open',
+    createdAt: now,
+    updatedAt: now,
+  }
+  session = { ...session, nextNumber: nextNumber + 1, updatedAt: now }
+  try {
+    await Promise.all([
+      sessions.put(session),
+      issues.add(issue),
+      blobs.add({ id: issue.shots.cropId, blob: crop }),
+      blobs.add({ id: issue.shots.viewportId, blob: viewport }),
+    ])
+    const savedIssues = await issues.index('by-session').getAll(session.id)
+    await tx.done
+    return { status: 'created', issue, summary: summarize(session, savedIssues) }
+  } catch (error) {
+    try {
+      tx.abort()
+    } catch {
+      /* A failed request may already have aborted it. */
+    }
+    await tx.done.catch(() => {})
+    throw error
+  }
 }
 
 export async function listSessionSummaries(): Promise<SessionSummary[]> {

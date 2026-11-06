@@ -2,10 +2,13 @@ import * as z from 'zod/mini'
 import { sendRuntimeMessage } from '@/services/chrome/runtime'
 import { sendTabMessage } from '@/services/chrome/tabs'
 import {
+  issueDraftSchema,
+  issueSchema,
   nonEmptyString,
   nonNegativeInt,
   sessionScopeSchema,
   sessionSummarySchema,
+  severitySchema,
   storageUsageSchema,
 } from './schemas'
 
@@ -19,6 +22,36 @@ import {
  * - background → content (via `tabs.sendMessage`): `review/open`, `review/status`, `review/close`
  */
 export const MESSAGE_TIMEOUT_MS = 5_000
+
+/** Isolated issue form: every port message is validated on receipt, like runtime messages. */
+export const issueFormPortSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('register'),
+    token: nonEmptyString(),
+    severity: severitySchema,
+    styles: z.optional(z.record(z.string(), z.string())),
+    theme: z.string(),
+  }),
+  z.object({ type: z.literal('registered') }),
+  z.object({ type: z.literal('heartbeat') }),
+  z.object({ type: z.literal('claim'), token: nonEmptyString() }),
+  z.object({
+    type: z.literal('config'),
+    severity: severitySchema,
+    styles: z.optional(z.record(z.string(), z.string())),
+    theme: z.string(),
+  }),
+  z.object({
+    type: z.literal('submit'),
+    text: z.string().check(z.trim(), z.minLength(1)),
+    severity: severitySchema,
+  }),
+  z.object({ type: z.literal('cancel') }),
+  z.object({ type: z.literal('result'), ok: z.boolean() }),
+  z.object({ type: z.literal('missing'), value: z.boolean() }),
+])
+export const ISSUE_FORM_PORT = 'issue-form'
+export type IssueFormPortMessage = z.infer<typeof issueFormPortSchema>
 
 const tabIdSchema = nonNegativeInt()
 const okSchema = z.object({ ok: z.literal(true) })
@@ -49,6 +82,20 @@ export const messages = {
   'capture/visible': define(
     emptySchema,
     z.object({ dataUrl: z.string().check(z.startsWith('data:image/')) }),
+  ),
+  'issue/create': define(
+    z.object({
+      operationId: nonEmptyString(),
+      scope: sessionScopeSchema,
+      expectedNumber: z.int().check(z.positive()),
+      draft: issueDraftSchema,
+      crop: z.string().check(z.startsWith('data:image/webp;base64,')),
+      viewport: z.string().check(z.startsWith('data:image/webp;base64,')),
+    }),
+    z.union([
+      z.object({ status: z.literal('created'), issue: issueSchema, summary: sessionSummarySchema }),
+      z.object({ status: z.literal('conflict'), nextNumber: z.int().check(z.positive()) }),
+    ]),
   ),
 } as const
 
