@@ -14,10 +14,12 @@ export function IssueFrame({
   selection,
   onCancel,
   onSave,
+  initial,
 }: {
   selection: IssueSelection & { operationId: string }
   onCancel: () => void
   onSave: (text: string, severity: Severity) => Promise<void>
+  initial?: { text: string; severity: Severity }
 }) {
   const frame = useRef<HTMLIFrameElement>(null)
   const token = useRef(crypto.randomUUID())
@@ -61,7 +63,8 @@ export function IssueFrame({
     connection.postMessage({
       type: 'register',
       token: token.current,
-      severity: useSettingsStore.getState().defaultSeverity,
+      severity: initial?.severity ?? useSettingsStore.getState().defaultSeverity,
+      text: initial?.text,
       theme: resolveTheme(
         useSettingsStore.getState().theme,
         window.matchMedia?.('(prefers-color-scheme: light)').matches ?? false,
@@ -83,7 +86,7 @@ export function IssueFrame({
       window.clearInterval(heartbeat)
       connection.disconnect()
     }
-  }, [selection])
+  }, [selection, initial])
   const src = extensionUrl('src/issue/index.html')
   useEffect(() => {
     const onReady = (event: MessageEvent) => {

@@ -31,6 +31,8 @@ const KEYBOARD_STEP_PX = 8
 export interface ToolbarProps {
   onExit: () => void
   snapshot: SnapshotController
+  onIssues: () => void
+  issuesOpen: boolean
 }
 
 /**
@@ -39,7 +41,7 @@ export interface ToolbarProps {
  * until their features land. Position and collapsed state persist per device through
  * toolbarState.ts.
  */
-export function Toolbar({ onExit, snapshot }: ToolbarProps) {
+export function Toolbar({ onExit, snapshot, onIssues, issuesOpen }: ToolbarProps) {
   const t = useT('overlay')
   const tCommon = useT('common')
   const collapsed = useOverlayStore((state) => state.collapsed)
@@ -257,13 +259,20 @@ export function Toolbar({ onExit, snapshot }: ToolbarProps) {
       <Separator />
 
       <span className="relative inline-flex">
-        <Tool
-          testId={TestId.ToolbarIssues}
-          tooltip={soon(t('toolbar.issues'), [])}
-          label={t('toolbar.issues')}
-        >
-          <List size={ICON_SIZE} aria-hidden="true" />
-        </Tool>
+        <Tooltip content={t('toolbar.issues')}>
+          <Button
+            variant="tool"
+            size="lg"
+            iconOnly
+            active={issuesOpen}
+            aria-pressed={issuesOpen}
+            aria-label={t('toolbar.issues')}
+            data-testid={TestId.ToolbarIssues}
+            onClick={trusted(onIssues)}
+          >
+            <List size={ICON_SIZE} aria-hidden="true" />
+          </Button>
+        </Tooltip>
         {issueCount > 0 && (
           <Badge
             data-testid={TestId.ToolbarIssuesBadge}

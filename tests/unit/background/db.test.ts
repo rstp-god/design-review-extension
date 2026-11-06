@@ -7,6 +7,7 @@ import {
   countSessions,
   createIssue,
   deleteAllSessions,
+  deleteIssue,
   deleteSession,
   getBlob,
   getDb,
@@ -20,6 +21,7 @@ import {
   putIssue,
   putSession,
   summarize,
+  updateIssue,
 } from '@/background/db'
 
 describe('background db', () => {
@@ -132,6 +134,31 @@ describe('background db', () => {
     expect(await getSession('b')).toBeDefined()
     expect(await listIssues('b')).toHaveLength(1)
     expect(await getBlob('b-crop')).toBeDefined()
+  })
+
+  it('edits only allowed fields and removes both images without reusing numbers', async () => {
+    const session = makeSession({ nextNumber: 8 })
+    const issue = makeIssue()
+    await putSession(session)
+    await putIssue(issue)
+    await putBlob({ id: issue.shots.cropId, blob: new Blob(['crop']) })
+    await putBlob({ id: issue.shots.viewportId, blob: new Blob(['viewport']) })
+    await expect(updateIssue('other', issue.id, 'bad', 'blocker')).rejects.toThrow()
+    await updateIssue(session.id, issue.id, 'Revised', 'minor')
+    const [edited] = await listIssues(session.id)
+    expect(edited).toMatchObject({
+      ...issue,
+      text: 'Revised',
+      severity: 'minor',
+      updatedAt: expect.any(String),
+    })
+    expect(edited.shots).toEqual(issue.shots)
+    await expect(deleteIssue('other', issue.id)).rejects.toThrow()
+    await deleteIssue(session.id, issue.id)
+    expect(await listIssues(session.id)).toEqual([])
+    expect(await getBlob(issue.shots.cropId)).toBeUndefined()
+    expect(await getBlob(issue.shots.viewportId)).toBeUndefined()
+    expect((await getSession(session.id))?.nextNumber).toBe(8)
   })
 
   it('deleting a missing session is a no-op', async () => {

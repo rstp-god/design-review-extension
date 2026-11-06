@@ -99,6 +99,17 @@ export const TestId = {
   AreaIssue: 'area-issue',
   AreaReselect: 'area-reselect',
 
+  IssuesPanel: 'issues-panel',
+  IssuesClose: 'issues-close',
+  IssuesScopePage: 'issues-scope-page',
+  IssuesScopeSite: 'issues-scope-site',
+  IssueCard: 'issue-card',
+  IssueCardOpen: 'issue-card-open',
+  IssueEdit: 'issue-edit',
+  IssueDelete: 'issue-delete',
+  IssueDeleteConfirm: 'issue-delete-confirm',
+  IssueHighlight: 'issue-highlight',
+
   // UI primitives
   Tooltip: 'ui-tooltip',
   Menu: 'ui-menu',
@@ -109,6 +120,7 @@ export const TestId = {
 export type TestIdValue = (typeof TestId)[keyof typeof TestId]
 
 export const testIds = {
+  issueFilter: (value: string) => `issues-filter-${value}`,
   segmentOption: (group: string, value: string | number) => `${group}-option-${value}`,
   tooltipField: (field: string) => `setting-tooltip-field-${field}`,
   recentItem: (sessionId: string) => `popup-recent-item-${sessionId}`,

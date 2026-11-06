@@ -57,7 +57,7 @@ describe('overlay app', () => {
     expect(toolbar).toHaveAttribute('role', 'toolbar')
     expect(toolbar).toHaveAttribute('aria-label', 'Design Review toolbar')
 
-    for (const id of ['toolbar-issues', 'toolbar-export']) {
+    for (const id of ['toolbar-export']) {
       expect(q.byTestId(id), id).toHaveAttribute('aria-disabled', 'true')
     }
     for (const id of [
@@ -65,6 +65,7 @@ describe('overlay app', () => {
       'toolbar-picker',
       'toolbar-area',
       'toolbar-freeze',
+      'toolbar-issues',
       'toolbar-collapse',
       'toolbar-exit',
     ]) {

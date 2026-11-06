@@ -30,6 +30,7 @@ export const issueFormPortSchema = z.discriminatedUnion('type', [
     token: nonEmptyString(),
     severity: severitySchema,
     styles: z.optional(z.record(z.string(), z.string())),
+    text: z.optional(z.string()),
     theme: z.string(),
   }),
   z.object({ type: z.literal('registered') }),
@@ -39,6 +40,7 @@ export const issueFormPortSchema = z.discriminatedUnion('type', [
     type: z.literal('config'),
     severity: severitySchema,
     styles: z.optional(z.record(z.string(), z.string())),
+    text: z.optional(z.string()),
     theme: z.string(),
   }),
   z.object({
@@ -96,6 +98,24 @@ export const messages = {
       z.object({ status: z.literal('created'), issue: issueSchema, summary: sessionSummarySchema }),
       z.object({ status: z.literal('conflict'), nextNumber: z.int().check(z.positive()) }),
     ]),
+  ),
+  'issue/list': define(z.object({ sessionId: nonEmptyString() }), z.array(issueSchema)),
+  'issue/crop': define(
+    z.object({ sessionId: nonEmptyString(), issueId: nonEmptyString() }),
+    z.nullable(z.string().check(z.startsWith('data:image/webp;base64,'))),
+  ),
+  'issue/update': define(
+    z.object({
+      sessionId: nonEmptyString(),
+      issueId: nonEmptyString(),
+      text: z.string().check(z.trim(), z.minLength(1)),
+      severity: severitySchema,
+    }),
+    sessionSummarySchema,
+  ),
+  'issue/delete': define(
+    z.object({ sessionId: nonEmptyString(), issueId: nonEmptyString() }),
+    sessionSummarySchema,
   ),
 } as const
 

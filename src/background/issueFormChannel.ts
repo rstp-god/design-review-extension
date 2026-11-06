@@ -50,8 +50,8 @@ export function onIssueFormConnect(port: chrome.runtime.Port): void {
       token = message.token
       role = 'frame'
       entry.frame = port
-      const { severity, styles, theme } = entry.config
-      port.postMessage({ type: 'config', severity, styles, theme })
+      const { severity, styles, theme, text } = entry.config
+      port.postMessage({ type: 'config', severity, styles, theme, text })
       return
     }
     const entry = token ? registrations.get(token) : undefined

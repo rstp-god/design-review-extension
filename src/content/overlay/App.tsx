@@ -26,6 +26,7 @@ import { useSettingsStore } from '@/store/settings'
 import { FloatingRootProvider } from '@/ui'
 import { Countdown } from './Countdown'
 import { Hint } from './Hint'
+import { PrivatePanel } from './PrivatePanel'
 import { SnapshotBadge } from './SnapshotBadge'
 import { SnapshotLayer } from './SnapshotLayer'
 import { Toast } from './Toast'
@@ -112,6 +113,10 @@ function Review({ host, onExit }: Omit<AppProps, 'language'>) {
     }>
   >([])
   const [layout, setLayout] = useState(0)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [highlight, setHighlight] = useState<Rect | null>(null)
+  const panelRef = useRef(false)
+  panelRef.current = panelOpen
   const navigationSequence = useRef(0)
   // The tools never know which page they read: live or frozen, the interface is the same.
   const source = snapshot.source ?? liveSource
@@ -123,6 +128,7 @@ function Review({ host, onExit }: Omit<AppProps, 'language'>) {
       installHotkeys([
         {
           key: 'Escape',
+          when: () => !panelRef.current,
           handler: () => {
             if (selectionRef.current) {
               if (saving.current) return
@@ -370,8 +376,54 @@ function Review({ host, onExit }: Omit<AppProps, 'language'>) {
           )
         })}
       <div inert={Boolean(selection)}>
-        <Toolbar onExit={onExit} snapshot={snapshot} />
+        <Toolbar
+          onExit={onExit}
+          snapshot={snapshot}
+          issuesOpen={panelOpen}
+          onIssues={() => setPanelOpen((open) => !open)}
+        />
       </div>
+      {panelOpen && (
+        <PrivatePanel
+          host={host}
+          onClose={() => {
+            setPanelOpen(false)
+            host.shadowRoot
+              .querySelector<HTMLButtonElement>('[data-testid="toolbar-issues"]')
+              ?.focus()
+          }}
+          onLocate={(issue) => {
+            const marker = markers.find(
+              (item) =>
+                item.id === issue.id && item.sessionId === activeSession && item.path === pagePath,
+            )
+            if (!marker?.element?.isConnected || marker.frozen || phase === 'snapshot') return false
+            marker.element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            window.setTimeout(() => {
+              if (!marker.element?.isConnected) return
+              const r = marker.element.getBoundingClientRect()
+              setHighlight({ x: r.x, y: r.y, w: r.width, h: r.height })
+              window.setTimeout(() => setHighlight(null), 1800)
+            }, 350)
+            return true
+          }}
+          onChanged={(id, severity) =>
+            setMarkers((previous) =>
+              severity
+                ? previous.map((item) => (item.id === id ? { ...item, severity } : item))
+                : previous.filter((item) => item.id !== id),
+            )
+          }
+        />
+      )}
+      {highlight && (
+        <div
+          aria-hidden="true"
+          data-testid={TestId.IssueHighlight}
+          className="pointer-events-none fixed z-10 border-2 border-accent"
+          style={{ left: highlight.x, top: highlight.y, width: highlight.w, height: highlight.h }}
+        />
+      )}
       {tool === 'picker' && (
         <Picker host={host} source={source} onIssue={selection ? undefined : openIssue} />
       )}

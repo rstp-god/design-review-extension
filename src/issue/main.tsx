@@ -45,6 +45,7 @@ function Form() {
           initialized.current = true
           setConfig(message)
           setSeverity(message.severity)
+          setText(message.text ?? '')
           document.documentElement.dataset.theme = message.theme
         }
         if (connection !== port.current) return

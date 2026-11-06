@@ -125,6 +125,33 @@ export async function getBlob(id: string): Promise<BlobRecord | undefined> {
   return (await getDb()).get('blobs', id)
 }
 
+/** Update only the editable fields; preserve screenshot IDs and session numbering. */
+export async function updateIssue(
+  sessionId: string,
+  issueId: string,
+  text: string,
+  severity: Issue['severity'],
+): Promise<void> {
+  const tx = (await getDb()).transaction('issues', 'readwrite')
+  const issue = await tx.store.get(issueId)
+  if (!issue || issue.sessionId !== sessionId) throw new Error('Issue not found')
+  await tx.store.put({ ...issue, text, severity, updatedAt: new Date().toISOString() })
+  await tx.done
+}
+
+/** Delete the issue and both images atomically, leaving nextNumber untouched. */
+export async function deleteIssue(sessionId: string, issueId: string): Promise<void> {
+  const tx = (await getDb()).transaction(['issues', 'blobs'], 'readwrite')
+  const issue = await tx.objectStore('issues').get(issueId)
+  if (!issue || issue.sessionId !== sessionId) throw new Error('Issue not found')
+  await Promise.all([
+    tx.objectStore('issues').delete(issueId),
+    tx.objectStore('blobs').delete(issue.shots.cropId),
+    tx.objectStore('blobs').delete(issue.shots.viewportId),
+    tx.done,
+  ])
+}
+
 /** Deletes a session with its issues and their screenshots in one transaction. */
 export async function deleteSession(id: string): Promise<void> {
   const db = await getDb()
